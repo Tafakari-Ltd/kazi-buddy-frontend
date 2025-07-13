@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+
+import NProgress from "nprogress";
+import "@/styles/nprogress.css";
 
 import SearchModal from "@/component/SearchModal/SearchModal";
 import { RootState } from "@/Redux/Store/Store";
-
 import { Preloader } from "../Preloader/Preloader";
 
 const MainLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -15,12 +17,13 @@ const MainLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    
+    NProgress.start();  
     setLoading(true);
 
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 200);
+      NProgress.done(); 
+    }, 300); 
 
     return () => clearTimeout(timer);
   }, [pathname]);
@@ -30,7 +33,7 @@ const MainLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
       {loading ? <Preloader /> : children}
       {isShown && <SearchModal />}
     </div>
-);
+  );
 };
 
 export default MainLayoutWrapper;
