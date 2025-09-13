@@ -56,18 +56,17 @@ const JobListPage = () => {
 
   return (
     <div className="mx-auto px-6 md:px-12 py-12">
-      <h1 className="text-4xl font-bold text-[#800000] mb-6">All Jobs</h1>
+      <h1 className="text-4xl font-bold text-[#800000] mb-6 container">All Jobs</h1>
 
       {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-3 mb-10">
+      <div className="flex flex-wrap gap-3 mb-10 container">
         {/* Add 'All' button */}
         <button
           onClick={() => setActiveCategory("All")}
-          className={`px-4 py-[0.1rem] rounded-sm text-sm font-medium border transition ${
-            activeCategory === "All"
+          className={`px-4 py-[0.1rem] rounded-sm text-sm font-medium border transition ${activeCategory === "All"
               ? "bg-[#800000] text-white"
               : "border-gray-400 text-gray-700 hover:bg-gray-100"
-          }`}
+            }`}
         >
           All
         </button>
@@ -76,11 +75,10 @@ const JobListPage = () => {
           <button
             key={category}
             onClick={() => setActiveCategory(category)}
-            className={`px-4 py-2 rounded-sm text-sm font-medium border transition ${
-              activeCategory === category
+            className={`px-4 py-2 rounded-sm text-sm font-medium border transition ${activeCategory === category
                 ? "bg-[#800000] text-white"
                 : "border-gray-400 text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             {category}
           </button>
@@ -88,7 +86,7 @@ const JobListPage = () => {
       </div>
 
       {/* Jobs Grid */}
-      <div className="grid gap-[1rem] md:grid-cols-3 lg:grid-cols-4 mb-12">
+      <div className="grid gap-[1rem] md:grid-cols-3 lg:grid-cols-4 mb-12 container">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
             <div
@@ -104,11 +102,9 @@ const JobListPage = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div
-                  className={`absolute inset-0 ${
-                    job.colorFilter
-                  } mix-blend-multiply transition-opacity duration-300 ${
-                    hoveredJob === job.id ? "opacity-60" : "opacity-80"
-                  }`}
+                  className={`absolute inset-0 ${job.colorFilter
+                    } mix-blend-multiply transition-opacity duration-300 ${hoveredJob === job.id ? "opacity-60" : "opacity-80"
+                    }`}
                 />
                 <button
                   onClick={(e) => toggleFavorite(job.id, e)}
@@ -116,11 +112,10 @@ const JobListPage = () => {
                   className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-sm rounded-sm hover:bg-white/30"
                 >
                   <Heart
-                    className={`w-5 h-5 ${
-                      favorites.has(job.id)
+                    className={`w-5 h-5 ${favorites.has(job.id)
                         ? "fill-red-500 text-red-500"
                         : "text-white hover:text-red-300"
-                    }`}
+                      }`}
                   />
                 </button>
                 <div className="absolute top-3 left-3">
@@ -175,7 +170,7 @@ const JobListPage = () => {
                     <span className="relative z-10">Apply Now</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:animate-pulse"></div>
                   </button>
-                 
+
                 </div>
               </div>
             </div>

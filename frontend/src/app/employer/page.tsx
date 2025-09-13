@@ -160,12 +160,12 @@ const EmployerApplicationsPage = () => {
 
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-red-800 mb-8">
+      <h1 className="text-3xl font-bold text-red-800 mb-8 container">
         Manage Job Applications
       </h1>
 
       {/* Filter Tabs */}
-      <div className="flex gap-4 mb-6 flex-wrap">
+      <div className="flex gap-4 mb-6 flex-wrap container">
         {STATUS_OPTIONS.map((statusOption) => (
           <button
             key={statusOption}
@@ -194,14 +194,14 @@ const EmployerApplicationsPage = () => {
 
       {/* Upload Job View */}
       {filter === "Upload Job" && (
-        <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg">
+        <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
           <UploadNew />
         </div>
       )}
 
       {/* Applications List */}
       {filter !== "Upload Job" && (
-        <div className="grid gap-6">
+        <div className="grid gap-6 container">
           {filteredApplications.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
               <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -320,7 +320,7 @@ const EmployerApplicationsPage = () => {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 container">
           <div className="bg-white p-6 rounded-lg w-full max-w-[700px] shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-red-800">
               Reject Application

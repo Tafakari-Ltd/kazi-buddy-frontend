@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import {
   Search,
   Plus,
@@ -12,77 +12,19 @@ import {
   Building,
 } from "lucide-react";
 
+import type { IEmployer } from "@/types/IEmployers";
+import emp_loyers from "./data";
 
-const AllEmployersAdministration = () => {
+const AllEmployersAdministration: React.FC = () => {
+  const [employers, setEmployers] = useState<IEmployer[]>(emp_loyers);
 
-  const [employers, setEmployers] = useState([
-    {
-      id: 1,
-      name: "Tech Solutions Inc.",
-      email: "contact@techsolutions.com",
-      phone: "+1-555-0123",
-      address: "123 Innovation Drive, Silicon Valley, CA",
-      industry: "Technology",
-      employees: 150,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Global Manufacturing Corp",
-      email: "hr@globalmfg.com",
-      phone: "+1-555-0456",
-      address: "456 Industrial Blvd, Detroit, MI",
-      industry: "Manufacturing",
-      employees: 500,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Healthcare Partners",
-      email: "admin@healthpartners.org",
-      phone: "+1-555-0789",
-      address: "789 Medical Center Dr, Houston, TX",
-      industry: "Healthcare",
-      employees: 75,
-      status: "Inactive",
-    },
-    {
-      id: 4,
-      name: "Tech Solutions Inc.",
-      email: "contact@techsolutions.com",
-      phone: "+1-555-0123",
-      address: "123 Innovation Drive, Silicon Valley, CA",
-      industry: "Technology",
-      employees: 150,
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Global Manufacturing Corp",
-      email: "hr@globalmfg.com",
-      phone: "+1-555-0456",
-      address: "456 Industrial Blvd, Detroit, MI",
-      industry: "Manufacturing",
-      employees: 500,
-      status: "Active",
-    },
-    {
-      id: 6,
-      name: "Healthcare Partners",
-      email: "admin@healthpartners.org",
-      phone: "+1-555-0789",
-      address: "789 Medical Center Dr, Houston, TX",
-      industry: "Healthcare",
-      employees: 75,
-      status: "Inactive",
-    },
-  ]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit" | "view">("add");
+  const [selectedEmployer, setSelectedEmployer] = useState<IEmployer | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // 'add', 'edit', 'view'
-  const [selectedEmployer, setSelectedEmployer] = useState(null);
-  const [formData, setFormData] = useState({
+  // formData matches IEmployer but `id` is optional (when adding a new employer)
+  const [formData, setFormData] = useState<Omit<IEmployer, "id" | "employees"> & { employees: string }>({
     name: "",
     email: "",
     phone: "",
@@ -99,7 +41,9 @@ const AllEmployersAdministration = () => {
       employer.industry.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -107,11 +51,13 @@ const AllEmployersAdministration = () => {
     }));
   };
 
-  const openModal = (mode, employer = null) => {
+
+  const openModal = (mode: "add" | "edit" | "view", employer: IEmployer | null = null) => {
     setModalMode(mode);
     setSelectedEmployer(employer);
     if (employer) {
-      setFormData(employer);
+      // convert employees (number) to string for the form input
+      setFormData({ ...employer, employees: employer.employees.toString() });
     } else {
       setFormData({
         name: "",
@@ -140,24 +86,24 @@ const AllEmployersAdministration = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (modalMode === "add") {
-      const newEmployer = {
+      const newEmployer: IEmployer = {
         ...formData,
-        id: Math.max(...employers.map((e) => e.id)) + 1,
+        id: employers.length > 0 ? Math.max(...employers.map((e) => e.id)) + 1 : 1,
         employees: parseInt(formData.employees),
       };
       setEmployers([...employers, newEmployer]);
-    } else if (modalMode === "edit") {
+    } else if (modalMode === "edit" && selectedEmployer) {
       setEmployers(
         employers.map((emp) =>
           emp.id === selectedEmployer.id
             ? {
-                ...formData,
-                id: selectedEmployer.id,
-                employees: parseInt(formData.employees),
-              }
+              ...formData,
+              id: selectedEmployer.id,
+              employees: parseInt(formData.employees),
+            }
             : emp
         )
       );
@@ -165,11 +111,12 @@ const AllEmployersAdministration = () => {
     closeModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: number) => {
     if (window.confirm("Are you sure you want to delete this employer?")) {
       setEmployers(employers.filter((emp) => emp.id !== id));
     }
   };
+
 
 
   return (
@@ -262,11 +209,10 @@ const AllEmployersAdministration = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          employer.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${employer.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {employer.status}
                       </span>
