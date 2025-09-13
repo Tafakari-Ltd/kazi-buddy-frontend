@@ -125,7 +125,7 @@ const HotJobs = () => {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="mx-auto px-6 md:px-12 py-12 bg-gradient-to-b from-gray-50 to-white">
+    <div className="mx-auto px-6 md:px-12 py-12 bg-gradient-to-b from-gray-50 to-white container">
       <div className="mb-12 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="p-3 bg-gradient-to-r from-[#800000] to-amber-600 rounded-sm shadow-lg">

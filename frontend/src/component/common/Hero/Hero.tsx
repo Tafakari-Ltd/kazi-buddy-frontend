@@ -12,9 +12,9 @@ const Hero = () => {
   const [selectedCategory, setSelectedCategory] = useState("All categories");
 
   return (
-    <div className="relative">
+    <div className="relative  bg-gradient-to-br from-maroon via-purple-dark to-redish">
       <Navbar />
-      <div className="bg-gradient-to-br from-maroon via-purple-dark to-redish text-white pt-[170px] pb-24 px-6 md:px-12 relative h-screen">
+      <div className=" text-white  pb-24 px-6 md:px-12 relative flex flex-col items-center justify-center h-screen container ">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h3 className="text-4xl md:text-5xl font-extrabold leading-tight">
             Find the job that fits your life

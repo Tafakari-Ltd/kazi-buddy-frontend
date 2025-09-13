@@ -21,7 +21,7 @@ const Getstarted = () => {
           loop
           playsInline
         />
-        <div className="content ">
+        <div className="content container ">
           <h3 className="text-3xl font-bold text-white mb-4">
             LOOKING FOR A JOB
           </h3>

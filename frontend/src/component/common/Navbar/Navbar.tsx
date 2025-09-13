@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
 
   return (
     <header className="w-full bg-white shadow-md fixed top-0 z-30">
-      <div className="mx-auto h-[55px] px-4 md:px-6 flex items-center justify-between relative">
+      <div className="mx-auto h-[55px] px-4 md:px-6 flex items-center justify-between relative container">
         {/* Logo */}
         <Link href="/" className="text-2xl font-extrabold text-maroon">
           Kazi<span className="text-gray-800">Buddy</span>
@@ -66,9 +66,9 @@ const Navbar: React.FC = () => {
         {/* Mobile Controls */}
         <div className="flex items-center space-x-3 ml-4">
           {/* Theme Toggle (Optional) */}
-          <button className="p-2 rounded-md hover:bg-gray-100">
+          {/* <button className="p-2 rounded-md hover:bg-gray-100">
             <Sun className="text-black w-5 h-5" />
-          </button>
+          </button> */}
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">

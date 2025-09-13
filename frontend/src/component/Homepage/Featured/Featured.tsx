@@ -119,7 +119,7 @@ const Featured = () => {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="mx-auto px-6 md:px-12 py-12 bg-gradient-to-b from-amber-50 to-white">
+    <div className="mx-auto px-6 md:px-12 py-12 bg-gradient-to-b from-amber-50 to-white container">
       {/* Header Section */}
       <div className="mb-12 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">

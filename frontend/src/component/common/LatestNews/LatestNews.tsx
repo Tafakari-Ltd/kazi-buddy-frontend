@@ -104,7 +104,7 @@ const Testimonials = () => {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-6">
-      <div className="mx-auto">
+      <div className="mx-auto container">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-[#800000] mb-4">
             Success Stories from Our Clients
