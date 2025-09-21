@@ -150,7 +150,7 @@ const HotJobs = () => {
       </div>
 
       {/* Jobs Grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 mb-12">
         {paginatedJobs.map((job) => (
           <div
             key={job.id}

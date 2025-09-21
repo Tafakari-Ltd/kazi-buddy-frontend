@@ -11,27 +11,33 @@ import SearchModal from "@/component/SearchModal/SearchModal";
 import { RootState } from "@/Redux/Store/Store";
 import { Preloader } from "../Preloader/Preloader";
 
+import { Toaster } from "sonner";
+
+import AuthWatcher from "@/Redux/middleware/AuthWatcher";
+
 const MainLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const isShown = useSelector((state: RootState) => state.search.isShown);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const pathname = usePathname();
 
   useEffect(() => {
-    NProgress.start();  
+    NProgress.start();
     setLoading(true);
 
     const timer = setTimeout(() => {
       setLoading(false);
-      NProgress.done(); 
-    }, 300); 
+      NProgress.done();
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [pathname]);
 
   return (
     <div>
+      {/* <AuthWatcher /> */}
       {loading ? <Preloader /> : children}
       {isShown && <SearchModal />}
+      <Toaster position="top-right" richColors closeButton />
     </div>
   );
 };

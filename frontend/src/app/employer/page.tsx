@@ -23,22 +23,31 @@ import {
 
 import { useRouter } from "next/navigation";
 
+
+import {
+  AppDispatch
+} from "@/Redux/Store/Store";
+
+
+
+
+
 const STATUS_OPTIONS: (
   | ApplicationStatus
   | "All"
   | "Employees Offered Jobs"
   | "Upload Job"
 )[] = [
-  "All",
-  "Pending",
-  "Interview Scheduled",
-  "Final Interview",
-  "Accepted",
-  "Rejected",
-  "Cancelled",
-  "Employees Offered Jobs",
-  "Upload Job",
-];
+    "All",
+    "Pending",
+    "Interview Scheduled",
+    "Final Interview",
+    "Accepted",
+    "Rejected",
+    "Cancelled",
+    "Employees Offered Jobs",
+    "Upload Job",
+  ];
 
 const STAGES: ApplicationStage[] = [
   "Application Review",
@@ -97,16 +106,18 @@ const EmployerApplicationsPage = () => {
     );
   };
 
+
+
   const handleRejectApplication = () => {
     if (applicationToReject && rejectionReason.trim()) {
       setApplications((prev) =>
         prev.map((app) =>
           app.id === applicationToReject.id
             ? {
-                ...app,
-                status: "Rejected",
-                rejectionReason: rejectionReason.trim(),
-              }
+              ...app,
+              status: "Rejected",
+              rejectionReason: rejectionReason.trim(),
+            }
             : app
         )
       );
@@ -134,10 +145,10 @@ const EmployerApplicationsPage = () => {
     filter === "All"
       ? applications
       : filter === "Employees Offered Jobs"
-      ? applications.filter((app) => app.status === "Accepted")
-      : filter === "Upload Job"
-      ? []
-      : applications.filter((app) => app.status === filter);
+        ? applications.filter((app) => app.status === "Accepted")
+        : filter === "Upload Job"
+          ? []
+          : applications.filter((app) => app.status === filter);
 
   const getStatusBadgeClass = (status: ApplicationStatus): string => {
     switch (status) {
@@ -175,11 +186,10 @@ const EmployerApplicationsPage = () => {
               }
               setFilter(statusOption);
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
-              filter === statusOption
-                ? "bg-red-800 text-white"
-                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${filter === statusOption
+              ? "bg-red-800 text-white"
+              : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+              }`}
           >
             {statusOption === "Employees Offered Jobs" && (
               <Users className="w-4 h-4" />
@@ -350,11 +360,10 @@ const EmployerApplicationsPage = () => {
               <button
                 onClick={handleRejectApplication}
                 disabled={!rejectionReason.trim()}
-                className={`px-4 py-2 rounded text-white ${
-                  rejectionReason.trim()
-                    ? "bg-red-800 hover:bg-red-700"
-                    : "bg-red-300 cursor-not-allowed"
-                }`}
+                className={`px-4 py-2 rounded text-white ${rejectionReason.trim()
+                  ? "bg-red-800 hover:bg-red-700"
+                  : "bg-red-300 cursor-not-allowed"
+                  }`}
               >
                 Submit
               </button>

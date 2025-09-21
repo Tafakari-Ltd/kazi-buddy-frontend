@@ -1,37 +1,36 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "@/Redux/Features/authSlice";
 
-const LoginPage = () => {
+import { AppDispatch, RootState } from "@/Redux/Store/Store";
+
+const LoginPage: React.FC = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const [formError, setFormError] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setFormError("");
 
-    // Grab form data
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    // Simulate login call
     try {
-      // TODO: replace this with your real auth logic
-      if (email === "user@example.com" && password === "password123") {
-        // Redirect on success
-        router.push("/");
-      } else {
-        throw new Error("Invalid credentials");
-      }
+      await dispatch(login({ email, password })).unwrap();
+      const returnTo = searchParams.get("returnTo");
+      router.push(returnTo || "/employer");
     } catch (err: any) {
-      setError(err.message || "Login failed");
-      setLoading(false);
+      setFormError(err || "Login failed");
     }
   };
 
@@ -45,9 +44,7 @@ const LoginPage = () => {
         {/* Google Sign In */}
         <button
           className="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-200 transition mb-6"
-          onClick={() => {
-            // Handle Google sign-in here
-          }}
+          onClick={() => { }}
           disabled={loading}
         >
           <FcGoogle size={24} />
@@ -93,21 +90,10 @@ const LoginPage = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <label className="flex items-center text-sm">
-              <input type="checkbox" className="mr-2" disabled={loading} />
-              Remember Me
-            </label>
-            <Link
-              href="/auth/forgot"
-              className="text-sm text-maroon hover:underline"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-
-          {error && (
-            <p className="text-red-600 text-sm mb-4 text-center">{error}</p>
+          {(formError || error) && (
+            <p className="text-red-600 text-sm mb-4 text-center">
+              {formError || error}
+            </p>
           )}
 
           <button

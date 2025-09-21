@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 
 import { RootState } from "@/Redux/Store/Store";
-import { closeSidebar, toggleSidebar } from "@/Redux/Features/SIdebarSlice";
+import { closeSidebar, toggleSidebar } from "@/Redux/Features/SidebarSlice";
 
 import "./sidebar.css";
 

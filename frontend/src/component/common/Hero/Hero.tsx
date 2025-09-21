@@ -1,20 +1,33 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../Navbar/Navbar";
 import { Search, Briefcase, MapPin, Layers, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/Redux/Store/Store";
 
-import { categories } from "@/component/Homepage/HotJobs/Jobs";
+import { fetchCategories } from "@/Redux/Features";
 
 const Hero = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All categories");
 
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories, loading, error } = useSelector(
+    (state: RootState) => state.categories
+  );
+
+  // Fetch categories on mount if not already in store/sessionStorage
+  useEffect(() => {
+    if (!categories.length) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
+
   return (
-    <div className="relative  bg-gradient-to-br from-maroon via-purple-dark to-redish">
+    <div className="relative bg-gradient-to-br from-maroon via-purple-dark to-redish">
       <Navbar />
-      <div className=" text-white  pb-24 px-6 md:px-12 relative flex flex-col items-center justify-center h-screen container ">
+      <div className="text-white pb-24 px-6 md:px-12 relative flex flex-col items-center justify-center h-screen container">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h3 className="text-4xl md:text-5xl font-extrabold leading-tight">
             Find the job that fits your life
@@ -43,6 +56,7 @@ const Hero = () => {
               />
             </div>
 
+            {/* Categories Dropdown */}
             <div className="relative">
               <div
                 onClick={() => setDropdownOpen((prev) => !prev)}
@@ -63,16 +77,31 @@ const Hero = () => {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute z-10 mb-1 bottom-full bg-white shadow-md rounded-md w-full text-left max-h-60 overflow-y-auto"
                   >
-                    {categories.map((cat, index) => (
+                    {loading && (
+                      <li className="px-4 py-2 text-gray-500">Loading...</li>
+                    )}
+                    {error && (
+                      <li className="px-4 py-2 text-red-500">{error}</li>
+                    )}
+                    <li
+                      onClick={() => {
+                        setSelectedCategory("All categories");
+                        setDropdownOpen(false);
+                      }}
+                      className="px-4 py-2 hover:bg-redish text-gray-800 hover:text-white cursor-pointer"
+                    >
+                      All categories
+                    </li>
+                    {categories.map((cat) => (
                       <li
-                        key={index}
+                        key={cat.id}
                         onClick={() => {
-                          setSelectedCategory(cat);
+                          setSelectedCategory(cat.name);
                           setDropdownOpen(false);
                         }}
                         className="px-4 py-2 hover:bg-redish text-gray-800 hover:text-white cursor-pointer"
                       >
-                        {cat}
+                        {cat.name}
                       </li>
                     ))}
                   </motion.ul>
