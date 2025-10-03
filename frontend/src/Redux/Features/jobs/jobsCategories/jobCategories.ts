@@ -1,4 +1,4 @@
-// src/Redux/Features/categorySlice.ts
+
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/lib/axios";
 
