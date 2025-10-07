@@ -26,22 +26,41 @@ export const registerWorker = createAsyncThunk<
                 }
             });
 
-
+            console.log("Registering worker with FormData...");
+            console.log("Form entries:", Array.from(form.entries()));
+            
             const response = await api.post("accounts/register/", form, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            console.log(response);
+            console.log("Registration successful:", response);
 
             return response as unknown as { message: string; user_id: string; user_data: WorkerData };
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message ?? "Registration failed");
+            console.error("Registration error caught:", err);
+            
+            
+            if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+                const errorMessages: string[] = [];
+                Object.entries(err.fieldErrors).forEach(([field, messages]) => {
+                    if (Array.isArray(messages) && messages.length > 0) {
+                        const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        errorMessages.push(`${fieldName}: ${messages[0]}`);
+                    }
+                });
+                
+                // Return both the formatted message and raw field errors
+                return rejectWithValue(JSON.stringify({
+                    message: errorMessages.join('\n'),
+                    fieldErrors: err.fieldErrors
+                }));
+            }
+            
+            const errorMessage = err?.message || "Registration failed";
+            return rejectWithValue(errorMessage);
         }
     }
 );
-
-
-
 
 // Verify Email
 export const verifyEmail = createAsyncThunk<
@@ -58,17 +77,47 @@ export const verifyEmail = createAsyncThunk<
                 otp_type: "registration",
             });
 
-            // Axios interceptor already returns response.data
+            console.log("Verification successful:", response);
+
             return response as unknown as { message: string };
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message ?? "Verification failed");
+            console.error("Verification error caught:", err);
+            
+            const errorMessage = err?.message || "Verification failed";
+            
+            return rejectWithValue(errorMessage);
         }
     }
 );
 
-// ========================
-// Initial State
-// ========================
+// Resend OTP
+export const resendOTP = createAsyncThunk<
+    { message: string }, // return type
+    { user_id: string; email: string }, // argument type
+    { rejectValue: string } // error type
+>(
+    "worker/resendOTP",
+    async ({ user_id, email }, { rejectWithValue }) => {
+        try {
+            const response = await api.post("accounts/resend-otp/", {
+                user_id,
+                email,
+                otp_type: "registration",
+            });
+
+            console.log("OTP resent successfully:", response);
+
+            return response as unknown as { message: string };
+        } catch (err: any) {
+            console.error("Resend OTP error caught:", err);
+            
+            const errorMessage = err?.message || "Failed to resend OTP";
+            
+            return rejectWithValue(errorMessage);
+        }
+    }
+);
+
 const initialState: WorkerState = {
     worker: null,
     loading: false,
@@ -77,9 +126,6 @@ const initialState: WorkerState = {
     verified: false,
 };
 
-// ========================
-// Slice
-// ========================
 const workerSlice = createSlice({
     name: "worker",
     initialState,
@@ -126,11 +172,23 @@ const workerSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload ?? "Verification failed";
             });
+
+        // Resend OTP
+        builder
+            .addCase(resendOTP.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(resendOTP.fulfilled, (state, action: PayloadAction<{ message: string }>) => {
+                state.loading = false;
+                state.successMessage = action.payload.message;
+            })
+            .addCase(resendOTP.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload ?? "Failed to resend OTP";
+            });
     },
 });
 
-// ========================
-// Exports
-// ========================
 export const { clearState } = workerSlice.actions;
 export default workerSlice;

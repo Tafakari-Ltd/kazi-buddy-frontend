@@ -35,10 +35,15 @@ const Signup: React.FC = () => {
     confirm_password: "",
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   // Toast messages
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
+      toast.info("Please check your email for the verification code. Don't forget to check your spam folder!", {
+        duration: 6000
+      });
       setFormData({
         profile_photo: undefined,
         username: "",
@@ -50,15 +55,22 @@ const Signup: React.FC = () => {
       });
       dispatch(clearState());
     }
-    if (error) {
-      toast.error(error);
-      dispatch(clearState());
-    }
-  }, [successMessage, error, dispatch]);
+   
+  }, [successMessage, dispatch]);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
+    
+  
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    
     if (name === "profile_photo" && files) {
       setFormData({ ...formData, profile_photo: files[0] });
     } else {
@@ -73,9 +85,11 @@ const Signup: React.FC = () => {
   };
 
   // Handle form submit
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous field errors
+    setFieldErrors({});
 
     // Password match check
     if (formData.password !== formData.confirm_password) {
@@ -102,18 +116,62 @@ const Signup: React.FC = () => {
       if (registerWorker.fulfilled.match(resultAction)) {
         // Successful registration
         const userId = resultAction.payload.user_id;
-        router.push(`/auth/verify-email?userId=${userId}`);
+        const userEmail = formData.email;
+        
+        // Pass email along with userId for resend functionality
+        router.push(`/auth/verify-email?userId=${userId}&email=${encodeURIComponent(userEmail)}`);
       } else if (registerWorker.rejected.match(resultAction)) {
-        // Handle backend errors (like duplicates)
-        console.error("Registration failed:", resultAction.payload);
-        toast.error(resultAction.payload || "Registration failed");
+        
+        console.log("=== DEBUGGING ERROR ===");
+        console.log("Full resultAction:", resultAction);
+        console.log("Payload type:", typeof resultAction.payload);
+        console.log("Payload value:", resultAction.payload);
+        
+        const errorPayload = resultAction.payload;
+        
+        if (errorPayload && typeof errorPayload === 'object' && 'fieldErrors' in errorPayload) {
+          const errors: Record<string, string> = {};
+          const payloadWithErrors = errorPayload as { fieldErrors: Record<string, string[]> };
+          
+          Object.entries(payloadWithErrors.fieldErrors).forEach(([field, messages]) => {
+            if (Array.isArray(messages) && messages.length > 0) {
+              errors[field] = messages[0];
+            }
+          });
+          setFieldErrors(errors);
+          toast.error(`Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''} in the form`);
+          return;
+        }
+        
+        if (typeof errorPayload === 'string') {
+          try {
+            const parsedError = JSON.parse(errorPayload);
+            console.log("Parsed error from string:", parsedError);
+            
+            if (parsedError?.fieldErrors && Object.keys(parsedError.fieldErrors).length > 0) {
+              const errors: Record<string, string> = {};
+              Object.entries(parsedError.fieldErrors).forEach(([field, messages]) => {
+                if (Array.isArray(messages) && messages.length > 0) {
+                  errors[field] = messages[0];
+                }
+              });
+              setFieldErrors(errors);
+              toast.error(`Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''} in the form`);
+              return;
+            }
+          } catch (e) {
+            console.log("Not valid JSON, treating as plain message");
+          }
+        }
+        
+     
+        toast.error(typeof errorPayload === 'string' ? errorPayload : "Registration failed");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("An unexpected error occurred");
+    } catch (err: any) {
+      console.error("Unexpected error:", err);
+      toast.error(err?.message || "An unexpected error occurred");
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-maroon via-purple-dark to-redish px-6">
@@ -121,6 +179,39 @@ const Signup: React.FC = () => {
         <h2 className="text-3xl font-bold text-center text-maroon mb-6">
           Sign Up
         </h2>
+        
+        {/* Display field errors summary */}
+        {Object.keys(fieldErrors).length > 0 && (
+          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md shadow-sm">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-semibold text-red-800">
+                  {Object.keys(fieldErrors).length === 1 
+                    ? 'Please fix the following error:' 
+                    : `Please fix the following ${Object.keys(fieldErrors).length} errors:`}
+                </h3>
+                <div className="mt-2 text-sm text-red-700 max-h-32 overflow-y-auto">
+                  <ul className="space-y-1">
+                    {Object.entries(fieldErrors).map(([field, error]) => (
+                      <li key={field} className="flex items-start">
+                        <span className="mr-2 text-red-500">•</span>
+                        <span>
+                          <strong className="capitalize">{field.replace(/_/g, ' ')}:</strong> {error}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {/* Profile Photo */}
           <div>
@@ -154,9 +245,14 @@ const Signup: React.FC = () => {
               placeholder="Username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
+              className={`w-full border rounded-md px-4 py-2 ${
+                fieldErrors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+              }`}
               required
             />
+            {fieldErrors.username && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.username}</p>
+            )}
           </div>
 
           {/* Phone Number */}
@@ -171,9 +267,14 @@ const Signup: React.FC = () => {
               placeholder="Phone Number"
               value={formData.phone_number}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
+              className={`w-full border rounded-md px-4 py-2 ${
+                fieldErrors.phone_number ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+              }`}
               required
             />
+            {fieldErrors.phone_number && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.phone_number}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -188,9 +289,14 @@ const Signup: React.FC = () => {
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
+              className={`w-full border rounded-md px-4 py-2 ${
+                fieldErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+              }`}
               required
             />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           {/* Full Name */}
