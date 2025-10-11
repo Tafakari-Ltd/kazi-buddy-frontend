@@ -10,6 +10,8 @@ import workerSlice from "../Features/WorkersSlice";
 import categoriesSlice from "../Features/jobs/jobsCategories/jobCategories";
 import profileSlice from "../Features/profileSlice";
 import jobsSlice from "../Features/jobsSlice";
+import jobSkillsSlice from "../Features/jobs/jobSkillsSlice";
+import jobEmployerSlice from "../Features/jobs/jobEmployerSlice";
 
 import { authMiddleware } from "../middleware/authMiddleware";
 
@@ -25,6 +27,8 @@ export const store = configureStore({
     categories: categoriesSlice.reducer,
     profile: profileSlice.reducer,
     jobs: jobsSlice.reducer,
+    jobSkills: jobSkillsSlice.reducer,
+    jobEmployer: jobEmployerSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(authMiddleware),

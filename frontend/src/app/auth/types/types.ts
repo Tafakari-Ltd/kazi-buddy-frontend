@@ -1,4 +1,4 @@
-interface IFormData {
+export interface IFormData {
     profile_photo?: File;
     username: string;
     phone_number: string;

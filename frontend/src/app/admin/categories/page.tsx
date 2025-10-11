@@ -230,30 +230,35 @@ const CategoriesPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 max-w-md w-full"
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this category? This action cannot be undone.
-              </p>
-              <div className="flex gap-3 justify-end">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6 text-sm">
+                  Are you sure you want to delete this category? This action cannot be undone and may affect related jobs.
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2.5 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all shadow-lg font-medium"
                 >
-                  Delete
+                  Delete Category
                 </button>
               </div>
             </motion.div>
@@ -268,61 +273,68 @@ const CategoriesPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Category Details
-                </h3>
+              <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-200">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    Category Details
+                  </h3>
+                  <p className="text-sm text-gray-500">View complete category information</p>
+                </div>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded"
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
                 >
-                  ×
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                     Category Name
                   </label>
-                  <p className="text-lg font-semibold text-gray-900 bg-gray-50 p-3 rounded">
-                    {categoryToView.name}
-                  </p>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-lg">
+                    <p className="text-xl font-bold text-gray-900">
+                      {categoryToView.name}
+                    </p>
+                  </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                     Description
                   </label>
-                  <div className="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed text-sm">
                       {categoryToView.description}
                     </p>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                     Category ID
                   </label>
-                  <p className="text-sm text-gray-500 font-mono bg-gray-50 p-2 rounded">
-                    {categoryToView.id}
-                  </p>
+                  <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600 font-mono break-all">
+                      {categoryToView.id}
+                    </p>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex gap-3 justify-end mt-6 pt-4 border-t">
+              <div className="flex gap-3 justify-end mt-8 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2.5 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Close
                 </button>
@@ -331,7 +343,7 @@ const CategoriesPage = () => {
                     setShowViewModal(false);
                     handleEditClick(categoryToView);
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 inline-flex items-center gap-2"
+                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 inline-flex items-center gap-2 transition-all shadow-lg font-medium"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit Category
@@ -349,50 +361,58 @@ const CategoriesPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto"
             >
-              <div className="flex justify-between items-start mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Edit Category
-                </h3>
+              <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-200">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    Edit Category
+                  </h3>
+                  <p className="text-sm text-gray-500">Update category information</p>
+                </div>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded"
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleEditSubmit} className="space-y-4">
+              <form onSubmit={handleEditSubmit} className="space-y-6">
                 {/* Category Name */}
                 <div>
                   <label
                     htmlFor="edit-name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide"
                   >
                     Category Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="edit-name"
-                    name="name"
-                    value={editFormData.name}
-                    onChange={handleEditInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                      editFormErrors.name
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Enter category name"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="edit-name"
+                      name="name"
+                      value={editFormData.name}
+                      onChange={handleEditInputChange}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
+                        editFormErrors.name
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      placeholder="Enter category name"
+                    />
+                  </div>
                   {editFormErrors.name && (
-                    <p className="mt-1 text-sm text-red-600">{editFormErrors.name}</p>
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {editFormErrors.name}
+                    </p>
                   )}
                 </div>
 
@@ -400,41 +420,46 @@ const CategoriesPage = () => {
                 <div>
                   <label
                     htmlFor="edit-description"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide"
                   >
                     Description <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    id="edit-description"
-                    name="description"
-                    rows={4}
-                    value={editFormData.description}
-                    onChange={handleEditInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                      editFormErrors.description
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Enter category description"
-                  />
+                  <div className="relative">
+                    <textarea
+                      id="edit-description"
+                      name="description"
+                      rows={4}
+                      value={editFormData.description}
+                      onChange={handleEditInputChange}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none ${
+                        editFormErrors.description
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      placeholder="Enter a detailed description of this category..."
+                    />
+                  </div>
                   {editFormErrors.description && (
-                    <p className="mt-1 text-sm text-red-600">{editFormErrors.description}</p>
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {editFormErrors.description}
+                    </p>
                   )}
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 justify-end pt-4 border-t">
+                <div className="flex gap-4 justify-end pt-6 mt-8 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-6 py-2.5 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg transition-all shadow-lg font-medium"
                   >
                     {loading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

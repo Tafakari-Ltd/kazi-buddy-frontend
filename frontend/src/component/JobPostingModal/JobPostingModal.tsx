@@ -5,31 +5,35 @@ import { useDispatch, useSelector } from "react-redux";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
-import { createJob, clearJobState } from "@/Redux/Features/jobsSlice";
-import { categories } from "../Homepage/HotJobs/Jobs";
+import { createJob, clearState } from "@/Redux/Features/jobsSlice";
+import { fetchCategories } from "@/Redux/Features/jobs/jobsCategories/jobCategories";
+import { JobType, UrgencyLevel, PaymentType, JobStatus, JobVisibility } from "@/types/job.types";
 
 const JOB_TYPES = [
-  { value: "full_time", label: "Full-Time" },
-  { value: "part_time", label: "Part-Time" },
-  { value: "contract", label: "Contract" },
-  { value: "internship", label: "Internship" }
+  { value: JobType.FULL_TIME, label: "Full-Time" },
+  { value: JobType.PART_TIME, label: "Part-Time" },
+  { value: JobType.CONTRACT, label: "Contract" },
+  { value: JobType.INTERNSHIP, label: "Internship" }
 ];
 
 const URGENCY_LEVELS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" }
+  { value: UrgencyLevel.LOW, label: "Low" },
+  { value: UrgencyLevel.MEDIUM, label: "Medium" },
+  { value: UrgencyLevel.HIGH, label: "High" }
 ];
 
 const PAYMENT_TYPES = [
-  { value: "fixed", label: "Fixed Price" },
-  { value: "hourly", label: "Hourly Rate" }
+  { value: PaymentType.FIXED, label: "Fixed Price" },
+  { value: PaymentType.HOURLY, label: "Hourly Rate" }
 ];
 
 const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, successMessage } = useSelector(
     (state: RootState) => state.jobs
+  );
+  const { categories, loading: categoriesLoading } = useSelector(
+    (state: RootState) => state.categories
   );
   const { user } = useSelector((state: RootState) => state.auth);
 
@@ -39,17 +43,17 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
     description: string;
     location: string;
     location_text: string;
-    job_type: string;
-    urgency_level: string;
+    job_type: JobType;
+    urgency_level: UrgencyLevel;
     budget_min: string;
     budget_max: string;
-    payment_type: string;
+    payment_type: PaymentType;
     start_date: string;
     end_date: string;
     estimated_hours: string;
     max_applicants: string;
-    status: string;
-    visibility: string;
+    status: JobStatus;
+    visibility: JobVisibility;
   };
 
   const [formData, setFormData] = useState<FormDataType>({
@@ -58,30 +62,37 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
     description: "",
     location: "",
     location_text: "",
-    job_type: "",
-    urgency_level: "medium",
+    job_type: JobType.FULL_TIME,
+    urgency_level: UrgencyLevel.MEDIUM,
     budget_min: "",
     budget_max: "",
-    payment_type: "fixed",
+    payment_type: PaymentType.FIXED,
     start_date: "",
     end_date: "",
     estimated_hours: "",
     max_applicants: "50",
-    status: "active",
-    visibility: "public",
+    status: JobStatus.ACTIVE,
+    visibility: JobVisibility.PUBLIC,
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // Fetch categories when modal opens
+  useEffect(() => {
+    if (categories.length === 0 && !categoriesLoading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length, categoriesLoading]);
+
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
-      dispatch(clearJobState());
+      dispatch(clearState());
       onClose(); 
     }
   }, [successMessage, dispatch, onClose]);
 
-  const handleChange = (field: keyof FormDataType, value: string) => {
+  const handleChange = (field: keyof FormDataType, value: string | JobType | UrgencyLevel | PaymentType | JobStatus | JobVisibility) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     
     if (fieldErrors[field]) {
@@ -147,18 +158,18 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
         title: formData.title,
         description: formData.description,
         location: formData.location,
-        location_text: formData.location_text || undefined,
-        job_type: formData.job_type as any,
-        urgency_level: formData.urgency_level as any,
-        budget_min: formData.budget_min ? parseFloat(formData.budget_min) : undefined,
-        budget_max: formData.budget_max ? parseFloat(formData.budget_max) : undefined,
-        payment_type: formData.payment_type as any,
-        start_date: formData.start_date || undefined,
-        end_date: formData.end_date || undefined,
-        estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : undefined,
-        max_applicants: formData.max_applicants ? parseInt(formData.max_applicants) : undefined,
-        status: formData.status as any,
-        visibility: formData.visibility as any,
+        location_text: formData.location_text || '',
+        job_type: formData.job_type,
+        urgency_level: formData.urgency_level,
+        budget_min: formData.budget_min ? parseFloat(formData.budget_min) : 0,
+        budget_max: formData.budget_max ? parseFloat(formData.budget_max) : 0,
+        payment_type: formData.payment_type,
+        start_date: formData.start_date || '',
+        end_date: formData.end_date || '',
+        estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : 0,
+        max_applicants: formData.max_applicants ? parseInt(formData.max_applicants) : 50,
+        status: formData.status,
+        visibility: formData.visibility,
       };
 
       const resultAction = await dispatch(createJob(jobData));
@@ -168,7 +179,7 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
       } else if (createJob.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
         
-        dispatch(clearJobState());
+        dispatch(clearState());
 
         // Handle field errors
         if (errorPayload && typeof errorPayload === 'object' && 'fieldErrors' in errorPayload) {
@@ -259,11 +270,14 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
                 }`}
                 value={formData.category}
                 onChange={(e) => handleChange("category", e.target.value)}
+                disabled={categoriesLoading}
               >
-                <option value="">Select category</option>
+                <option value="">
+                  {categoriesLoading ? "Loading categories..." : "Select category"}
+                </option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
                   </option>
                 ))}
               </select>

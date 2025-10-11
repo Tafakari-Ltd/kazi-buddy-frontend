@@ -38,10 +38,11 @@ export const menuItems = [
     href: "/jobs",
     badge: "12",
     submenu: [
-      { label: "Active Projects", href: "/jobs/active" },
-      { label: "Job Postings", href: "/jobs/postings" },
-      { label: "Project Timeline", href: "/jobs/timeline" },
-      { label: "Resource Allocation", href: "/jobs/resources" },
+      { label: "All Jobs", href: "/admin/jobs" },
+      { label: "Create Job", href: "/admin/jobs/create" },
+      { label: "Active Jobs", href: "/admin/jobs?status=active" },
+      { label: "Draft Jobs", href: "/admin/jobs?status=draft" },
+      { label: "Job Analytics", href: "/admin/jobs/analytics" },
     ],
   },
   {
