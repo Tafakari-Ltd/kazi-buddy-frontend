@@ -35,8 +35,9 @@ export const fetchCategories = createAsyncThunk<
   "categories/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("jobs/categories/");
-      return response.data;
+      const response = await api.get("/jobs/categories/");
+      // Handle the nested data structure from your API
+      return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch categories"
@@ -54,8 +55,8 @@ export const fetchCategoryById = createAsyncThunk<
   "categories/fetchCategoryById",
   async (categoryId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`jobs/categories/${categoryId}/`);
-      return response.data; // <- Changed from 'return response'
+      const response = await api.get(`/jobs/categories/${categoryId}/`);
+      return response.data; 
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch category"
@@ -72,7 +73,7 @@ export const createCategory = createAsyncThunk<
   "categories/createCategory",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await api.post("jobs/categories/create/", data);
+      const response = await api.post("/jobs/categories/create/", data);
       return response.data;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
@@ -95,7 +96,7 @@ export const updateCategory = createAsyncThunk<
   "categories/updateCategory",
   async ({ categoryId, data }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`jobs/categories/update/${categoryId}/`, data);
+      const response = await api.put(`/jobs/categories/update/${categoryId}/`, data);
       return response.data;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
@@ -118,7 +119,7 @@ export const deleteCategory = createAsyncThunk<
   "categories/deleteCategory",
   async (categoryId, { rejectWithValue }) => {
     try {
-      await api.delete(`jobs/categories/delete/${categoryId}/`);
+      await api.delete(`/jobs/categories/delete/${categoryId}/`);
       return categoryId;
     } catch (error: any) {
       return rejectWithValue(
@@ -137,7 +138,7 @@ export const fetchJobsByCategory = createAsyncThunk<
   "categories/fetchJobsByCategory",
   async (categoryId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`jobs/categories/${categoryId}/jobs/`);
+      const response = await api.get(`j/obs/categories/${categoryId}/jobs/`);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(

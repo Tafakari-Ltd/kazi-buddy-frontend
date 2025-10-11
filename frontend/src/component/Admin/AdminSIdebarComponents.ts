@@ -1,4 +1,4 @@
-import { Home, Users, HardHat, Briefcase, Shield } from "lucide-react";
+import { Home, Users, HardHat, Briefcase, Shield, Tags } from "lucide-react";
 export const menuItems = [
   {
     id: "dashboard",
@@ -42,6 +42,17 @@ export const menuItems = [
       { label: "Job Postings", href: "/jobs/postings" },
       { label: "Project Timeline", href: "/jobs/timeline" },
       { label: "Resource Allocation", href: "/jobs/resources" },
+    ],
+  },
+  {
+    id: "categories",
+    label: "Categories",
+    icon: Tags,
+    href: "/categories",
+    badge: null,
+    submenu: [
+      { label: "All Categories", href: "/admin/categories" },
+      { label: "Create Category", href: "/admin/categories/create" },
     ],
   },
   {
