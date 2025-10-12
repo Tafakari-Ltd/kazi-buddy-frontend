@@ -40,7 +40,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useEmployerProfiles } from "@/Redux/Functions/useEmployerProfiles";
 import { RootState } from "@/Redux/Store/Store";
-import { createEmployerProfile } from "@/Redux/Features/employerProfilesSlice";
 
 const STATUS_OPTIONS: (
   | ApplicationStatus
@@ -74,15 +73,44 @@ const STAGES: ApplicationStage[] = [
 const EmployerApplicationsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const postjob = searchParams?.get("postjob");
+  const [postjob, setPostjob] = useState<string | null>(null);
   
-  // Auth state
-  const { user, userId, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  // Handle search params on client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPostjob(searchParams?.get("postjob") || null);
+    }
+  }, [searchParams]);
+  
+  // Auth state with defensive checks
+  const authState = useSelector((state: RootState) => state.auth || {});
+  const { user, userId, isAuthenticated } = authState;
   
   // Get the actual user ID 
-  const currentUserId = userId || user?.user_id;
+  const currentUserId = userId || user?.user_id || user?.id;
   
-  // Employer profiles hook
+  // Employer profiles hook with error handling
+  let employerProfiles;
+  try {
+    employerProfiles = useEmployerProfiles();
+  } catch (error) {
+    console.error('Error loading employer profiles hook:', error);
+    return (
+      <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-800 mb-4">Error Loading Profile</h2>
+          <p className="text-gray-600 mb-6">Failed to load employer profile system.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const {
     userProfile,
     loading: profileLoading,
@@ -95,7 +123,7 @@ const EmployerApplicationsPage = () => {
     hasUserProfile,
     isProfileVerified,
     isProfilePending,
-  } = useEmployerProfiles();
+  } = employerProfiles;
 
   // Local state
   const [applications, setApplications] = useState<Application[]>(dummyApplications);
@@ -119,29 +147,53 @@ const EmployerApplicationsPage = () => {
   });
   
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+  const [isClient, setIsClient] = useState(false);
+  
+  // Ensure client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Fetch user profile on mount
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
-      handleFetchUserEmployerProfile(currentUserId);
+      try {
+        handleFetchUserEmployerProfile(currentUserId);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
     }
   }, [currentUserId, isAuthenticated, handleFetchUserEmployerProfile]);
 
   // Handle postjob redirect
   useEffect(() => {
-    if (postjob === "1") {
-      if (!hasUserProfile()) {
-        toast.error("Please complete your employer profile first");
-        setShowProfileModal(true);
-        setFilter("Profile Setup");
-      } else {
-        setFilter("Upload Job");
+    try {
+      console.log('Postjob redirect check:', { 
+        postjob, 
+        userProfile, 
+        hasProfile: hasUserProfile(), 
+        currentUserId 
+      });
+      
+      if (postjob === "1") {
+        if (!hasUserProfile()) {
+          console.log('No user profile found, showing profile setup modal');
+          toast.error("Please complete your employer profile first");
+          setShowProfileModal(true);
+          setFilter("Profile Setup");
+        } else {
+          console.log('User profile exists, showing upload job');
+          setFilter("Upload Job");
+        }
       }
+    } catch (error) {
+      console.error('Error in postjob redirect handler:', error);
     }
-  }, [postjob, hasUserProfile]);
+  }, [postjob, hasUserProfile, userProfile, currentUserId]);
 
   // Update profile form when userProfile changes
   useEffect(() => {
+    console.log('User profile changed:', userProfile);
     if (userProfile) {
       setProfileForm({
         company_name: userProfile.company_name,
@@ -159,7 +211,9 @@ const EmployerApplicationsPage = () => {
   // Handle success messages
   useEffect(() => {
     if (successMessage) {
-      toast.success(successMessage);
+      
+      const message = typeof successMessage === 'string' ? successMessage : 'Operation completed successfully';
+      toast.success(message);
       handleClearState();
       setShowProfileModal(false);
       setShowEditModal(false);
@@ -170,7 +224,9 @@ const EmployerApplicationsPage = () => {
   useEffect(() => {
     if (profileError) {
       console.error('Profile error:', profileError);
-      toast.error(profileError);
+      // Ensure profileError is a string
+      const errorMessage = typeof profileError === 'string' ? profileError : 'An error occurred with your profile';
+      toast.error(errorMessage);
       handleClearState();
     }
   }, [profileError, handleClearState]);
@@ -269,9 +325,37 @@ const EmployerApplicationsPage = () => {
       return;
     }
 
+    console.log('Profile form data before submission:', profileForm);
+    console.log('User data:', user);
+    console.log('Authentication status:', isAuthenticated);
+
     try {
-     
-      await handleCreateEmployerProfile(profileForm);
+      const result = await handleCreateEmployerProfile(profileForm);
+      
+      // Check if the action was rejected 
+      if (result.type.endsWith('/rejected')) {
+        const errorPayload = result.payload;
+        
+        // Handle field errors
+        if (errorPayload && typeof errorPayload === 'object' && 'fieldErrors' in errorPayload) {
+          const backendErrors: Record<string, string> = {};
+          const payloadWithErrors = errorPayload as { fieldErrors: Record<string, string[]> };
+          
+          Object.entries(payloadWithErrors.fieldErrors).forEach(([field, messages]) => {
+            if (Array.isArray(messages) && messages.length > 0) {
+              backendErrors[field] = messages[0];
+            }
+          });
+          
+          setProfileErrors(backendErrors);
+          toast.error(`Please fix ${Object.keys(backendErrors).length} validation error${Object.keys(backendErrors).length > 1 ? 's' : ''}`);
+        } else {
+          toast.error(typeof errorPayload === 'string' ? errorPayload : "Failed to create profile");
+        }
+      } else if (result.type.endsWith('/fulfilled')) {
+        // Profile created successfully
+        console.log('Profile created successfully:', result.payload);
+      }
     } catch (error: any) {
       console.error('Profile creation error:', error);
       toast.error(error?.message || "Failed to create profile");
@@ -332,8 +416,8 @@ const EmployerApplicationsPage = () => {
     }
   };
 
-  // Show loading state
-  if (profileLoading && !userProfile) {
+  // Show loading state during SSR or initial client load
+  if (!isClient || (profileLoading && !userProfile)) {
     return (
       <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
         <div className="animate-pulse space-y-4">

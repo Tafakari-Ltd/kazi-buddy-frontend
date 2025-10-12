@@ -10,8 +10,11 @@ import { Job, JobStatus } from '@/types/job.types';
 
 const EmployerJobsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { jobs, loading } = useSelector((state: RootState) => state.jobs);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { jobs, loading, error } = useSelector((state: RootState) => state.jobs);
+  const { user, userId } = useSelector((state: RootState) => state.auth);
+  
+  // Get the actual user ID 
+  const currentUserId = userId || user?.user_id || user?.id;
   
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -19,10 +22,22 @@ const EmployerJobsPage = () => {
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
 
   useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchJobsByEmployer(user.id));
+    console.log('Auth state in manage jobs:', { user, userId, currentUserId });
+    if (currentUserId) {
+      console.log('Fetching jobs for employer:', currentUserId);
+      dispatch(fetchJobsByEmployer(currentUserId));
+    } else {
+      console.log('No user ID found for fetching jobs');
     }
-  }, [dispatch, user?.id]);
+  }, [dispatch, currentUserId]);
+  
+  // Log error if jobs fetch fails
+  useEffect(() => {
+    if (error) {
+      console.error('Jobs fetch error:', error);
+      toast.error(`Error loading jobs: ${error}`);
+    }
+  }, [error]);
 
   const handleViewJob = (job: Job) => {
     setSelectedJob(job);
@@ -39,8 +54,8 @@ const EmployerJobsPage = () => {
       const result = await dispatch(deleteJob(jobToDelete.id));
       if (deleteJob.fulfilled.match(result)) {
         toast.success('Job deleted successfully');
-        if (user?.id) {
-          dispatch(fetchJobsByEmployer(user.id)); // Refresh the list
+        if (currentUserId) {
+          dispatch(fetchJobsByEmployer(currentUserId)); // Refresh the list
         }
       } else {
         toast.error('Failed to delete job');
@@ -56,8 +71,8 @@ const EmployerJobsPage = () => {
     
     if (updateJobStatus.fulfilled.match(result)) {
       toast.success(`Job ${newStatus === 'active' ? 'activated' : 'paused'} successfully`);
-      if (user?.id) {
-        dispatch(fetchJobsByEmployer(user.id)); // Refresh the list
+      if (currentUserId) {
+        dispatch(fetchJobsByEmployer(currentUserId)); // Refresh the list
       }
     } else {
       toast.error('Failed to update job status');

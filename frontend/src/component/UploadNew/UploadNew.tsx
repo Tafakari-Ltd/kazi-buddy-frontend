@@ -4,9 +4,26 @@ import { UploadCloud } from "lucide-react";
 import JobPostingModal from "../JobPostingModal/JobPostingModal";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/Redux/Store/Store";
+import { fetchJobsByEmployer } from "@/Redux/Features/jobsSlice";
 
 const UploadNew = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, userId } = useSelector((state: RootState) => state.auth);
   const [createModal, setCreateModal] = useState<boolean>(false);
+  
+  // Get the actual user ID
+  const currentUserId = userId || user?.user_id || user?.id;
+  
+  const handleModalClose = () => {
+    setCreateModal(false);
+    // Refresh the jobs list after modal closes to show any newly created jobs
+    if (currentUserId) {
+      console.log('Refreshing jobs list after modal close');
+      dispatch(fetchJobsByEmployer(currentUserId));
+    }
+  };
 
   return (
     <div>
@@ -36,7 +53,7 @@ const UploadNew = () => {
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-50"
           >
-            <JobPostingModal onClose={() => setCreateModal(false)} />
+            <JobPostingModal onClose={handleModalClose} />
           </motion.div>
         )}
       </AnimatePresence>

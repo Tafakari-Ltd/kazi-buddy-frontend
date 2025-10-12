@@ -57,7 +57,7 @@ export const fetchJobs = createAsyncThunk<
       const url = `/jobs/${queryString ? `?${queryString}` : ''}`;
       
       const response = await api.get(url);
-      return response.data || response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch jobs"
@@ -76,7 +76,7 @@ export const fetchJobById = createAsyncThunk<
   async (jobId, { rejectWithValue }) => {
     try {
       const response = await api.get(`/jobs/${jobId}/`);
-      return response.data || response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch job details"
@@ -95,7 +95,7 @@ export const createJob = createAsyncThunk<
   async (jobData, { rejectWithValue }) => {
     try {
       const response = await api.post("/jobs/create/", jobData);
-      return response.data || response;
+      return response.data;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
@@ -118,7 +118,7 @@ export const updateJob = createAsyncThunk<
   async ({ jobId, data }, { rejectWithValue }) => {
     try {
       const response = await api.put(`/jobs/update/${jobId}/`, data);
-      return response.data || response;
+      return response.data;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
@@ -178,9 +178,13 @@ export const fetchJobsByEmployer = createAsyncThunk<
   "jobs/fetchJobsByEmployer",
   async (employerId, { rejectWithValue }) => {
     try {
+      console.log('Fetching jobs for employer ID:', employerId);
+      // Try with employer_id parameter first
       const response = await api.get(`/jobs/employers/?employer_id=${employerId}`);
-      return response.data || response;
+      console.log('Jobs fetch response:', response.data);
+      return response.data;
     } catch (error: any) {
+      console.error('Failed to fetch jobs by employer:', error);
       return rejectWithValue(
         error?.message || "Failed to fetch jobs by employer"
       );
@@ -198,7 +202,7 @@ export const fetchJobsByCategory = createAsyncThunk<
   async (categoryId, { rejectWithValue }) => {
     try {
       const response = await api.get(`/jobs/category/${categoryId}/filter/`);
-      return response.data || response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch jobs by category"

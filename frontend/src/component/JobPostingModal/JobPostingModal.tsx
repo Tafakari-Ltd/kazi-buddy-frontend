@@ -36,9 +36,13 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
     (state: RootState) => state.categories
   );
   const { user, userId } = useSelector((state: RootState) => state.auth);
+  const { userProfile } = useSelector((state: RootState) => state.employerProfiles);
   
-  // Get the actual user ID - try userId field first, then user.user_id
-  const currentUserId = userId || user?.user_id;
+  // Get the actual user ID 
+  const currentUserId = userId || user?.user_id || user?.id;
+  
+  // Get employer profile ID for job creation
+  const employerProfileId = userProfile?.id;
 
   type FormDataType = {
     title: string;
@@ -146,12 +150,19 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    // Get employer ID from authenticated user's profile
-    const employerId = currentUserId;
+    // Get employer ID from employer profile
+    const employerId = employerProfileId;
     if (!employerId) {
-      toast.error("You must be logged in to create a job");
+      toast.error("You must have a complete employer profile to create a job");
       return;
     }
+    
+    console.log('Creating job with data:', {
+      employerId,
+      currentUserId,
+      userProfile,
+      formData
+    });
 
     try {
       
@@ -178,7 +189,8 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
       const resultAction = await dispatch(createJob(jobData));
 
       if (createJob.fulfilled.match(resultAction)) {
-        
+        console.log('Job created successfully:', resultAction.payload);
+        // The success message and modal closing is handled in useEffect
       } else if (createJob.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
         
