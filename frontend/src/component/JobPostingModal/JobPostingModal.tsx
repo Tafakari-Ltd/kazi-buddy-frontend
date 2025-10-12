@@ -35,7 +35,10 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
   const { categories, loading: categoriesLoading } = useSelector(
     (state: RootState) => state.categories
   );
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, userId } = useSelector((state: RootState) => state.auth);
+  
+  // Get the actual user ID - try userId field first, then user.user_id
+  const currentUserId = userId || user?.user_id;
 
   type FormDataType = {
     title: string;
@@ -143,8 +146,8 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    // Get employer ID from authenticated user
-    const employerId = user?.id;
+    // Get employer ID from authenticated user's profile
+    const employerId = currentUserId;
     if (!employerId) {
       toast.error("You must be logged in to create a job");
       return;

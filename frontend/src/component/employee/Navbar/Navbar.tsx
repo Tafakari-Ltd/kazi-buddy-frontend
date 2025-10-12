@@ -43,7 +43,9 @@ const Navbar = () => {
     }
   };
 
-  const displayId = user?.user_id ? user.user_id.slice(0, 8) : "N/A";
+  // Get user ID from auth state - try userId field first, then user.user_id
+  const userId = useSelector((state: RootState) => state.auth.userId) || user?.user_id;
+  const displayId = userId ? userId.slice(0, 8) : "N/A";
 
   return (
     <div className="h-16 w-full bg-white border-b border-gray-200 px-6 fixed top-0 left-0 right-0 z-50 shadow-sm">
@@ -107,7 +109,7 @@ const Navbar = () => {
                   {/* Truncated ID with hover tooltip */}
                   <span
                     className="text-xs text-gray-500 cursor-pointer"
-                    title={user?.user_id}
+                    title={userId}
                   >
                     ID: {displayId}
                   </span>
@@ -139,7 +141,7 @@ const Navbar = () => {
                 >
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-800">{user?.full_name}</p>
-                    <p className="text-xs text-gray-500" title={user?.user_id}>
+                    <p className="text-xs text-gray-500" title={userId}>
                       ID: {displayId}
                     </p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
