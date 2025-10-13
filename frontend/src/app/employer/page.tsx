@@ -506,8 +506,9 @@ const EmployerApplicationsPage = () => {
           <button
             key={statusOption}
             onClick={() => {
-              if (postjob === "1") {
-                router.push("/employer");
+             
+              if (postjob === "1" && statusOption !== "Upload Job") {
+                router.replace("/employer");
               }
               setFilter(statusOption);
             }}

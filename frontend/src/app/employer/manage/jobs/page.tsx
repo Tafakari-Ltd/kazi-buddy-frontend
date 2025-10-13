@@ -29,6 +29,12 @@ const EmployerJobsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // First fetch the user's employer profile
   useEffect(() => {
@@ -46,6 +52,8 @@ const EmployerJobsPage = () => {
       dispatch(fetchJobsByEmployer(employerProfileId));
     } else if (currentUserId && !userProfile) {
       console.log('Employer profile not loaded yet, will fetch jobs once profile is available');
+    } else if (!currentUserId) {
+      console.log('No user ID found');
     } else {
       console.log('No employer profile found - user may not have completed employer setup');
     }
@@ -134,11 +142,13 @@ const EmployerJobsPage = () => {
     return `KSh ${amount.toLocaleString()}`;
   };
 
-  if (loading) {
+  // Show loading state during SSR or initial client load
+  if (!isClient || loading || (currentUserId && !userProfile && !error)) {
     return (
-      <div className="p-6">
+      <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="h-20 bg-gray-200 rounded"></div>
@@ -150,30 +160,32 @@ const EmployerJobsPage = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <div className="flex justify-between items-start">
+    <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="container mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
-            <p className="text-gray-600 mt-1">Manage your posted jobs and track applications</p>
+            <h1 className="text-3xl font-bold text-red-800">My Job Postings</h1>
+            <p className="text-gray-600 mt-2">Manage your posted jobs and track applications</p>
           </div>
           <button
             onClick={handleCreateJob}
-            className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="flex items-center gap-2 bg-red-800 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4" />
             Create Job Posting
           </button>
         </div>
       </div>
 
       {jobs.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2" />
-            </svg>
-          </div>
+        <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2" />
+              </svg>
+            </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {!employerProfileId ? 'Complete your employer profile first' : 'No jobs posted yet'}
           </h3>
@@ -199,9 +211,11 @@ const EmployerJobsPage = () => {
               Create Job Posting
             </button>
           )}
+          </div>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="container">
+          <div className="grid gap-4">
           {jobs.map((job) => (
             <div key={job.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
@@ -279,6 +293,7 @@ const EmployerJobsPage = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 
