@@ -133,6 +133,7 @@ const EmployerApplicationsPage = () => {
   const [applicationToReject, setApplicationToReject] = useState<Application | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showJobModal, setShowJobModal] = useState(false);
   
   // Profile form state
   const [profileForm, setProfileForm] = useState({

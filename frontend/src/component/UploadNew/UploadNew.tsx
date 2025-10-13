@@ -8,9 +8,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { fetchJobsByEmployer } from "@/Redux/Features/jobsSlice";
 import { useEmployerProfiles } from "@/Redux/Functions/useEmployerProfiles";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const UploadNew = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { user, userId } = useSelector((state: RootState) => state.auth);
   const [createModal, setCreateModal] = useState<boolean>(false);
   
@@ -23,14 +26,26 @@ const UploadNew = () => {
   // Get the employer profile ID 
   const employerProfileId = userProfile?.id;
   
-  const handleModalClose = () => {
+  const handleModalClose = (jobCreated = false) => {
     setCreateModal(false);
-    // Refresh the jobs list after modal closes to show any newly created jobs
-    if (employerProfileId) {
-      console.log('Refreshing jobs list after modal close for employer profile ID:', employerProfileId);
-      dispatch(fetchJobsByEmployer(employerProfileId));
+    
+    if (jobCreated) {
+      // Redirect to manage jobs page to show the newly created job
+      console.log('Job created successfully, redirecting to manage jobs page');
+      toast.info('Redirecting to manage jobs...', {
+        duration: 1000,
+      });
+
+      setTimeout(() => {
+        router.push('/employer/manage/jobs');
+      }, 1000);
+      return; // Exit early to prevent the job refresh
     } else {
-      console.log('No employer profile ID available for job refresh');
+      // If no job was created, just refresh the current jobs list
+      if (employerProfileId) {
+        console.log('Modal closed without job creation, refreshing current jobs list');
+        dispatch(fetchJobsByEmployer(employerProfileId));
+      }
     }
   };
 
@@ -62,7 +77,10 @@ const UploadNew = () => {
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-50"
           >
-            <JobPostingModal onClose={handleModalClose} />
+            <JobPostingModal 
+              onClose={() => handleModalClose(false)} 
+              onSuccess={() => handleModalClose(true)} 
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -27,7 +27,7 @@ const PAYMENT_TYPES = [
   { value: PaymentType.HOURLY, label: "Hourly Rate" }
 ];
 
-const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
+const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, successMessage } = useSelector(
     (state: RootState) => state.jobs
@@ -95,9 +95,13 @@ const JobPostingModal = ({ onClose }: { onClose: () => void }) => {
     if (successMessage) {
       toast.success(successMessage);
       dispatch(clearState());
-      onClose(); 
+      if (onSuccess) {
+        onSuccess(); // Call success callback if provided
+      } else {
+        onClose(); // Fallback to regular close
+      }
     }
-  }, [successMessage, dispatch, onClose]);
+  }, [successMessage, dispatch, onClose, onSuccess]);
 
   const handleChange = (field: keyof FormDataType, value: string | JobType | UrgencyLevel | PaymentType | JobStatus | JobVisibility) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useJobs } from "@/Redux/Functions/useJobs";
 import { useCategories } from "@/Redux/Functions/useCategories";
@@ -119,7 +119,7 @@ const JobsManagementPage = () => {
 
   // Apply filters when they change
   useEffect(() => {
-    // Build the filters object with proper types
+    
     const processedFilters: any = {
       page: 1,
       limit: 10,
@@ -231,6 +231,26 @@ const JobsManagementPage = () => {
     const category = categories.find(cat => cat.id === categoryId);
     return category?.name || 'Unknown Category';
   };
+
+  // Group current jobs by category for sectioned rendering
+  const groupedByCategory = useMemo(() => {
+    if (!jobs || jobs.length === 0) return [] as { categoryId: string; categoryName: string; jobs: Job[] }[];
+    const map = new Map<string, { categoryId: string; categoryName: string; jobs: Job[] }>();
+    jobs.forEach((j: any) => {
+      const catRaw = j?.category;
+      const catId: string = typeof catRaw === 'string' 
+        ? catRaw 
+        : (catRaw?.id ? String(catRaw.id) : 'uncategorized');
+      const catName: string = (typeof catRaw === 'object' && catRaw?.name)
+        ? catRaw.name
+        : getCategoryName(catId);
+      if (!map.has(catId)) {
+        map.set(catId, { categoryId: catId, categoryName: catName, jobs: [] });
+      }
+      map.get(catId)!.jobs.push(j as Job);
+    });
+    return Array.from(map.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+  }, [jobs, categories]);
 
   // Create job form functions
   const validateCreateForm = (): boolean => {
@@ -558,92 +578,108 @@ const JobsManagementPage = () => {
             </div>
           ) : (
             <>
-              {jobs.map((job) => (
-                <div key={job.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 truncate">
-                              {job.title}
-                            </h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                              {JOB_STATUS_OPTIONS.find(opt => opt.value === job.status)?.label}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(job.urgency_level)}`}>
-                              {URGENCY_LEVEL_OPTIONS.find(opt => opt.value === job.urgency_level)?.label}
-                            </span>
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                            {job.description}
-                          </p>
+              {groupedByCategory.map((section) => (
+                <div key={section.categoryId} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-gray-800">{section.categoryName}</h2>
+                    <span className="text-xs text-gray-500">{section.jobs.length} job{section.jobs.length !== 1 ? 's' : ''}</span>
+                  </div>
 
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
-                              {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {job.location}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {formatDate(job.start_date)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              {job.max_applicants} max applicants
+                  <div className="p-6 space-y-4">
+                    {section.jobs.map((job) => (
+                      <div key={job.id} className="rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                    {job.title}
+                                  </h3>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
+                                    {JOB_STATUS_OPTIONS.find(opt => opt.value === job.status)?.label}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(job.urgency_level)}`}>
+                                    {URGENCY_LEVEL_OPTIONS.find(opt => opt.value === job.urgency_level)?.label}
+                                  </span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                    {typeof (job as any).category === 'object' && (job as any).category?.name
+                                      ? (job as any).category.name
+                                      : getCategoryName(typeof (job as any).category === 'object' ? (job as any).category?.id : (job as any).category)}
+                                  </span>
+                                </div>
+                                
+                                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                                  {job.description}
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="w-4 h-4" />
+                                    {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="w-4 h-4" />
+                                    {job.location}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-4 h-4" />
+                                    {formatDate(job.start_date)}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users className="w-4 h-4" />
+                                    {job.max_applicants} max applicants
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleViewClick(job)}
+                                  className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <a
+                                  href={`/admin/jobs/edit/${job.id}`}
+                                  className="text-yellow-600 hover:text-yellow-900 p-2 rounded-lg hover:bg-yellow-50 transition-colors"
+                                  title="Edit Job"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteClick(job.id)}
+                                  className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                  title="Delete Job"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                                
+                                {/* Status Toggle */}
+                                {job.status === 'active' ? (
+                                  <button
+                                    onClick={() => handleStatusChange(job.id, JobStatus.PAUSED)}
+                                    className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors"
+                                    title="Pause Job"
+                                  >
+                                    <Pause className="w-4 h-4" />
+                                  </button>
+                                ) : job.status === 'paused' ? (
+                                  <button
+                                    onClick={() => handleStatusChange(job.id, JobStatus.ACTIVE)}
+                                    className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                    title="Activate Job"
+                                  >
+                                    <Play className="w-4 h-4" />
+                                  </button>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleViewClick(job)}
-                            className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <a
-                            href={`/admin/jobs/edit/${job.id}`}
-                            className="text-yellow-600 hover:text-yellow-900 p-2 rounded-lg hover:bg-yellow-50 transition-colors"
-                            title="Edit Job"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </a>
-                          <button
-                            onClick={() => handleDeleteClick(job.id)}
-                            className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                            title="Delete Job"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                          
-                          {/* Status Toggle */}
-                          {job.status === 'active' ? (
-                            <button
-                              onClick={() => handleStatusChange(job.id, JobStatus.PAUSED)}
-                              className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors"
-                              title="Pause Job"
-                            >
-                              <Pause className="w-4 h-4" />
-                            </button>
-                          ) : job.status === 'paused' ? (
-                            <button
-                              onClick={() => handleStatusChange(job.id, JobStatus.ACTIVE)}
-                              className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors"
-                              title="Activate Job"
-                            >
-                              <Play className="w-4 h-4" />
-                            </button>
-                          ) : null}
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -707,7 +743,7 @@ const JobsManagementPage = () => {
         )}
       </AnimatePresence>
 
-      {/* View Job Modal - We'll create this next */}
+    
       {/* View Job Modal */}
       <AnimatePresence>
         {showViewModal && jobToView && (
