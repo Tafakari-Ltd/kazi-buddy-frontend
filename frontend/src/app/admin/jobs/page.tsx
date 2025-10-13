@@ -46,6 +46,7 @@ import { useSearchParams } from "next/navigation";
 const JobsManagementPage = () => {
   const searchParams = useSearchParams();
   const statusParam = searchParams?.get('status') as JobStatus | null;
+  const jobIdParam = searchParams?.get('jobId');
 
   const {
     jobs,
@@ -116,6 +117,17 @@ const JobsManagementPage = () => {
     handleFetchJobs();
     handleFetchCategories();
   }, []);
+
+  // Open view modal if jobId is provided in query params and jobs are loaded
+  useEffect(() => {
+    if (jobIdParam && !loading && jobs.length > 0) {
+      const job = jobs.find(j => j.id === jobIdParam);
+      if (job) {
+        setJobToView(job);
+        setShowViewModal(true);
+      }
+    }
+  }, [jobIdParam, loading, jobs]);
 
   // Apply filters when they change
   useEffect(() => {
@@ -755,7 +767,7 @@ const JobsManagementPage = () => {
         )}
       </AnimatePresence>
 
-      {/* View Job Modal - We'll create this next */}
+      
       {/* View Job Modal */}
       <AnimatePresence>
         {showViewModal && jobToView && (
