@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Edit2, Trash2, Eye, MoreVertical, Calendar, MapPin, DollarSign, Users, Clock } from 'lucide-react';
+import { Edit2, Trash2, Eye, MoreVertical, Calendar, MapPin, DollarSign, Users, Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDispatch, RootState } from '@/Redux/Store/Store';
 import { fetchJobsByEmployer, deleteJob, updateJobStatus } from '@/Redux/Features/jobsSlice';
 import { Job, JobStatus } from '@/types/job.types';
 import { useEmployerProfiles } from '@/Redux/Functions/useEmployerProfiles';
+import JobPostingModal from '@/component/JobPostingModal/JobPostingModal';
 
 const EmployerJobsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -27,6 +28,7 @@ const EmployerJobsPage = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // First fetch the user's employer profile
   useEffect(() => {
@@ -65,6 +67,22 @@ const EmployerJobsPage = () => {
   const handleDeleteJob = (job: Job) => {
     setJobToDelete(job);
     setShowDeleteModal(true);
+  };
+
+  const handleCreateJob = () => {
+    if (!employerProfileId) {
+      toast.error('Please complete your employer profile first');
+      return;
+    }
+    setShowCreateModal(true);
+  };
+
+  const handleCreateModalClose = () => {
+    setShowCreateModal(false);
+    // Refresh the jobs list to show newly created jobs
+    if (employerProfileId) {
+      dispatch(fetchJobsByEmployer(employerProfileId));
+    }
   };
 
   const confirmDelete = async () => {
@@ -134,8 +152,19 @@ const EmployerJobsPage = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
-        <p className="text-gray-600 mt-1">Manage your posted jobs and track applications</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
+            <p className="text-gray-600 mt-1">Manage your posted jobs and track applications</p>
+          </div>
+          <button
+            onClick={handleCreateJob}
+            className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Job Posting
+          </button>
+        </div>
       </div>
 
       {jobs.length === 0 ? (
@@ -154,12 +183,22 @@ const EmployerJobsPage = () => {
               : 'Create your first job posting to start finding candidates'
             }
           </p>
-          <a 
-            href={!employerProfileId ? "/employer?postjob=1" : "/employer?postjob=1"} 
-            className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            {!employerProfileId ? 'Complete Profile' : 'Create Job Posting'}
-          </a>
+          {!employerProfileId ? (
+            <a 
+              href="/employer?postjob=1" 
+              className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Complete Profile
+            </a>
+          ) : (
+            <button
+              onClick={handleCreateJob}
+              className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Job Posting
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4">
@@ -357,6 +396,11 @@ const EmployerJobsPage = () => {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Job Creation Modal */}
+      {showCreateModal && (
+        <JobPostingModal onClose={handleCreateModalClose} />
       )}
     </div>
   );
