@@ -119,7 +119,7 @@ const JobsManagementPage = () => {
 
   // Apply filters when they change
   useEffect(() => {
-    
+    // Build the filters object with proper types
     const processedFilters: any = {
       page: 1,
       limit: 10,
@@ -232,11 +232,23 @@ const JobsManagementPage = () => {
     return category?.name || 'Unknown Category';
   };
 
+  // Apply local category filter
+  const displayedJobs = useMemo(() => {
+    if (!localFilters.category) return jobs;
+    return jobs.filter((j: any) => {
+      const catRaw = j?.category;
+      const catId: string = typeof catRaw === 'string'
+        ? catRaw
+        : (catRaw?.id ? String(catRaw.id) : '');
+      return catId === localFilters.category;
+    });
+  }, [jobs, localFilters.category]);
+
   // Group current jobs by category for sectioned rendering
   const groupedByCategory = useMemo(() => {
-    if (!jobs || jobs.length === 0) return [] as { categoryId: string; categoryName: string; jobs: Job[] }[];
+    if (!displayedJobs || displayedJobs.length === 0) return [] as { categoryId: string; categoryName: string; jobs: Job[] }[];
     const map = new Map<string, { categoryId: string; categoryName: string; jobs: Job[] }>();
-    jobs.forEach((j: any) => {
+    displayedJobs.forEach((j: any) => {
       const catRaw = j?.category;
       const catId: string = typeof catRaw === 'string' 
         ? catRaw 
@@ -250,7 +262,7 @@ const JobsManagementPage = () => {
       map.get(catId)!.jobs.push(j as Job);
     });
     return Array.from(map.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
-  }, [jobs, categories]);
+  }, [displayedJobs, categories]);
 
   // Create job form functions
   const validateCreateForm = (): boolean => {
@@ -556,7 +568,7 @@ const JobsManagementPage = () => {
       {/* Jobs Grid/List */}
       {!loading && (
         <div className="space-y-4">
-          {jobs.length === 0 ? (
+          {displayedJobs.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Briefcase className="w-16 h-16 mx-auto" />
@@ -743,7 +755,7 @@ const JobsManagementPage = () => {
         )}
       </AnimatePresence>
 
-    
+      {/* View Job Modal - We'll create this next */}
       {/* View Job Modal */}
       <AnimatePresence>
         {showViewModal && jobToView && (

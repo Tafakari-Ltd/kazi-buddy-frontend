@@ -179,7 +179,13 @@ const handleEditJob = useCallback((job: Job) => {
   // Filter jobs by selected category (client-side)
   const filteredJobs = useMemo(() => {
     if (!selectedCategoryId) return jobs;
-    return jobs.filter(j => j.category === selectedCategoryId);
+    return jobs.filter((j: any) => {
+      const catRaw = j?.category;
+      const catId: string = typeof catRaw === 'string'
+        ? catRaw
+        : (catRaw?.id ? String(catRaw.id) : '');
+      return catId === selectedCategoryId;
+    });
   }, [jobs, selectedCategoryId]);
 
   // Group filtered jobs by category
