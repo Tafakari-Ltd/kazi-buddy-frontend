@@ -7,29 +7,47 @@ import { toast } from 'sonner';
 import { AppDispatch, RootState } from '@/Redux/Store/Store';
 import { fetchJobsByEmployer, deleteJob, updateJobStatus } from '@/Redux/Features/jobsSlice';
 import { Job, JobStatus } from '@/types/job.types';
+import { useEmployerProfiles } from '@/Redux/Functions/useEmployerProfiles';
 
 const EmployerJobsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { jobs, loading, error } = useSelector((state: RootState) => state.jobs);
   const { user, userId } = useSelector((state: RootState) => state.auth);
   
+  // Get employer profile information
+  const { userProfile, handleFetchUserEmployerProfile } = useEmployerProfiles();
+  
   // Get the actual user ID 
   const currentUserId = userId || user?.user_id || user?.id;
+  
+  // Get the employer profile ID (this is what should be used for job operations)
+  const employerProfileId = userProfile?.id;
   
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
 
+  // First fetch the user's employer profile
   useEffect(() => {
-    console.log('Auth state in manage jobs:', { user, userId, currentUserId });
     if (currentUserId) {
-      console.log('Fetching jobs for employer:', currentUserId);
-      dispatch(fetchJobsByEmployer(currentUserId));
-    } else {
-      console.log('No user ID found for fetching jobs');
+      console.log('Fetching employer profile for user:', currentUserId);
+      handleFetchUserEmployerProfile(currentUserId);
     }
-  }, [dispatch, currentUserId]);
+  }, [currentUserId, handleFetchUserEmployerProfile]);
+  
+  // Then fetch jobs using the employer profile ID
+  useEffect(() => {
+    console.log('Auth state in manage jobs:', { user, userId, currentUserId, userProfile, employerProfileId });
+    if (employerProfileId) {
+      console.log('Fetching jobs for employer profile ID:', employerProfileId);
+      dispatch(fetchJobsByEmployer(employerProfileId));
+    } else if (currentUserId && !userProfile) {
+      console.log('Employer profile not loaded yet, will fetch jobs once profile is available');
+    } else {
+      console.log('No employer profile found - user may not have completed employer setup');
+    }
+  }, [dispatch, employerProfileId, userProfile, currentUserId]);
   
   // Log error if jobs fetch fails
   useEffect(() => {
@@ -54,8 +72,8 @@ const EmployerJobsPage = () => {
       const result = await dispatch(deleteJob(jobToDelete.id));
       if (deleteJob.fulfilled.match(result)) {
         toast.success('Job deleted successfully');
-        if (currentUserId) {
-          dispatch(fetchJobsByEmployer(currentUserId)); // Refresh the list
+        if (employerProfileId) {
+          dispatch(fetchJobsByEmployer(employerProfileId)); // Refresh the list
         }
       } else {
         toast.error('Failed to delete job');
@@ -71,8 +89,8 @@ const EmployerJobsPage = () => {
     
     if (updateJobStatus.fulfilled.match(result)) {
       toast.success(`Job ${newStatus === 'active' ? 'activated' : 'paused'} successfully`);
-      if (currentUserId) {
-        dispatch(fetchJobsByEmployer(currentUserId)); // Refresh the list
+      if (employerProfileId) {
+        dispatch(fetchJobsByEmployer(employerProfileId)); // Refresh the list
       }
     } else {
       toast.error('Failed to update job status');
@@ -127,10 +145,20 @@ const EmployerJobsPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs posted yet</h3>
-          <p className="text-gray-500 mb-4">Create your first job posting to start finding candidates</p>
-          <a href="/employer?postjob=1" className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors">
-            Create Job Posting
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {!employerProfileId ? 'Complete your employer profile first' : 'No jobs posted yet'}
+          </h3>
+          <p className="text-gray-500 mb-4">
+            {!employerProfileId 
+              ? 'You need to complete your employer profile before you can manage jobs' 
+              : 'Create your first job posting to start finding candidates'
+            }
+          </p>
+          <a 
+            href={!employerProfileId ? "/employer?postjob=1" : "/employer?postjob=1"} 
+            className="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            {!employerProfileId ? 'Complete Profile' : 'Create Job Posting'}
           </a>
         </div>
       ) : (

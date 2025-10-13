@@ -7,21 +7,30 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { fetchJobsByEmployer } from "@/Redux/Features/jobsSlice";
+import { useEmployerProfiles } from "@/Redux/Functions/useEmployerProfiles";
 
 const UploadNew = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, userId } = useSelector((state: RootState) => state.auth);
   const [createModal, setCreateModal] = useState<boolean>(false);
   
+  // Get employer profile information
+  const { userProfile } = useEmployerProfiles();
+  
   // Get the actual user ID
   const currentUserId = userId || user?.user_id || user?.id;
+  
+  // Get the employer profile ID 
+  const employerProfileId = userProfile?.id;
   
   const handleModalClose = () => {
     setCreateModal(false);
     // Refresh the jobs list after modal closes to show any newly created jobs
-    if (currentUserId) {
-      console.log('Refreshing jobs list after modal close');
-      dispatch(fetchJobsByEmployer(currentUserId));
+    if (employerProfileId) {
+      console.log('Refreshing jobs list after modal close for employer profile ID:', employerProfileId);
+      dispatch(fetchJobsByEmployer(employerProfileId));
+    } else {
+      console.log('No employer profile ID available for job refresh');
     }
   };
 

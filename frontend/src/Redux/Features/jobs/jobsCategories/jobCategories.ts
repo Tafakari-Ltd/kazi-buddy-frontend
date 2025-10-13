@@ -36,7 +36,7 @@ export const fetchCategories = createAsyncThunk<
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get("/jobs/categories/");
-      // Handle the nested data structure from your API
+    
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
@@ -193,7 +193,7 @@ const categoriesSlice = createSlice({
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
+    });
 
     // Fetch single category
     builder
