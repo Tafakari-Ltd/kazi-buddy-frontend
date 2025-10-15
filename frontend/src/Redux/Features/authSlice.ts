@@ -14,7 +14,7 @@ export const login = createAsyncThunk<
     { rejectValue: string }
 >("auth/login", async ({ email, password }, { rejectWithValue }) => {
     try {
-        const res: ILoginResponse = await api.post("accounts/login/", {
+        const res: ILoginResponse = await api.post("/accounts/login/", {
             identifier: email,
             password,
         });
@@ -28,7 +28,7 @@ export const login = createAsyncThunk<
         const userId = res.user_id;
 
         // Fetch user details
-        const user = await api.get("accounts/me/", {
+        const user = await api.get("/accounts/me/", {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
 

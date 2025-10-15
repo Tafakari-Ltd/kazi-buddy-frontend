@@ -50,7 +50,11 @@ api.interceptors.response.use(
                 status: error.response.status,
                 data: error.response.data,
                 url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers,
+                requestData: error.config?.data,
             });
+            console.error("Full error object:", error);
             
             if (error.response.status === 401) {
                 if (typeof window !== "undefined") {

@@ -17,5 +17,5 @@ export default function AuthWatcher() {
         }
     }, [isAuthenticated, router]);
 
-    return null; // Invisible
+    return null; 
 }

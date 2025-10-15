@@ -1,4 +1,4 @@
-import { Home, Users, HardHat, Briefcase, Shield } from "lucide-react";
+import { Home, Users, HardHat, Briefcase, Shield, Tags } from "lucide-react";
 export const menuItems = [
   {
     id: "dashboard",
@@ -38,10 +38,22 @@ export const menuItems = [
     href: "/jobs",
     badge: "12",
     submenu: [
-      { label: "Active Projects", href: "/jobs/active" },
-      { label: "Job Postings", href: "/jobs/postings" },
-      { label: "Project Timeline", href: "/jobs/timeline" },
-      { label: "Resource Allocation", href: "/jobs/resources" },
+      { label: "All Jobs", href: "/admin/jobs" },
+      { label: "Create Job", href: "/admin/jobs/create" },
+      { label: "Active Jobs", href: "/admin/jobs?status=active" },
+      { label: "Draft Jobs", href: "/admin/jobs?status=draft" },
+      { label: "Job Analytics", href: "/admin/jobs/analytics" },
+    ],
+  },
+  {
+    id: "categories",
+    label: "Categories",
+    icon: Tags,
+    href: "/categories",
+    badge: null,
+    submenu: [
+      { label: "All Categories", href: "/admin/categories" },
+      { label: "Create Category", href: "/admin/categories/create" },
     ],
   },
   {
