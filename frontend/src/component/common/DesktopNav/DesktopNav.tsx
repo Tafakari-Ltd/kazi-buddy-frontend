@@ -23,6 +23,10 @@ export const navItems: NavItem[] = [
     href: "/jobs",
   },
   {
+    label: "Workers",
+    href: "/workers",
+  },
+  {
     label: "Candidates",
     submenu: [
       { label: "Browse Jobs", href: "/jobs" },

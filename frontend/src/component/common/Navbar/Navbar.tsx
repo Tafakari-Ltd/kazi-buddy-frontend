@@ -74,6 +74,7 @@ const Navbar: React.FC = () => {
         {/* CTA Buttons (Desktop) */}
         <div className="hidden md:flex items-center space-x-3 ml-4">
           {[
+            { label: "Worker", href: "/worker" },
             { label: "Employer", href: "/employer" },
             { label: "Post Job", href: "/employer?postjob=1" },
             { label: "Admin", href: "/admin/employers/all" },
@@ -137,6 +138,7 @@ const Navbar: React.FC = () => {
                       {[
                         { label: "Profile", href: "/profile" },
                         { label: "Account Settings", href: "/account-settings" },
+                        { label: "Worker Dashboard", href: "/worker" },
                         { label: "Employer", href: "/employer" },
                         { label: "Admin", href: "/admin/employers/all" },
                       ].map(({ label, href }) => (
