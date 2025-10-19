@@ -17,7 +17,7 @@ import {
   clearFilters,
   setPagination,
 } from "../Features/jobsSlice";
-import { fetchJobSkills } from "../Features/jobs/jobSkillsSlice";
+import { fetchJobSkills } from '../Features/jobSkillsSlice'
 import { fetchJobEmployer } from "../Features/jobs/jobEmployerSlice";
 import {
   CreateJobData,
@@ -39,7 +39,7 @@ export const useJobs = () => {
     successMessage,
   } = useSelector((state: RootState) => state.jobs);
 
-  const { skills: jobSkills, loading: skillsLoading } = useSelector(
+  const { jobSkills, loading: skillsLoading } = useSelector(
     (state: RootState) => state.jobSkills
   );
 
@@ -102,8 +102,8 @@ export const useJobs = () => {
   };
 
   // Additional data operations
-  const handleFetchJobSkills = async (jobId: string) => {
-    const result = await dispatch(fetchJobSkills(jobId));
+  const handleFetchJobSkills = async () => {
+    const result = await dispatch(fetchJobSkills());
     return result.payload;
   };
 

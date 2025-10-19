@@ -96,11 +96,24 @@ export interface UpdateJobData {
 
 export interface JobSkill {
   id: string;
-  job_id: string;
-  skill_name: string;
-  required_level: SkillLevel;
+  job_id?: string;
+  skill: string;
+  experience_level: SkillLevel;
   is_required: boolean;
   created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateJobSkillData {
+  skill: string;
+  is_required: boolean;
+  experience_level: SkillLevel;
+}
+
+export interface UpdateJobSkillData {
+  skill?: string;
+  is_required?: boolean;
+  experience_level?: SkillLevel;
 }
 
 export interface JobEmployer {
@@ -158,6 +171,15 @@ export interface JobDetailResponse {
 export interface JobSkillsResponse {
   message: string;
   data: JobSkill[];
+}
+
+export interface JobSkillResponse {
+  message: string;
+  data: JobSkill;
+}
+
+export interface JobSkillDeleteResponse {
+  message: string;
 }
 
 export interface JobEmployerResponse {

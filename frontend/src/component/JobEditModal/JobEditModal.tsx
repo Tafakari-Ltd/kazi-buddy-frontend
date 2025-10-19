@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useJobs } from "@/Redux/Functions/useJobs";
 import { Job } from "@/types/job.types";
+import JobSkillsManagerV2 from "@/components/JobSkills/JobSkillsManagerV2";
 
 interface Props {
   job: Job;
@@ -122,6 +123,11 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
             </button>
           </div>
         </form>
+        
+        {/* Job Skills Section - Outside of form to avoid nesting */}
+        <div className="p-4 border-t">
+          <JobSkillsManagerV2 jobId={job.id} />
+        </div>
       </div>
     </div>
   );

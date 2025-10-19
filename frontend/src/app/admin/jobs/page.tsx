@@ -42,6 +42,7 @@ import {
   VISIBILITY_OPTIONS
 } from "@/types/job.types";
 import { useSearchParams } from "next/navigation";
+import JobSkillsManagerV2 from "@/components/JobSkills/JobSkillsManagerV2";
 
 const JobsManagementPage = () => {
   const searchParams = useSearchParams();
@@ -867,6 +868,12 @@ const JobsManagementPage = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Job Skills Section */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Job Skills</h4>
+                <JobSkillsManagerV2 jobId={jobToView.id} readonly />
               </div>
 
               <div className="flex gap-3 justify-end mt-8 pt-6 border-t border-gray-200">

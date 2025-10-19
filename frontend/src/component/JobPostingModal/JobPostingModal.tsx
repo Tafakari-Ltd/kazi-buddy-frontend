@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { createJob, clearState } from "@/Redux/Features/jobsSlice";
 import { fetchCategories } from "@/Redux/Features/jobs/jobsCategories/jobCategories";
-import { JobType, UrgencyLevel, PaymentType, JobStatus, JobVisibility } from "@/types/job.types";
+import { JobType, UrgencyLevel, PaymentType, JobStatus, JobVisibility, Job } from "@/types/job.types";
+import JobSkillsManagerV2 from "@/components/JobSkills/JobSkillsManagerV2";
 
 const JOB_TYPES = [
   { value: JobType.FULL_TIME, label: "Full-Time" },
@@ -83,6 +84,8 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<'basic' | 'skills'>('basic');
+  const [createdJob, setCreatedJob] = useState<Job | null>(null);
 
   // Fetch categories when modal opens
   useEffect(() => {
@@ -92,16 +95,21 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
   }, [dispatch, categories.length, categoriesLoading]);
 
   useEffect(() => {
-    if (successMessage) {
+    if (successMessage && step === 'basic') {
       toast.success(successMessage);
       dispatch(clearState());
+      // Don't close modal yet, move to skills step
+      // Job creation success will be handled in handleSubmit
+    } else if (successMessage && step === 'skills') {
+      toast.success("Job and skills created successfully!");
+      dispatch(clearState());
       if (onSuccess) {
-        onSuccess(); // Call success callback if provided
+        onSuccess();
       } else {
-        onClose(); // Fallback to regular close
+        onClose();
       }
     }
-  }, [successMessage, dispatch, onClose, onSuccess]);
+  }, [successMessage, dispatch, onClose, onSuccess, step]);
 
   const handleChange = (field: keyof FormDataType, value: string | JobType | UrgencyLevel | PaymentType | JobStatus | JobVisibility) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -194,7 +202,10 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
 
       if (createJob.fulfilled.match(resultAction)) {
         console.log('Job created successfully:', resultAction.payload);
-        // The success message and modal closing is handled in useEffect
+        setCreatedJob(resultAction.payload as Job);
+        setStep('skills');
+        dispatch(clearState());
+        toast.success('Job created! Now add skills (optional)');
       } else if (createJob.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
         
@@ -226,10 +237,19 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full shadow-lg max-w-[1100px]">
         <div className="p-4 border-b border-neutral-300">
-          <h3 className="text-lg font-semibold text-red-800">Create New Job</h3>
+          <h3 className="text-lg font-semibold text-red-800">
+            {step === 'basic' ? 'Create New Job' : `Add Skills - ${createdJob?.title}`}
+          </h3>
+          {step === 'skills' && (
+            <p className="text-sm text-gray-600 mt-1">
+              Add skills required for this job (optional)
+            </p>
+          )}
         </div>
 
         <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+          {step === 'basic' && (
+            <>
           {/* Error Summary */}
           {Object.keys(fieldErrors).length > 0 && (
             <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md shadow-sm">
@@ -508,22 +528,59 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
               </select>
             </div>
           </div>
+            </>
+          )}
+          
+          {step === 'skills' && createdJob && (
+            <div className="space-y-4">
+              <JobSkillsManagerV2 jobId={createdJob.id} />
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-neutral-300  flex justify-end gap-2">
-          <button
-            className="px-4 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-1 rounded text-white bg-red-800 hover:bg-red-700"
-          >
-            Create Job
-          </button>
+        <div className="p-4 border-t border-neutral-300 flex justify-between">
+          <div className="flex gap-2">
+            {step === 'skills' && (
+              <button
+                className="px-4 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                onClick={() => setStep('basic')}
+              >
+                ← Back
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="px-4 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+              onClick={onClose}
+            >
+              {step === 'skills' ? 'Close' : 'Cancel'}
+            </button>
+            {step === 'basic' ? (
+              <button
+                onClick={handleSubmit}
+                className="px-4 py-1 rounded text-white bg-red-800 hover:bg-red-700"
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : 'Create Job'}
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  toast.success('Job created successfully!');
+                  if (onSuccess) {
+                    onSuccess();
+                  } else {
+                    onClose();
+                  }
+                }}
+                className="px-4 py-1 rounded text-white bg-green-600 hover:bg-green-700"
+              >
+                Finish
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,8 @@ const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL
 });
 
+// API Base URL configured
+
 // List of routes that are public and don't require authentication
 const PUBLIC_ROUTES = [
     '/auth/login',
@@ -48,12 +50,15 @@ api.interceptors.response.use(
         if (error.response) {
             console.error("API error:", {
                 status: error.response.status,
+                statusText: error.response.statusText,
                 data: error.response.data,
                 url: error.config?.url,
                 method: error.config?.method,
                 headers: error.config?.headers,
                 requestData: error.config?.data,
             });
+            console.error("Full API Error Response:", error.response);
+            console.error("API Request Config:", error.config);
             console.error("Full error object:", error);
             
             if (error.response.status === 401) {
