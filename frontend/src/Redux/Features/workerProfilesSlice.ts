@@ -83,18 +83,30 @@ export const fetchWorkerProfileById = createAsyncThunk<
   }
 );
 
-// 3. Fetch current user's worker profile
+// 3. Fetch current user's worker profile by filtering
 export const fetchUserWorkerProfile = createAsyncThunk<
-  WorkerProfile,
+  WorkerProfile | null,
   string,
   { rejectValue: string }
 >(
   "workerProfiles/fetchUserWorkerProfile",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/workers/profiles/${userId}/`);
-      return response.data || response;
+      // First try to get all profiles and filter by user ID
+      const response = await api.get("/workers/profiles/list/");
+      const profiles = Array.isArray(response) ? response : response.data || [];
+      
+      // Find the profile that belongs to the current user
+      const userProfile = profiles.find((profile: WorkerProfile) => profile.user === userId);
+      
+      if (!userProfile) {
+        // No profile found - this is not an error, just means user hasn't created one yet
+        return null;
+      }
+      
+      return userProfile;
     } catch (error: any) {
+      console.error('Fetch user worker profile error:', error);
       return rejectWithValue(
         error?.message || "Failed to fetch user worker profile"
       );
@@ -118,33 +130,42 @@ export const createWorkerProfile = createAsyncThunk<
     } catch (error: any) {
       console.error('Create worker profile error:', error);
       
+      // Handle specific error cases
+      if (error.status === 400) {
+        // Check for duplicate profile error
+        if (error.message && error.message.includes('already exists')) {
+          return rejectWithValue('You already have a worker profile. Please refresh the page.');
+        }
+        
+        // Handle validation errors
+        if (error?.data && typeof error.data === 'object') {
+          const fieldErrors: Record<string, string[]> = {};
+          let hasFieldErrors = false;
+          
+          Object.entries(error.data).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              fieldErrors[key] = value;
+              hasFieldErrors = true;
+            } else if (typeof value === 'string') {
+              fieldErrors[key] = [value];
+              hasFieldErrors = true;
+            }
+          });
+          
+          if (hasFieldErrors) {
+            return rejectWithValue({
+              message: "Please fix the validation errors",
+              fieldErrors: fieldErrors,
+            } as any);
+          }
+        }
+      }
+      
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
           message: "Validation errors occurred",
           fieldErrors: error.fieldErrors,
         } as any);
-      }
-      
-      if (error?.data && typeof error.data === 'object') {
-        const fieldErrors: Record<string, string[]> = {};
-        let hasFieldErrors = false;
-        
-        Object.entries(error.data).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            fieldErrors[key] = value;
-            hasFieldErrors = true;
-          } else if (typeof value === 'string') {
-            fieldErrors[key] = [value];
-            hasFieldErrors = true;
-          }
-        });
-        
-        if (hasFieldErrors) {
-          return rejectWithValue({
-            message: "Please fix the validation errors",
-            fieldErrors: fieldErrors,
-          } as any);
-        }
       }
       
       return rejectWithValue(error?.message || "Failed to create worker profile");
@@ -273,7 +294,11 @@ const workerProfilesSlice = createSlice({
         state.userProfile = action.payload;
         
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("userWorkerProfile", JSON.stringify(action.payload));
+          if (action.payload) {
+            sessionStorage.setItem("userWorkerProfile", JSON.stringify(action.payload));
+          } else {
+            sessionStorage.removeItem("userWorkerProfile");
+          }
         }
       })
       .addCase(fetchUserWorkerProfile.rejected, (state, action) => {

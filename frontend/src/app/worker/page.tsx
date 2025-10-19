@@ -107,6 +107,7 @@ const WorkerDashboardPage = () => {
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
       try {
+        console.log('Fetching worker profile for user:', currentUserId);
         handleFetchUserWorkerProfile(currentUserId);
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -148,15 +149,26 @@ const WorkerDashboardPage = () => {
       handleClearState();
       setShowProfileModal(false);
       setShowEditModal(false);
+      
+      // Refresh the user profile after successful creation/update
+      if (currentUserId && isAuthenticated) {
+        setTimeout(() => {
+          handleFetchUserWorkerProfile(currentUserId);
+        }, 500); // Small delay to ensure API state is updated
+      }
     }
-  }, [successMessage, handleClearState]);
+  }, [successMessage, handleClearState, currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
 
   // Handle profile errors
   useEffect(() => {
     if (profileError) {
       console.error('Profile error:', profileError);
-      const errorMessage = typeof profileError === 'string' ? profileError : 'An error occurred with your profile';
-      toast.error(errorMessage);
+      // Don't show error for "No worker profile found" as it's expected for new users
+      if (typeof profileError === 'string' && !profileError.includes('No worker profile found')) {
+        toast.error(profileError);
+      } else if (typeof profileError !== 'string') {
+        toast.error('An error occurred with your profile');
+      }
       handleClearState();
     }
   }, [profileError, handleClearState]);
@@ -321,6 +333,14 @@ const WorkerDashboardPage = () => {
               <h3 className="font-semibold text-yellow-800">Profile Required</h3>
               <p className="text-yellow-700 text-sm">
                 Please create your worker profile to start finding jobs and connecting with employers.
+              </p>
+              <p className="text-yellow-600 text-xs mt-1">
+                Already have a profile? <button 
+                  onClick={() => currentUserId && handleFetchUserWorkerProfile(currentUserId)}
+                  className="underline hover:text-yellow-800"
+                >
+                  Refresh to check
+                </button>
               </p>
             </div>
             <button
