@@ -26,13 +26,22 @@ export class JobApplicationApi {
     applicationData: JobApplicationRequest
   ): Promise<ApplicationApiResponse> {
     try {
-      const response = await api.post(
-        `${this.BASE_ENDPOINT}/${jobId}/apply/`,
-        applicationData
-      );
-      return response;
+      const url = `${this.BASE_ENDPOINT}/${jobId}/apply/`;
+      console.log('Applying for job at:', url);
+      console.log('Application data:', applicationData);
+      
+      const response = await api.post(url, applicationData);
+      console.log('Apply response:', response);
+      
+      return response as any;
     } catch (error: any) {
       console.error('Error applying for job:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+        url: error.config?.url
+      });
       throw this.handleApiError(error);
     }
   }
@@ -46,12 +55,21 @@ export class JobApplicationApi {
   ): Promise<ApplicationListResponse> {
     try {
       const queryParams = this.buildQueryParams(params);
-      const response = await api.get(
-        `${this.BASE_ENDPOINT}/me/${queryParams ? `?${queryParams}` : ''}`
-      );
-      return response;
+      const url = `${this.BASE_ENDPOINT}/me/${queryParams ? `?${queryParams}` : ''}`;
+      console.log('Fetching applications from:', url);
+      
+      const response = await api.get(url);
+      console.log('Applications response:', response);
+      
+      return response as any;
     } catch (error: any) {
       console.error('Error fetching my applications:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+        url: error.config?.url
+      });
       throw this.handleApiError(error);
     }
   }
@@ -65,7 +83,7 @@ export class JobApplicationApi {
   ): Promise<ApplicationDetailResponse> {
     try {
       const response = await api.get(`${this.BASE_ENDPOINT}/${applicationId}/`);
-      return response;
+      return response as any;
     } catch (error: any) {
       console.error('Error fetching application details:', error);
       throw this.handleApiError(error);
@@ -85,7 +103,7 @@ export class JobApplicationApi {
       const response = await api.get(
         `${this.BASE_ENDPOINT}/job/${jobId}/${queryParams ? `?${queryParams}` : ''}`
       );
-      return response;
+      return response as any;
     } catch (error: any) {
       console.error('Error fetching job applications:', error);
       throw this.handleApiError(error);
@@ -104,7 +122,7 @@ export class JobApplicationApi {
       const response = await api.get(
         `${this.BASE_ENDPOINT}/all/${queryParams ? `?${queryParams}` : ''}`
       );
-      return response;
+      return response as any;
     } catch (error: any) {
       console.error('Error fetching all applications:', error);
       throw this.handleApiError(error);
@@ -124,7 +142,7 @@ export class JobApplicationApi {
         `${this.BASE_ENDPOINT}/${applicationId}/`,
         updateData
       );
-      return response;
+      return response as any;
     } catch (error: any) {
       console.error('Error updating application:', error);
       throw this.handleApiError(error);
@@ -138,7 +156,7 @@ export class JobApplicationApi {
   static async deleteApplication(applicationId: string): Promise<{ message: string }> {
     try {
       const response = await api.delete(`${this.BASE_ENDPOINT}/${applicationId}/`);
-      return response;
+      return response as any;
     } catch (error: any) {
       console.error('Error deleting application:', error);
       throw this.handleApiError(error);

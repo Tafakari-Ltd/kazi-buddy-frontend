@@ -18,8 +18,14 @@ import {
   Badge,
 } from "lucide-react";
 
+// Import job application components
+import { AvailableJobs } from "@/components/WorkerProfile/AvailableJobs";
+import { MyApplicationsSection } from "@/components/WorkerProfile/MyApplicationsSection";
+import { JobDetails } from "@/types/jobApplication.types";
+
 import { RootState } from "@/Redux/Store/Store";
 import { useWorkerProfiles } from "@/Redux/Functions/useWorkerProfiles";
+import { useJobs } from "@/Redux/Functions/useJobs";
 import WorkerProfileForm from "@/components/WorkerProfiles/WorkerProfileForm";
 import {
   CreateWorkerProfileData,
@@ -57,10 +63,12 @@ const WorkerDashboardPage = () => {
 
   // Worker profiles hook with error handling
   let workerProfiles;
+  let jobsHook;
   try {
     workerProfiles = useWorkerProfiles();
+    jobsHook = useJobs();
   } catch (error) {
-    console.error('Error loading worker profiles hook:', error);
+    console.error('Error loading hooks:', error);
     return (
       <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
         <div className="text-center">
@@ -90,6 +98,8 @@ const WorkerDashboardPage = () => {
     isProfileVerified,
     isProfilePending,
   } = workerProfiles;
+  
+  const { handleFetchJobs } = jobsHook;
 
   // Local state
   const [filter, setFilter] = useState<string>("Dashboard");
@@ -97,6 +107,11 @@ const WorkerDashboardPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [isClient, setIsClient] = useState(false);
+  
+  // Job application state
+  const [availableJobs, setAvailableJobs] = useState<JobDetails[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobsError, setJobsError] = useState<string | null>(null);
 
   // Ensure client-side rendering
   useEffect(() => {
@@ -173,6 +188,13 @@ const WorkerDashboardPage = () => {
     }
   }, [profileError, handleClearState]);
 
+  // Fetch jobs when Available Jobs tab is accessed
+  useEffect(() => {
+    if (filter === "Available Jobs" && availableJobs.length === 0 && !jobsLoading) {
+      fetchAvailableJobs();
+    }
+  }, [filter, availableJobs.length, jobsLoading]);
+
   // Profile management functions
   const validateProfileForm = (data: CreateWorkerProfileData) => {
     const errors: Record<string, string> = {};
@@ -239,6 +261,79 @@ const WorkerDashboardPage = () => {
       await handleUpdateWorkerProfile(userProfile.id, data);
     } catch (error) {
       toast.error("Failed to update profile");
+    }
+  };
+
+  // Job fetching function
+  const fetchAvailableJobs = async () => {
+    try {
+      setJobsLoading(true);
+      setJobsError(null);
+      
+      // Use the actual jobs API to fetch available jobs
+      const result = await handleFetchJobs({ 
+        status: 'active', 
+        visibility: 'public',
+        page: 1,
+        limit: 50
+      });
+      
+      console.log('Raw jobs result:', result);
+      
+      if (result) {
+        let jobsArray = [];
+        
+        // Handle different response formats
+        if (result.data && Array.isArray(result.data)) {
+          jobsArray = result.data;
+        } else if (Array.isArray(result)) {
+          jobsArray = result;
+        } else if (result.jobs && Array.isArray(result.jobs)) {
+          jobsArray = result.jobs;
+        }
+        
+        console.log('Jobs array to transform:', jobsArray);
+        
+        if (jobsArray.length > 0) {
+          // Transform Job[] to JobDetails[] format
+          const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
+            id: job.id,
+            title: job.title,
+            description: job.description,
+            location: job.location,
+            location_text: job.location_text || job.location,
+            job_type: job.job_type,
+            urgency_level: job.urgency_level,
+            budget_min: job.budget_min,
+            budget_max: job.budget_max,
+            payment_type: job.payment_type,
+            start_date: job.start_date,
+            end_date: job.end_date,
+            estimated_hours: job.estimated_hours,
+            max_applicants: job.max_applicants,
+            status: job.status,
+            visibility: job.visibility,
+            employer: job.employer,
+            category: job.category
+          }));
+          
+          console.log('Transformed jobs:', transformedJobs);
+          setAvailableJobs(transformedJobs);
+        } else {
+          console.log('No jobs found in result');
+          setAvailableJobs([]);
+        }
+      } else {
+        console.log('No result returned from API');
+        setAvailableJobs([]);
+      }
+    } catch (err: any) {
+      console.error('Error fetching jobs:', err);
+      const errorMessage = err?.message || err?.toString() || 'Failed to fetch available jobs';
+      setJobsError(errorMessage);
+      toast.error(`Failed to load available jobs: ${errorMessage}`);
+    } finally {
+      setJobsLoading(false);
     }
   };
 
@@ -484,16 +579,75 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* Other status views */}
-      {!["Dashboard", "Profile Setup"].includes(filter) && (
+      {/* Available Jobs View */}
+      {filter === "Available Jobs" && (
+        <div className="container">
+          {hasUserProfile() ? (
+            <AvailableJobs
+              jobs={availableJobs}
+              loading={jobsLoading}
+              error={jobsError}
+              onRefresh={fetchAvailableJobs}
+            />
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="text-center py-8">
+                <AlertCircle className="w-12 h-12 mx-auto text-yellow-400 mb-4" />
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                  Profile Required
+                </h3>
+                <p className="text-yellow-700 mb-4">
+                  Please create your worker profile first to view and apply for available jobs.
+                </p>
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
+                >
+                  Create Profile
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My Applications View */}
+      {filter === "My Applications" && (
+        <div className="container">
+          {hasUserProfile() ? (
+            <MyApplicationsSection showAll={true} />
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="text-center py-8">
+                <AlertCircle className="w-12 h-12 mx-auto text-yellow-400 mb-4" />
+                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                  Profile Required
+                </h3>
+                <p className="text-yellow-700 mb-4">
+                  Please create your worker profile first to view your job applications.
+                </p>
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
+                >
+                  Create Profile
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Settings View */}
+      {filter === "Settings" && (
         <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
           <div className="text-center py-8">
-            <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <Settings className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              {filter}
+              Account Settings
             </h3>
             <p className="text-gray-500 mb-4">
-              This section is coming soon!
+              Account settings and preferences coming soon!
             </p>
           </div>
         </div>

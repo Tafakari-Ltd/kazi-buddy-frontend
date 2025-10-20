@@ -56,8 +56,10 @@ export const fetchJobs = createAsyncThunk<
       const queryString = queryParams.toString();
       const url = `/jobs/${queryString ? `?${queryString}` : ''}`;
       
+      console.log('Fetching jobs from URL:', url);
       const response = await api.get(url);
-      return response.data;
+      console.log('Jobs response:', response);
+      return response;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch jobs"

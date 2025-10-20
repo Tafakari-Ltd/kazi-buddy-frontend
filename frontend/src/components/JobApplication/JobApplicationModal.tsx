@@ -10,11 +10,13 @@ import { toast } from 'sonner';
 
 interface JobApplicationModalProps {
   jobDetails?: JobDetails;
+  onSuccess?: () => void;
   className?: string;
 }
 
 export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   jobDetails,
+  onSuccess,
   className = ''
 }) => {
   const {
@@ -30,6 +32,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const handleSuccess = () => {
     toast.success('Application submitted successfully!');
+    onSuccess?.(); // Call external success handler if provided
     hideJobModal();
   };
 
