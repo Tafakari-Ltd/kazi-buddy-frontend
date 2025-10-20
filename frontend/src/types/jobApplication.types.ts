@@ -184,4 +184,5 @@ export interface PaginationParams {
 
 export interface ApplicationQueryParams extends ApplicationFilters, PaginationParams {
   search?: string;
+  expand?: string; // For requesting expanded/nested data
 }

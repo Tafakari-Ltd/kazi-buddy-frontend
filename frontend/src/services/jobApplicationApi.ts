@@ -279,6 +279,9 @@ export class JobApplicationApi {
 
     // Add search
     if (params.search) queryParams.append('search', params.search);
+    
+    // Add expand parameter for nested data
+    if (params.expand) queryParams.append('expand', params.expand);
 
     return queryParams.toString();
   }

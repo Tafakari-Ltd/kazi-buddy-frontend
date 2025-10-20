@@ -56,6 +56,35 @@ const AllWorkersAdministration: React.FC = () => {
     setApplicationToView(null); 
   };
 
+  // Helper function to enrich applications with job details
+  const enrichApplicationsWithJobDetails = async (applications: JobApplicationWithDetails[]) => {
+    const enrichedApps = [...applications];
+    const jobCache = new Map();
+    
+    for (let i = 0; i < enrichedApps.length; i++) {
+      const app = enrichedApps[i];
+      if (!app.job_details && app.job) {
+        try {
+          // Check cache first
+          if (jobCache.has(app.job)) {
+            enrichedApps[i] = { ...app, job_details: jobCache.get(app.job) };
+          } else {
+            // Fetch job details
+            const jobResponse = await api.get(`/jobs/${app.job}/`);
+            const jobDetails = jobResponse.data || jobResponse;
+            jobCache.set(app.job, jobDetails);
+            enrichedApps[i] = { ...app, job_details: jobDetails };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch job details for job ${app.job}:`, error);
+          
+        }
+      }
+    }
+    
+    return enrichedApps;
+  };
+
   // Admin application management functions
   const handleUpdateApplicationStatus = async (applicationId: string, status: ApplicationStatus, workerId: string) => {
     try {
@@ -76,7 +105,7 @@ const AllWorkersAdministration: React.FC = () => {
         }
       }));
 
-      // Update modal view if it's the same application
+      
       if (applicationToView?.id === applicationId) {
         setApplicationToView(prev => prev ? {
           ...prev,
@@ -87,7 +116,7 @@ const AllWorkersAdministration: React.FC = () => {
       
     } catch (e: any) {
       console.error('Error updating application status:', e);
-      // You can add toast notification here
+      
     } finally {
       setProcessingApplicationIds(prev => {
         const newSet = new Set(prev);
@@ -182,13 +211,28 @@ const AllWorkersAdministration: React.FC = () => {
         [id]: { applications: [], loading: true, error: null, loaded: false },
       }));
       try {
-        // Admin: fetch all applications and filter by worker id
-        const resp = await JobApplicationApi.getAllApplications({ ordering: '-applied_at' });
+       
+        const resp = await JobApplicationApi.getAllApplications({ 
+          ordering: '-applied_at',
+          expand: 'job_details,worker_details,employer_details'
+        });
         const allApps = resp.applications as JobApplicationWithDetails[];
-        const data = (allApps || []).filter((app) => app.worker === id || app.worker_details?.id === id);
+        
+       
+        if (allApps && allApps.length > 0) {
+          console.log('API Response - First application structure:', allApps[0]);
+          console.log('Job details exists?', !!allApps[0].job_details);
+          console.log('Job details:', allApps[0].job_details);
+        }
+        
+        const filteredData = (allApps || []).filter((app) => app.worker === id || app.worker_details?.id === id);
+        
+        // Enrich applications with missing job details
+        const enrichedData = await enrichApplicationsWithJobDetails(filteredData);
+        
         setWorkerApplications((prev) => ({
           ...prev,
-          [id]: { applications: data, loading: false, error: null, loaded: true },
+          [id]: { applications: enrichedData, loading: false, error: null, loaded: true },
         }));
       } catch (e: any) {
         setWorkerApplications((prev) => ({
@@ -226,13 +270,25 @@ const AllWorkersAdministration: React.FC = () => {
 
     try {
       // Fetch all applications once and distribute to workers
-      const resp = await JobApplicationApi.getAllApplications({ ordering: '-applied_at' });
+      const resp = await JobApplicationApi.getAllApplications({ 
+        ordering: '-applied_at',
+        expand: 'job_details,worker_details,employer_details'
+      });
       const allApps = resp.applications as JobApplicationWithDetails[];
+      
+      // Debug: Log the structure for expandAll
+      if (allApps && allApps.length > 0) {
+        console.log('ExpandAll - First application structure:', allApps[0]);
+        console.log('ExpandAll - Job details:', allApps[0].job_details);
+      }
+      
+      // Enrich all applications with job details first
+      const enrichedAllApps = await enrichApplicationsWithJobDetails(allApps || []);
       
       setWorkerApplications((prev) => {
         const next = { ...prev } as WorkerApplicationsCache;
         toFetch.forEach((id) => {
-          const data = (allApps || []).filter((app) => app.worker === id || app.worker_details?.id === id);
+          const data = enrichedAllApps.filter((app) => app.worker === id || app.worker_details?.id === id);
           next[id] = { applications: data, loading: false, error: null, loaded: true };
         });
         return next;
@@ -360,7 +416,8 @@ const AllWorkersAdministration: React.FC = () => {
                                 <div key={application.id} className="border border-gray-200 rounded p-4">
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="font-semibold text-gray-900 truncate pr-2">
-                                      {application.job_details?.title || 'Unknown Job'}
+                                      {application.job_details?.title || 
+                                       (application.job ? `Job ID: ${application.job}` : 'Unknown Job')}
                                     </h4>
                                     <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getApplicationStatusColor(application.status)}`}>
                                       {getApplicationStatusIcon(application.status)}
@@ -554,7 +611,8 @@ const AllWorkersAdministration: React.FC = () => {
                         <div className="flex items-center gap-2 mb-2">
                           <Briefcase className="text-blue-900" size={18} />
                           <h5 className="font-medium text-blue-900">
-                            {applicationToView.job_details?.title || 'Unknown Job'}
+                            {applicationToView.job_details?.title || 
+                             (applicationToView.job ? `Job ID: ${applicationToView.job}` : 'Unknown Job')}
                           </h5>
                         </div>
                         <p className="text-blue-800 text-sm mb-2">
