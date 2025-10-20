@@ -46,6 +46,7 @@ const AllWorkersAdministration: React.FC = () => {
   // Local application view modal state
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [applicationToView, setApplicationToView] = useState<JobApplicationWithDetails | null>(null);
+  const [processingApplicationIds, setProcessingApplicationIds] = useState<Set<string>>(new Set());
   const openViewApplication = (application: JobApplicationWithDetails) => { 
     setApplicationToView(application); 
     setShowApplicationModal(true); 
@@ -53,6 +54,59 @@ const AllWorkersAdministration: React.FC = () => {
   const closeViewApplication = () => { 
     setShowApplicationModal(false); 
     setApplicationToView(null); 
+  };
+
+  // Admin application management functions
+  const handleUpdateApplicationStatus = async (applicationId: string, status: ApplicationStatus, workerId: string) => {
+    try {
+      setProcessingApplicationIds(prev => new Set([...prev, applicationId]));
+      
+      await JobApplicationApi.updateApplication(applicationId, { status });
+
+      // Update local cache for this worker
+      setWorkerApplications(prev => ({
+        ...prev,
+        [workerId]: {
+          ...prev[workerId],
+          applications: prev[workerId]?.applications.map(app => 
+            app.id === applicationId 
+              ? { ...app, status, responded_at: new Date().toISOString() }
+              : app
+          ) || []
+        }
+      }));
+
+      // Update modal view if it's the same application
+      if (applicationToView?.id === applicationId) {
+        setApplicationToView(prev => prev ? {
+          ...prev,
+          status,
+          responded_at: new Date().toISOString()
+        } : null);
+      }
+      
+    } catch (e: any) {
+      console.error('Error updating application status:', e);
+      // You can add toast notification here
+    } finally {
+      setProcessingApplicationIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(applicationId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleApproveApplication = (applicationId: string, workerId: string) => {
+    handleUpdateApplicationStatus(applicationId, 'accepted', workerId);
+  };
+
+  const handleRejectApplication = (applicationId: string, workerId: string) => {
+    handleUpdateApplicationStatus(applicationId, 'rejected', workerId);
+  };
+
+  const handleMoveToReviewed = (applicationId: string, workerId: string) => {
+    handleUpdateApplicationStatus(applicationId, 'reviewed', workerId);
   };
 
   const formatCurrency = (amount?: unknown) => {
@@ -326,12 +380,77 @@ const AllWorkersAdministration: React.FC = () => {
                                       Applied: {formatDate(application.applied_at)}
                                     </span>
                                   </div>
-                                  <div className="flex items-center justify-end">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1">
+                                      {application.status === 'pending' && (
+                                        <>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleMoveToReviewed(application.id, profile.id);
+                                            }}
+                                            disabled={processingApplicationIds.has(application.id)}
+                                            className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Mark as Reviewed"
+                                          >
+                                            {processingApplicationIds.has(application.id) ? '...' : 'Review'}
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleApproveApplication(application.id, profile.id);
+                                            }}
+                                            disabled={processingApplicationIds.has(application.id)}
+                                            className="text-xs bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Accept Application"
+                                          >
+                                            {processingApplicationIds.has(application.id) ? '...' : 'Accept'}
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRejectApplication(application.id, profile.id);
+                                            }}
+                                            disabled={processingApplicationIds.has(application.id)}
+                                            className="text-xs bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Reject Application"
+                                          >
+                                            {processingApplicationIds.has(application.id) ? '...' : 'Reject'}
+                                          </button>
+                                        </>
+                                      )}
+                                      {application.status === 'reviewed' && (
+                                        <>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleApproveApplication(application.id, profile.id);
+                                            }}
+                                            disabled={processingApplicationIds.has(application.id)}
+                                            className="text-xs bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Accept Application"
+                                          >
+                                            {processingApplicationIds.has(application.id) ? '...' : 'Accept'}
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRejectApplication(application.id, profile.id);
+                                            }}
+                                            disabled={processingApplicationIds.has(application.id)}
+                                            className="text-xs bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Reject Application"
+                                          >
+                                            {processingApplicationIds.has(application.id) ? '...' : 'Reject'}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
                                     <button
                                       onClick={() => openViewApplication(application)}
                                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                                     >
-                                      View Application
+                                      View Details
                                     </button>
                                   </div>
                                 </div>
@@ -502,7 +621,116 @@ const AllWorkersAdministration: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-3 justify-end mt-8 pt-6 border-t border-gray-200">
+                <div className="flex gap-3 justify-between mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex gap-2">
+                    {applicationToView.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const workerId = profiles.find(p => 
+                              p.user === applicationToView.worker || 
+                              p.id === applicationToView.worker_details?.id
+                            )?.id;
+                            if (workerId) handleMoveToReviewed(applicationToView.id, workerId);
+                          }}
+                          disabled={processingApplicationIds.has(applicationToView.id)}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          {processingApplicationIds.has(applicationToView.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <Star className="w-4 h-4" />
+                          )}
+                          Mark as Reviewed
+                        </button>
+                        <button
+                          onClick={() => {
+                            const workerId = profiles.find(p => 
+                              p.user === applicationToView.worker || 
+                              p.id === applicationToView.worker_details?.id
+                            )?.id;
+                            if (workerId) handleApproveApplication(applicationToView.id, workerId);
+                          }}
+                          disabled={processingApplicationIds.has(applicationToView.id)}
+                          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          {processingApplicationIds.has(applicationToView.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                          Accept Application
+                        </button>
+                        <button
+                          onClick={() => {
+                            const workerId = profiles.find(p => 
+                              p.user === applicationToView.worker || 
+                              p.id === applicationToView.worker_details?.id
+                            )?.id;
+                            if (workerId) handleRejectApplication(applicationToView.id, workerId);
+                          }}
+                          disabled={processingApplicationIds.has(applicationToView.id)}
+                          className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          {processingApplicationIds.has(applicationToView.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <AlertCircle className="w-4 h-4" />
+                          )}
+                          Reject Application
+                        </button>
+                      </>
+                    )}
+                    {applicationToView.status === 'reviewed' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const workerId = profiles.find(p => 
+                              p.user === applicationToView.worker || 
+                              p.id === applicationToView.worker_details?.id
+                            )?.id;
+                            if (workerId) handleApproveApplication(applicationToView.id, workerId);
+                          }}
+                          disabled={processingApplicationIds.has(applicationToView.id)}
+                          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          {processingApplicationIds.has(applicationToView.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                          Accept Application
+                        </button>
+                        <button
+                          onClick={() => {
+                            const workerId = profiles.find(p => 
+                              p.user === applicationToView.worker || 
+                              p.id === applicationToView.worker_details?.id
+                            )?.id;
+                            if (workerId) handleRejectApplication(applicationToView.id, workerId);
+                          }}
+                          disabled={processingApplicationIds.has(applicationToView.id)}
+                          className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          {processingApplicationIds.has(applicationToView.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <AlertCircle className="w-4 h-4" />
+                          )}
+                          Reject Application
+                        </button>
+                      </>
+                    )}
+                    {(applicationToView.status === 'accepted' || applicationToView.status === 'rejected') && (
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Application {applicationToView.status === 'accepted' ? 'accepted' : 'rejected'}
+                        {applicationToView.responded_at && (
+                          <span className="ml-2">on {formatDate(applicationToView.responded_at)}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={closeViewApplication}
                     className="px-6 py-2.5 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors font-medium"
