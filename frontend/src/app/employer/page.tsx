@@ -17,6 +17,7 @@ import {
   Shield,
   Plus,
   Edit,
+  Briefcase,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -25,6 +26,12 @@ import { toast } from "sonner";
 
 import { dummyApplications } from "@/component/applications/dummyApplications";
 import UploadNew from "@/component/UploadNew/UploadNew";
+import EmployerApplicationsSection from "@/components/Employer/ApplicationsSection";
+import { JobApplicationApi } from "@/services/jobApplicationApi";
+import {
+  JobApplicationWithDetails,
+  ApplicationListResponse
+} from "@/types/jobApplication.types";
 import {
   Application,
   ApplicationStage,
@@ -47,6 +54,7 @@ const STATUS_OPTIONS: (
   | "Employees Offered Jobs"
   | "Upload Job"
   | "Profile Setup"
+  | "Job Applications"
 )[] = [
   "All",
   "Pending",
@@ -56,6 +64,7 @@ const STATUS_OPTIONS: (
   "Rejected",
   "Cancelled",
   "Employees Offered Jobs",
+  "Job Applications",
   "Upload Job",
   "Profile Setup",
 ];
@@ -126,7 +135,9 @@ const EmployerApplicationsPage = () => {
   } = employerProfiles;
 
   // Local state
-  const [applications, setApplications] = useState<Application[]>(dummyApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [realApplications, setRealApplications] = useState<JobApplicationWithDetails[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [filter, setFilter] = useState<string>("All");
   const [showRejectModal, setShowRejectModal] = useState<boolean>(false);
   const [rejectionReason, setRejectionReason] = useState<string>("");
@@ -165,6 +176,109 @@ const EmployerApplicationsPage = () => {
       }
     }
   }, [currentUserId, isAuthenticated, handleFetchUserEmployerProfile]);
+
+  // Fetch applications when user is authenticated and has profile
+  useEffect(() => {
+    if (currentUserId && isAuthenticated && hasUserProfile()) {
+      fetchEmployerApplications();
+    }
+  }, [currentUserId, isAuthenticated, userProfile]);
+
+  // Fetch real applications for this employer
+  const fetchEmployerApplications = async () => {
+    if (!currentUserId) return;
+    
+    try {
+      setApplicationsLoading(true);
+      
+     
+      const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
+        ordering: '-applied_at'
+      });
+      
+      console.log('Debug: All applications:', response.applications.length);
+      console.log('Debug: Current user ID:', currentUserId);
+      console.log('Debug: Sample application data:', response.applications[0]);
+      
+      console.log('Debug: Fetching detailed data for', response.applications.length, 'applications');
+      
+      const detailedApplications = await Promise.all(
+        response.applications.map(async (app) => {
+          try {
+            const detailResponse = await JobApplicationApi.getApplicationDetails(app.id);
+            console.log('Debug: Detailed app data for', app.id, detailResponse.application);
+            return detailResponse.application;
+          } catch (error) {
+            console.warn('Could not fetch details for application', app.id, error);
+            return app; // Return original app if detailed fetch fails
+          }
+        })
+      );
+      
+      // For now, show all detailed applications
+      const employerApplications = detailedApplications as JobApplicationWithDetails[];
+      
+      console.log('Debug: Filtered applications count:', employerApplications.length);
+      
+      setRealApplications(employerApplications);
+      
+      // Convert to old format for existing UI
+      const convertedApplications: Application[] = employerApplications.map((app, index) => ({
+        id: parseInt(app.id) || index + 1,
+        applicantName: app.worker_details?.full_name || 'Unknown Worker',
+        jobTitle: app.job_details?.title || 'Unknown Job',
+        appliedDate: new Date(app.applied_at).toISOString().split('T')[0],
+        phone: app.worker_details?.phone_number || 'N/A',
+        email: app.worker_details?.email || '',
+        experience: app.worker_details?.experience_level || 'Not specified',
+        availability: new Date(app.availability_start).toLocaleDateString(),
+        status: mapApplicationStatus(app.status),
+        stage: mapApplicationStage(app.status),
+        message: app.cover_letter || 'No message provided',
+        rejectionReason: undefined
+      }));
+      
+      setApplications(convertedApplications);
+    } catch (error) {
+      console.error('Error fetching employer applications:', error);
+      // Fallback to empty array on error
+      setApplications([]);
+    } finally {
+      setApplicationsLoading(false);
+    }
+  };
+
+  // Map real application status to old format
+  const mapApplicationStatus = (status: string): ApplicationStatus => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'reviewed':
+        return 'Interview Scheduled';
+      default:
+        return 'Pending';
+    }
+  };
+
+  // Map real application status to old stage format
+  const mapApplicationStage = (status: string): ApplicationStage => {
+    switch (status) {
+      case 'pending':
+        return 'Application Review';
+      case 'reviewed':
+        return 'Phone Interview';
+      case 'accepted':
+        return 'Offer Extended';
+      case 'rejected':
+        return 'Application Review';
+      default:
+        return 'Application Review';
+    }
+  };
 
   // Handle postjob redirect
   useEffect(() => {
@@ -379,7 +493,7 @@ const EmployerApplicationsPage = () => {
       ? applications
       : filter === "Employees Offered Jobs"
         ? applications.filter((app) => app.status === "Accepted")
-        : filter === "Upload Job" || filter === "Profile Setup"
+        : filter === "Upload Job" || filter === "Profile Setup" || filter === "Job Applications"
           ? []
           : applications.filter((app) => app.status === filter);
 
@@ -524,6 +638,9 @@ const EmployerApplicationsPage = () => {
             {statusOption === "Upload Job" && (
               <UploadCloud className="w-4 h-4" />
             )}
+            {statusOption === "Job Applications" && (
+              <Briefcase className="w-4 h-4" />
+            )}
             {statusOption === "Profile Setup" && (
               <Settings className="w-4 h-4" />
             )}
@@ -531,6 +648,31 @@ const EmployerApplicationsPage = () => {
           </button>
         ))}
       </div>
+
+      {/* Job Applications View */}
+      {filter === "Job Applications" && (
+        <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
+          {hasUserProfile() ? (
+            <EmployerApplicationsSection />
+          ) : (
+            <div className="text-center py-8">
+              <Building className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Profile Required
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Complete your employer profile to view job applications
+              </p>
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
+              >
+                Complete Profile
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Upload Job View */}
       {filter === "Upload Job" && (
@@ -579,13 +721,22 @@ const EmployerApplicationsPage = () => {
       )}
 
       {/* Applications List */}
-      {filter !== "Upload Job" && filter !== "Profile Setup" && (
+      {filter !== "Upload Job" && filter !== "Profile Setup" && filter !== "Job Applications" && (
         <div className="grid gap-6 container">
-          {filteredApplications.length === 0 ? (
+          {applicationsLoading ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">
+                Loading applications...
+              </p>
+            </div>
+          ) : filteredApplications.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
               <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-600 text-lg">
-                No applications found for this filter.
+                {hasUserProfile() 
+                  ? "No applications found for this filter."
+                  : "Complete your profile to view job applications."}
               </p>
             </div>
           ) : (
