@@ -15,7 +15,7 @@ import {
  * Handles all job application-related API calls with proper error handling
  */
 export class JobApplicationApi {
-  private static readonly BASE_ENDPOINT = '/api/applications';
+  private static readonly BASE_ENDPOINT = '/applications';
 
   /**
    * Apply for a job
@@ -27,21 +27,37 @@ export class JobApplicationApi {
   ): Promise<ApplicationApiResponse> {
     try {
       const url = `${this.BASE_ENDPOINT}/${jobId}/apply/`;
-      console.log('Applying for job at:', url);
-      console.log('Application data:', applicationData);
+      console.log('=== JOB APPLICATION DEBUG ===');
+      console.log('Job ID:', jobId);
+      console.log('Base endpoint:', this.BASE_ENDPOINT);
+      console.log('Constructed URL:', url);
+      console.log('Base URL from env:', process.env.NEXT_PUBLIC_BASE_URL);
+      console.log('Full URL will be:', `${process.env.NEXT_PUBLIC_BASE_URL}${url}`);
+      console.log('Application data:', JSON.stringify(applicationData, null, 2));
+      
+      // Check if user is authenticated
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("accessToken") : null;
+      console.log('Has auth token:', !!token);
+      if (token) {
+        console.log('Token preview:', `${token.substring(0, 20)}...`);
+      }
       
       const response = await api.post(url, applicationData);
-      console.log('Apply response:', response);
+      console.log('Apply response received:', response);
+      console.log('=== END DEBUG ===');
       
       return response as any;
     } catch (error: any) {
-      console.error('Error applying for job:', error);
-      console.error('Error details:', {
-        message: error.message,
-        status: error.status,
-        data: error.data,
-        url: error.config?.url
-      });
+      console.error('=== ERROR APPLYING FOR JOB ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error status:', error.status);
+      console.error('Error data:', error.data);
+      console.error('Request config URL:', error.config?.url);
+      console.error('Request method:', error.config?.method);
+      console.error('Request headers:', error.config?.headers);
+      console.error('Request data:', error.config?.data);
+      console.error('=== END ERROR DEBUG ===');
       throw this.handleApiError(error);
     }
   }
@@ -56,20 +72,29 @@ export class JobApplicationApi {
     try {
       const queryParams = this.buildQueryParams(params);
       const url = `${this.BASE_ENDPOINT}/me/${queryParams ? `?${queryParams}` : ''}`;
-      console.log('Fetching applications from:', url);
+      console.log('=== FETCH MY APPLICATIONS DEBUG ===');
+      console.log('Base endpoint:', this.BASE_ENDPOINT);
+      console.log('Query params:', queryParams);
+      console.log('Constructed URL:', url);
+      console.log('Full URL will be:', `${process.env.NEXT_PUBLIC_BASE_URL}${url}`);
+      
+      // Check if user is authenticated
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("accessToken") : null;
+      console.log('Has auth token:', !!token);
       
       const response = await api.get(url);
-      console.log('Applications response:', response);
+      console.log('Applications response received:', response);
+      console.log('=== END FETCH DEBUG ===');
       
       return response as any;
     } catch (error: any) {
-      console.error('Error fetching my applications:', error);
-      console.error('Error details:', {
-        message: error.message,
-        status: error.status,
-        data: error.data,
-        url: error.config?.url
-      });
+      console.error('=== ERROR FETCHING APPLICATIONS ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error status:', error.status);
+      console.error('Error data:', error.data);
+      console.error('Request URL:', error.config?.url);
+      console.error('=== END FETCH ERROR DEBUG ===');
       throw this.handleApiError(error);
     }
   }
