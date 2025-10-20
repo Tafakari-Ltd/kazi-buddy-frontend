@@ -55,29 +55,19 @@ export class JobApplicationApi {
     try {
       const queryParams = this.buildQueryParams(params);
       const url = `${this.BASE_ENDPOINT}/me/${queryParams ? `?${queryParams}` : ''}`;
-      console.log('=== FETCH MY APPLICATIONS DEBUG ===');
-      console.log('Base endpoint:', this.BASE_ENDPOINT);
-      console.log('Query params:', queryParams);
-      console.log('Constructed URL:', url);
-      console.log('Full URL will be:', `${process.env.NEXT_PUBLIC_BASE_URL}${url}`);
-      
-      // Check if user is authenticated
-      const token = typeof window !== "undefined" ? sessionStorage.getItem("accessToken") : null;
-      console.log('Has auth token:', !!token);
+      console.log('Fetching my applications from:', url);
       
       const response = await api.get(url);
-      console.log('Applications response received:', response);
-      console.log('=== END FETCH DEBUG ===');
+      console.log('My applications fetched successfully');
       
       return response as any;
     } catch (error: any) {
-      console.error('=== ERROR FETCHING APPLICATIONS ===');
-      console.error('Full error object:', error);
-      console.error('Error message:', error.message);
-      console.error('Error status:', error.status);
-      console.error('Error data:', error.data);
-      console.error('Request URL:', error.config?.url);
-      console.error('=== END FETCH ERROR DEBUG ===');
+      console.error('Error fetching my applications:', {
+        url: error.config?.url,
+        status: error.status,
+        message: error.message,
+        data: error.data
+      });
       throw this.handleApiError(error);
     }
   }
@@ -90,10 +80,21 @@ export class JobApplicationApi {
     applicationId: string
   ): Promise<ApplicationDetailResponse> {
     try {
-      const response = await api.get(`${this.BASE_ENDPOINT}/${applicationId}/`);
+      const url = `${this.BASE_ENDPOINT}/${applicationId}/`;
+      console.log('Fetching application details:', applicationId, 'from URL:', url);
+      
+      const response = await api.get(url);
+      console.log('Application details fetched successfully');
+      
       return response as any;
     } catch (error: any) {
-      console.error('Error fetching application details:', error);
+      console.error('Error fetching application details:', {
+        applicationId,
+        url: error.config?.url,
+        status: error.status,
+        message: error.message,
+        data: error.data
+      });
       throw this.handleApiError(error);
     }
   }
