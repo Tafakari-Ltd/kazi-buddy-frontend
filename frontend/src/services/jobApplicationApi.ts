@@ -27,37 +27,20 @@ export class JobApplicationApi {
   ): Promise<ApplicationApiResponse> {
     try {
       const url = `${this.BASE_ENDPOINT}/${jobId}/apply/`;
-      console.log('=== JOB APPLICATION DEBUG ===');
-      console.log('Job ID:', jobId);
-      console.log('Base endpoint:', this.BASE_ENDPOINT);
-      console.log('Constructed URL:', url);
-      console.log('Base URL from env:', process.env.NEXT_PUBLIC_BASE_URL);
-      console.log('Full URL will be:', `${process.env.NEXT_PUBLIC_BASE_URL}${url}`);
-      console.log('Application data:', JSON.stringify(applicationData, null, 2));
-      
-      // Check if user is authenticated
-      const token = typeof window !== "undefined" ? sessionStorage.getItem("accessToken") : null;
-      console.log('Has auth token:', !!token);
-      if (token) {
-        console.log('Token preview:', `${token.substring(0, 20)}...`);
-      }
+      console.log('Applying for job:', jobId, 'at URL:', url);
       
       const response = await api.post(url, applicationData);
-      console.log('Apply response received:', response);
-      console.log('=== END DEBUG ===');
+      console.log('Job application successful');
       
       return response as any;
     } catch (error: any) {
-      console.error('=== ERROR APPLYING FOR JOB ===');
-      console.error('Full error object:', error);
-      console.error('Error message:', error.message);
-      console.error('Error status:', error.status);
-      console.error('Error data:', error.data);
-      console.error('Request config URL:', error.config?.url);
-      console.error('Request method:', error.config?.method);
-      console.error('Request headers:', error.config?.headers);
-      console.error('Request data:', error.config?.data);
-      console.error('=== END ERROR DEBUG ===');
+      console.error('Error applying for job:', {
+        jobId,
+        url: error.config?.url,
+        status: error.status,
+        message: error.message,
+        data: error.data
+      });
       throw this.handleApiError(error);
     }
   }

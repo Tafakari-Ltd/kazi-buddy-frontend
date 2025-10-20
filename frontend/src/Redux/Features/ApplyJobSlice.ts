@@ -192,6 +192,8 @@ const applyJobSlice = createSlice({
     // Modal management
     openJobModal(state) {
       state.isModalOpen = true;
+      state.apiError = null;
+      state.successMessage = null; // Clear any previous messages
     },
     
     closeJobModal(state) {
@@ -199,6 +201,7 @@ const applyJobSlice = createSlice({
       state.formData = initialFormData;
       state.errors = {};
       state.apiError = null;
+      state.successMessage = null; // Clear success message when closing modal
     },
     
     // Success/Error message management

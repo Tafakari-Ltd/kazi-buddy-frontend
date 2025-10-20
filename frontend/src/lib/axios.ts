@@ -41,26 +41,17 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     (response) => {
-        console.log('=== AXIOS RESPONSE INTERCEPTOR ===');
-        console.log('Response status:', response.status);
-        console.log('Response URL:', response.config?.url);
-        console.log('Response data:', response.data);
-        console.log('=== END RESPONSE INTERCEPTOR ===');
         return response.data;
     },
     (error) => {
         if (error.response) {
-            console.error("=== AXIOS ERROR INTERCEPTOR ===");
             console.error("API error:", {
                 status: error.response.status,
                 data: error.response.data,
                 url: error.config?.url,
                 method: error.config?.method,
-                headers: error.config?.headers,
-                requestData: error.config?.data,
             });
             console.error("Full error object:", error);
-            console.error("=== END AXIOS ERROR INTERCEPTOR ===");
             
             if (error.response.status === 401) {
                 if (typeof window !== "undefined") {

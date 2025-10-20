@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { JobDetails } from '../../types/jobApplication.types';
-import { useJobApplicationForm } from '../../Redux/Functions/jobs';
+import { useJobApplicationForm, useApplicationMessages } from '../../Redux/Functions/jobs';
 import JobApplicationApi from '../../services/jobApplicationApi';
 import { toast } from 'sonner';
 
@@ -32,8 +32,15 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
     submitApplication
   } = useJobApplicationForm();
 
+  const { clearAllMessages } = useApplicationMessages();
+
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [hasApplied, setHasApplied] = useState(false);
+
+  // Clear any previous messages when component mounts
+  useEffect(() => {
+    clearAllMessages();
+  }, [clearAllMessages]);
 
   // Check if user has already applied
   useEffect(() => {
