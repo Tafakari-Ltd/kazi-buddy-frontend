@@ -26,6 +26,7 @@ export const menuItems = [
     href: "/workers",
     badge: "89",
     submenu: [
+      { label: "All Workers", href: "/admin/workers/all" },
       { label: "Active Workers", href: "/admin/workers/active" },
       { label: "Assignments", href: "/workers/assignments" },
       { label: "Performance", href: "/workers/performance" },
