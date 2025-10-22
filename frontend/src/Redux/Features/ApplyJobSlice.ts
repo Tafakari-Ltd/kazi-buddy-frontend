@@ -220,7 +220,7 @@ const applyJobSlice = createSlice({
       state.apiError = null;
     },
     
-    // Application status update (for real-time updates)
+    // Application status update 
     updateApplicationStatus(state, action: PayloadAction<{ id: string; status: ApplicationStatus }>) {
       const { id, status } = action.payload;
       

@@ -100,7 +100,7 @@ export const fetchUserWorkerProfile = createAsyncThunk<
       const userProfile = profiles.find((profile: WorkerProfile) => profile.user === userId);
       
       if (!userProfile) {
-        // No profile found - this is not an error, just means user hasn't created one yet
+        
         return null;
       }
       

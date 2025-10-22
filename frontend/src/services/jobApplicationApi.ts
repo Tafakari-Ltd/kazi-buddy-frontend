@@ -11,8 +11,8 @@ import {
 } from '../types/jobApplication.types';
 
 /**
- * Job Application API Service
- * Handles all job application-related API calls with proper error handling
+ 
+ * Handles all job application-related API calls 
  */
 export class JobApplicationApi {
   private static readonly BASE_ENDPOINT = '/applications';
@@ -272,15 +272,15 @@ export class JobApplicationApi {
     if (params.min_rate) queryParams.append('min_rate', params.min_rate.toString());
     if (params.max_rate) queryParams.append('max_rate', params.max_rate.toString());
 
-    // Add pagination
+    //  pagination
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.per_page) queryParams.append('per_page', params.per_page.toString());
     if (params.ordering) queryParams.append('ordering', params.ordering);
 
-    // Add search
+    //  search
     if (params.search) queryParams.append('search', params.search);
     
-    // Add expand parameter for nested data
+    //  expand parameter for nested data
     if (params.expand) queryParams.append('expand', params.expand);
 
     return queryParams.toString();
@@ -351,7 +351,7 @@ export class JobApplicationApi {
       }
     }
 
-    // Validate worker notes (optional but if provided, check length)
+    // Validate worker notes
     if (data.worker_notes && data.worker_notes.length > 1000) {
       errors.worker_notes = 'Worker notes must not exceed 1000 characters';
     }
@@ -368,11 +368,11 @@ export class JobApplicationApi {
   static formatApplicationForDisplay(application: JobApplication): JobApplicationWithDetails {
     return {
       ...application,
-      // Ensure dates are properly formatted
+     
       applied_at: new Date(application.applied_at).toISOString(),
       reviewed_at: application.reviewed_at ? new Date(application.reviewed_at).toISOString() : null,
       responded_at: application.responded_at ? new Date(application.responded_at).toISOString() : null,
-      // Parse proposed_rate to number for calculations
+      
       proposed_rate: parseFloat(application.proposed_rate).toFixed(2)
     };
   }

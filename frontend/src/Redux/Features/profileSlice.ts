@@ -36,7 +36,7 @@ export const getProfile = createAsyncThunk<
 >("profile/getProfile", async (_, { rejectWithValue }) => {
     try {
         const response = await api.get("accounts/me/");
-        // Your axios interceptor returns response.data directly
+        
         return response as unknown as UserProfile;
     } catch (err: any) {
         return rejectWithValue(
