@@ -210,26 +210,26 @@ const EmployerApplicationsPage = () => {
             return detailResponse.application;
           } catch (error) {
             console.warn('Could not fetch details for application', app.id, error);
-            return app; // Return original app if detailed fetch fails
+            return app; 
           }
         })
       );
       
-      // For now, show all detailed applications
+      
       const employerApplications = detailedApplications as JobApplicationWithDetails[];
       
       console.log('Debug: Filtered applications count:', employerApplications.length);
       
       setRealApplications(employerApplications);
       
-      // Convert to old format for existing UI
+      
       const convertedApplications: Application[] = employerApplications.map((app, index) => ({
         id: parseInt(app.id) || index + 1,
-        applicantName: app.worker_details?.full_name || 'Unknown Worker',
-        jobTitle: app.job_details?.title || 'Unknown Job',
+        applicantName: app.worker?.user?.full_name || app.worker_details?.full_name || 'Unknown Worker',
+        jobTitle: app.job?.title || app.job_details?.title || 'Unknown Job',
         appliedDate: new Date(app.applied_at).toISOString().split('T')[0],
         phone: app.worker_details?.phone_number || 'N/A',
-        email: app.worker_details?.email || '',
+        email: app.worker?.user?.email || app.worker_details?.email || '',
         experience: app.worker_details?.experience_level || 'Not specified',
         availability: new Date(app.availability_start).toLocaleDateString(),
         status: mapApplicationStatus(app.status),
@@ -248,7 +248,7 @@ const EmployerApplicationsPage = () => {
     }
   };
 
-  // Map real application status to old format
+  
   const mapApplicationStatus = (status: string): ApplicationStatus => {
     switch (status) {
       case 'pending':

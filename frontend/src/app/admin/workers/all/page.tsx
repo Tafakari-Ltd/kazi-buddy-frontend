@@ -27,7 +27,7 @@ import { WorkerProfile, VERIFICATION_STATUS_OPTIONS } from "@/types/worker.types
 import { JobApplicationWithDetails, ApplicationStatus } from "@/types/jobApplication.types";
 import { JobApplicationApi } from "@/services/jobApplicationApi";
 
-// Local cache for applications per worker to avoid mutating global state
+// Local cache for applications per worker 
 type WorkerApplicationsCache = Record<string, { 
   applications: JobApplicationWithDetails[]; 
   loading: boolean; 
@@ -416,8 +416,8 @@ const AllWorkersAdministration: React.FC = () => {
                                 <div key={application.id} className="border border-gray-200 rounded p-4">
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="font-semibold text-gray-900 truncate pr-2">
-                                      {application.job_details?.title || 
-                                       (application.job ? `Job ID: ${application.job}` : 'Unknown Job')}
+                                      {application.job?.title || application.job_details?.title || 
+                                       (application.job ? `Job ID: ${typeof application.job === 'string' ? application.job : application.job.id}` : 'Unknown Job')}
                                     </h4>
                                     <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getApplicationStatusColor(application.status)}`}>
                                       {getApplicationStatusIcon(application.status)}
@@ -425,7 +425,7 @@ const AllWorkersAdministration: React.FC = () => {
                                     </span>
                                   </div>
                                   <p className="text-xs text-gray-600 mb-2">
-                                    {application.employer_details?.company_name || 'Unknown Company'}
+                                    {application.job?.employer?.company_name || application.employer_details?.company_name || 'Unknown Company'}
                                   </p>
                                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
                                     <span className="inline-flex items-center gap-1">
@@ -611,22 +611,22 @@ const AllWorkersAdministration: React.FC = () => {
                         <div className="flex items-center gap-2 mb-2">
                           <Briefcase className="text-blue-900" size={18} />
                           <h5 className="font-medium text-blue-900">
-                            {applicationToView.job_details?.title || 
-                             (applicationToView.job ? `Job ID: ${applicationToView.job}` : 'Unknown Job')}
+                            {applicationToView.job?.title || applicationToView.job_details?.title || 
+                             (applicationToView.job ? `Job ID: ${typeof applicationToView.job === 'string' ? applicationToView.job : applicationToView.job.id}` : 'Unknown Job')}
                           </h5>
                         </div>
                         <p className="text-blue-800 text-sm mb-2">
-                          {applicationToView.employer_details?.company_name || 'Unknown Company'}
+                          {applicationToView.job?.employer?.company_name || applicationToView.employer_details?.company_name || 'Unknown Company'}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-blue-700">
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={14} />
-                            {applicationToView.job_details?.location}
+                            {applicationToView.job?.location || applicationToView.job_details?.location}
                           </span>
-                          {applicationToView.job_details?.budget_min && applicationToView.job_details?.budget_max && (
+                          {((applicationToView.job?.budget_min && applicationToView.job?.budget_max) || (applicationToView.job_details?.budget_min && applicationToView.job_details?.budget_max)) && (
                             <span className="inline-flex items-center gap-1">
                               <DollarSign size={14} />
-                              {formatCurrency(applicationToView.job_details.budget_min)} - {formatCurrency(applicationToView.job_details.budget_max)}
+                              {formatCurrency(applicationToView.job?.budget_min || applicationToView.job_details?.budget_min)} - {formatCurrency(applicationToView.job?.budget_max || applicationToView.job_details?.budget_max)}
                             </span>
                           )}
                         </div>
@@ -665,11 +665,11 @@ const AllWorkersAdministration: React.FC = () => {
                     <div>
                       <h5 className="font-semibold text-gray-900 mb-3">Worker Details</h5>
                       <div className="space-y-2 text-sm">
-                        {applicationToView.worker_details?.full_name && (
-                          <p className="font-medium">{applicationToView.worker_details.full_name}</p>
+                        {(applicationToView.worker?.user?.full_name || applicationToView.worker_details?.full_name) && (
+                          <p className="font-medium">{applicationToView.worker?.user?.full_name || applicationToView.worker_details?.full_name}</p>
                         )}
-                        {applicationToView.worker_details?.email && (
-                          <p className="text-gray-600">{applicationToView.worker_details.email}</p>
+                        {(applicationToView.worker?.user?.email || applicationToView.worker_details?.email) && (
+                          <p className="text-gray-600">{applicationToView.worker?.user?.email || applicationToView.worker_details?.email}</p>
                         )}
                         {applicationToView.worker_details?.phone_number && (
                           <p className="text-gray-600">{applicationToView.worker_details.phone_number}</p>

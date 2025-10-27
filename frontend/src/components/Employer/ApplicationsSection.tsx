@@ -84,10 +84,15 @@ const EmployerApplicationsSection = () => {
     // Filter by status
     const statusMatch = filter === 'all' || app.status === filter;
     
+    // Get worker name from nested structure
+    const workerName = app.worker?.user?.full_name || app.worker_details?.full_name || '';
+    // Get job title from nested structure
+    const jobTitle = app.job?.title || app.job_details?.title || '';
+    
     // Filter by search query
     const searchMatch = searchQuery === '' || 
-      app.worker_details?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.job_details?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.cover_letter?.toLowerCase().includes(searchQuery.toLowerCase());
 
     return statusMatch && searchMatch;
@@ -303,7 +308,7 @@ const EmployerApplicationsSection = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {application.worker_details?.full_name || 'Unknown Worker'}
+                        {application.worker?.user?.full_name || application.worker_details?.full_name || 'Unknown Worker'}
                       </h3>
                       <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(application.status)}`}>
                         {getStatusIcon(application.status)}
@@ -314,7 +319,7 @@ const EmployerApplicationsSection = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                       <span className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        {application.job_details?.title || 'Unknown Job'}
+                        {application.job?.title || application.job_details?.title || 'Unknown Job'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -331,10 +336,10 @@ const EmployerApplicationsSection = () => {
                         <Calendar className="w-4 h-4" />
                         Available: {new Date(application.availability_start).toLocaleDateString()}
                       </span>
-                      {application.job_details?.location && (
+                      {(application.job?.location || application.job_details?.location) && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {application.job_details.location}
+                          {application.job?.location || application.job_details?.location}
                         </span>
                       )}
                       {application.responded_at && (
@@ -390,7 +395,7 @@ const EmployerApplicationsSection = () => {
               <div className="flex justify-between items-start p-6 border-b">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Application from {selectedApplication.worker_details?.full_name}
+                    Application from {selectedApplication.worker?.user?.full_name || selectedApplication.worker_details?.full_name || 'Unknown Worker'}
                   </h3>
                   <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedApplication.status)}`}>
                     {getStatusIcon(selectedApplication.status)}
@@ -433,16 +438,16 @@ const EmployerApplicationsSection = () => {
                     <h4 className="font-semibold text-gray-900 mb-3">Job Details</h4>
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                       <h5 className="font-medium text-blue-900 mb-2">
-                        {selectedApplication.job_details?.title}
+                        {selectedApplication.job?.title || selectedApplication.job_details?.title || 'Unknown Job'}
                       </h5>
                       <div className="flex items-center gap-4 text-sm text-blue-700">
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {selectedApplication.job_details?.location}
+                          {selectedApplication.job?.location || selectedApplication.job_details?.location}
                         </span>
                         <span className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          Budget: {selectedApplication.job_details?.budget_min} - {selectedApplication.job_details?.budget_max}
+                          Budget: {selectedApplication.job?.budget_min || selectedApplication.job_details?.budget_min} - {selectedApplication.job?.budget_max || selectedApplication.job_details?.budget_max}
                         </span>
                       </div>
                     </div>
@@ -480,12 +485,12 @@ const EmployerApplicationsSection = () => {
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3">Worker Info</h4>
                     <div className="space-y-2 text-sm">
-                      <p className="font-medium">{selectedApplication.worker_details?.full_name}</p>
+                      <p className="font-medium">{selectedApplication.worker?.user?.full_name || selectedApplication.worker_details?.full_name || 'Unknown Worker'}</p>
                       <div className="flex items-center gap-1 text-gray-600">
                         <Mail className="w-4 h-4" />
-                        {selectedApplication.worker_details?.email}
+                        {selectedApplication.worker?.user?.email || selectedApplication.worker_details?.email || 'N/A'}
                       </div>
-                      {selectedApplication.worker_details?.phone_number && (
+                      {(selectedApplication.worker_details?.phone_number) && (
                         <div className="flex items-center gap-1 text-gray-600">
                           <Phone className="w-4 h-4" />
                           {selectedApplication.worker_details.phone_number}

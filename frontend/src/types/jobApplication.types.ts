@@ -24,8 +24,90 @@ export interface JobApplication {
 
 export interface JobApplicationWithDetails extends JobApplication {
   job_details?: JobDetails;
+  job?: FullJobDetails; // Full nested job object from API
   worker_details?: WorkerDetails;
+  worker?: FullWorkerDetails; // Full nested worker object from API
   employer_details?: EmployerDetails;
+}
+
+// User info nested in worker/employer
+export interface UserInfo {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+// Full worker object 
+export interface FullWorkerDetails {
+  id: string;
+  user: UserInfo;
+  location: string;
+  location_text: string;
+  is_available: boolean;
+  years_experience: number;
+  hourly_rate: string;
+  availability_schedule: Record<string, string[]>;
+  bio: string;
+  created_at: string;
+  updated_at: string;
+  profile_completion_percentage: number;
+  verification_status: string;
+  admin_notes: string | null;
+}
+
+// Category info
+export interface CategoryInfo {
+  id: string;
+  name: string;
+  description: string;
+}
+
+// Full employer object
+export interface FullEmployerDetails {
+  id: string;
+  user: UserInfo;
+  company_name: string;
+  business_type: string;
+  industry: string;
+  location: string;
+  location_text: string;
+  description: string;
+  website_url: string;
+  business_registration_number: string;
+  verification_status: string;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Full job object as returned by API
+export interface FullJobDetails {
+  id: string;
+  employer: FullEmployerDetails;
+  category: CategoryInfo;
+  title: string;
+  description: string;
+  location: string;
+  location_text: string;
+  job_type: JobType;
+  urgency_level: UrgencyLevel;
+  budget_min: string;
+  budget_max: string;
+  payment_type: PaymentType;
+  start_date: string;
+  end_date: string;
+  estimated_hours: number;
+  max_applicants: number;
+  status: JobStatus;
+  visibility: JobVisibility;
+  admin_approved: boolean;
+  views_count: number;
+  applications_count: number;
+  created_at: string;
+  updated_at: string;
+  expires_at: string | null;
+  filled_at: string | null;
+  job_skills: any[];
 }
 
 export interface JobDetails {
