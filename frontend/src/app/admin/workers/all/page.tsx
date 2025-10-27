@@ -63,7 +63,14 @@ const AllWorkersAdministration: React.FC = () => {
     
     for (let i = 0; i < enrichedApps.length; i++) {
       const app = enrichedApps[i];
-      if (!app.job_details && app.job) {
+      // If app.job is already an object with full details, no need to fetch
+      if (app.job && typeof app.job === 'object' && 'title' in app.job) {
+        // Job details already embedded in the response
+        continue;
+      }
+      
+      // Only fetch if job is a string ID and job_details is missing
+      if (!app.job_details && app.job && typeof app.job === 'string') {
         try {
           // Check cache first
           if (jobCache.has(app.job)) {
@@ -77,7 +84,7 @@ const AllWorkersAdministration: React.FC = () => {
           }
         } catch (error) {
           console.warn(`Failed to fetch job details for job ${app.job}:`, error);
-          
+          // Don't break the loop, continue with other applications
         }
       }
     }

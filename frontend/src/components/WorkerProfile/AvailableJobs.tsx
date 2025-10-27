@@ -38,7 +38,11 @@ export const AvailableJobs: React.FC<AvailableJobsProps> = ({
   // Merge jobs with application status
   useEffect(() => {
     const mergedJobs = jobs.map(job => {
-      const application = applications.find(app => app.job === job.id);
+      // Handle both app.job as string (ID) or object
+      const application = applications.find(app => {
+        const jobId = typeof app.job === 'string' ? app.job : app.job?.id;
+        return jobId === job.id;
+      });
       return {
         ...job,
         applicationId: application?.id,
