@@ -2,13 +2,20 @@
 
 // Availability Schedule Interface
 export interface AvailabilitySchedule {
-  [day: string]: string[]; // Day of week mapped to array of time slots ["start_time", "end_time"]
+  [day: string]: string[]; 
+}
+
+// User Info for nested structure
+export interface WorkerUserInfo {
+  id: string;
+  full_name: string;
+  email: string;
 }
 
 // Worker Profile Interface
 export interface WorkerProfile {
   id: string;
-  user: string;
+  user: string | WorkerUserInfo; // Can be user ID (string) or nested user object
   location: string;
   location_text: string;
   is_available: boolean;
@@ -190,7 +197,7 @@ export const isWorkerCurrentlyAvailable = (profile: WorkerProfile): boolean => {
   
   const now = new Date();
   const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+  const currentTime = now.toTimeString().slice(0, 5); 
   
   const todaySchedule = profile.availability_schedule[currentDay];
   if (!todaySchedule || todaySchedule.length < 2) return false;

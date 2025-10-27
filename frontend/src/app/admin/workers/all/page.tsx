@@ -225,7 +225,12 @@ const AllWorkersAdministration: React.FC = () => {
           console.log('Job details:', allApps[0].job_details);
         }
         
-        const filteredData = (allApps || []).filter((app) => app.worker === id || app.worker_details?.id === id);
+        // Filter by worker ID - handle both string and object formats
+        const filteredData = (allApps || []).filter((app) => {
+          // Check if worker is a string (ID) or object
+          const workerId = typeof app.worker === 'string' ? app.worker : app.worker?.id;
+          return workerId === id || app.worker_details?.id === id;
+        });
         
         // Enrich applications with missing job details
         const enrichedData = await enrichApplicationsWithJobDetails(filteredData);
@@ -288,7 +293,11 @@ const AllWorkersAdministration: React.FC = () => {
       setWorkerApplications((prev) => {
         const next = { ...prev } as WorkerApplicationsCache;
         toFetch.forEach((id) => {
-          const data = enrichedAllApps.filter((app) => app.worker === id || app.worker_details?.id === id);
+          // Filter by worker ID - handle both string and object formats
+          const data = enrichedAllApps.filter((app) => {
+            const workerId = typeof app.worker === 'string' ? app.worker : app.worker?.id;
+            return workerId === id || app.worker_details?.id === id;
+          });
           next[id] = { applications: data, loading: false, error: null, loaded: true };
         });
         return next;
@@ -378,7 +387,9 @@ const AllWorkersAdministration: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-2">
                               <User className="text-red-900" size={18} />
-                              <span className="font-semibold text-gray-900">Worker #{profile.id}</span>
+                              <span className="font-semibold text-gray-900">
+                                {typeof profile.user === 'string' ? `Worker ID: ${profile.user}` : profile.user?.full_name || `Worker #${profile.id}`}
+                              </span>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getVerificationColor(profile.verification_status)}`}>
                                 {VERIFICATION_STATUS_OPTIONS.find(opt => opt.value === profile.verification_status)?.label || profile.verification_status}
                               </span>

@@ -92,18 +92,29 @@ export const fetchUserWorkerProfile = createAsyncThunk<
   "workerProfiles/fetchUserWorkerProfile",
   async (userId, { rejectWithValue }) => {
     try {
-      // First try to get all profiles and filter by user ID
       const response = await api.get("/workers/profiles/list/");
       const profiles = Array.isArray(response) ? response : response.data || [];
       
+      console.log('Fetching user worker profile for userId:', userId);
+      console.log('Profiles fetched:', profiles.length);
+      
       // Find the profile that belongs to the current user
-      const userProfile = profiles.find((profile: WorkerProfile) => profile.user === userId);
+   
+      const userProfile = profiles.find((profile: any) => {
+        if (typeof profile.user === 'string') {
+          return profile.user === userId;
+        } else if (profile.user && typeof profile.user === 'object') {
+          return profile.user.id === userId;
+        }
+        return false;
+      });
       
       if (!userProfile) {
-        
+        console.log('No worker profile found for user:', userId);
         return null;
       }
       
+      console.log('Found user worker profile:', userProfile);
       return userProfile;
     } catch (error: any) {
       console.error('Fetch user worker profile error:', error);
