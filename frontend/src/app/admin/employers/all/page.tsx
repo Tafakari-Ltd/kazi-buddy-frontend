@@ -10,7 +10,9 @@ import {
   DollarSign,
   Calendar,
   X,
-  Users
+  Users,
+  Briefcase,
+  CheckCircle
 } from "lucide-react";
 import ProtectedRoute from "@/component/Authentication/ProtectedRoute";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
@@ -32,6 +34,11 @@ const AllEmployersAdministration: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [employerJobs, setEmployerJobs] = useState<EmployerJobsCache>({});
+  const [viewMode, setViewMode] = useState<'by_employer' | 'by_status'>('by_status');
+  const [jobStatusFilter, setJobStatusFilter] = useState<'all' | string>('all');
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [loadingAllJobs, setLoadingAllJobs] = useState(false);
+  const [processingJobIds, setProcessingJobIds] = useState<Set<string>>(new Set());
 
   // Local job view modal state
   const [showJobViewModal, setShowJobViewModal] = useState(false);
@@ -61,7 +68,80 @@ const AllEmployersAdministration: React.FC = () => {
   // Initial fetch
   useEffect(() => {
     dispatch(fetchEmployerProfiles());
-  }, [dispatch]);
+    if (viewMode === 'by_status') {
+      fetchAllJobs();
+    }
+  }, [dispatch, viewMode]);
+
+  // Fetch all jobs for status-based view
+  const fetchAllJobs = async () => {
+    setLoadingAllJobs(true);
+    try {
+      const resp = await api.get('/jobs/');
+      const data = (resp && (resp as any).data) ? (resp as any).data : Array.isArray(resp) ? resp : [];
+      setAllJobs(data as Job[]);
+    } catch (e: any) {
+      console.error('Failed to fetch all jobs:', e);
+    } finally {
+      setLoadingAllJobs(false);
+    }
+  };
+
+  // Handle job status update (approve/reject)
+  const handleUpdateJobStatus = async (jobId: string, newStatus: string) => {
+    try {
+      setProcessingJobIds(prev => new Set([...prev, jobId]));
+      
+      await api.patch(`/jobs/${jobId}/`, { status: newStatus });
+
+      // Update all jobs list
+      setAllJobs(prev => prev.map(job => 
+        job.id === jobId ? { ...job, status: newStatus as any } : job
+      ));
+
+      // Update employer jobs cache
+      setEmployerJobs(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(employerId => {
+          next[employerId] = {
+            ...next[employerId],
+            jobs: next[employerId].jobs.map(job => 
+              job.id === jobId ? { ...job, status: newStatus as any } : job
+            )
+          };
+        });
+        return next;
+      });
+
+      // Update modal if viewing this job
+      if (jobToView?.id === jobId) {
+        setJobToView(prev => prev ? { ...prev, status: newStatus as any } : null);
+      }
+      
+    } catch (e: any) {
+      console.error('Error updating job status:', e);
+    } finally {
+      setProcessingJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleApproveJob = (jobId: string) => {
+    handleUpdateJobStatus(jobId, 'active');
+  };
+
+  const handleRejectJob = (jobId: string) => {
+    handleUpdateJobStatus(jobId, 'cancelled');
+  };
+
+  // Filter jobs by status
+  const filteredJobs = useMemo(() => {
+    if (jobStatusFilter === 'all') return allJobs;
+    return allJobs.filter(job => job.status === jobStatusFilter);
+  }, [allJobs, jobStatusFilter]);
 
   // Filter profiles client-side by simple search (company name, industry, location)
   const filteredProfiles = useMemo(() => {
@@ -169,7 +249,7 @@ const AllEmployersAdministration: React.FC = () => {
         <div className="mx-auto container">
           {/* Header */}
           <div className="bg-white border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
               <h1 className="text-xl font-bold text-gray-800">Employers Administration</h1>
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-96">
@@ -201,9 +281,198 @@ const AllEmployersAdministration: React.FC = () => {
             {error && (
               <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">{error}</div>
             )}
+            
+            {/* View Mode Toggle */}
+            <div className="flex gap-2 mt-4 border-t pt-4">
+              <button
+                onClick={() => setViewMode('by_status')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  viewMode === 'by_status'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                View by Job Status
+              </button>
+              <button
+                onClick={() => setViewMode('by_employer')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  viewMode === 'by_employer'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                View by Employer
+              </button>
+            </div>
+            
+            {/* Job Status Filters (shown in by_status mode) */}
+            {viewMode === 'by_status' && (
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <button
+                  onClick={() => setJobStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'all'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  All Jobs ({allJobs.length})
+                </button>
+                <button
+                  onClick={() => setJobStatusFilter('draft')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'draft'
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Draft ({allJobs.filter(j => j.status === 'draft').length})
+                </button>
+                <button
+                  onClick={() => setJobStatusFilter('active')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'active'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Active ({allJobs.filter(j => j.status === 'active').length})
+                </button>
+                <button
+                  onClick={() => setJobStatusFilter('paused')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'paused'
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Paused ({allJobs.filter(j => j.status === 'paused').length})
+                </button>
+                <button
+                  onClick={() => setJobStatusFilter('closed')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'closed'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Closed ({allJobs.filter(j => j.status === 'closed').length})
+                </button>
+                <button
+                  onClick={() => setJobStatusFilter('cancelled')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    jobStatusFilter === 'cancelled'
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Cancelled ({allJobs.filter(j => j.status === 'cancelled').length})
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Employers List */}
+          {/* Jobs by Status View */}
+          {viewMode === 'by_status' && (
+            <div className="bg-white shadow-sm border border-gray-200 overflow-hidden rounded-md">
+              {loadingAllJobs ? (
+                <div className="p-6 text-gray-600">Loading jobs...</div>
+              ) : filteredJobs.length === 0 ? (
+                <div className="p-6 text-gray-600">No jobs found.</div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {filteredJobs.map((job) => (
+                    <div key={job.id} className="p-6 hover:bg-gray-50">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Briefcase className="text-red-900" size={18} />
+                            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(job.status)}`}>
+                              {JOB_STATUS_OPTIONS.find(opt => opt.value === job.status)?.label || job.status}
+                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${getUrgencyColor(job.urgency_level)}`}>
+                              {URGENCY_LEVEL_OPTIONS.find(opt => opt.value === job.urgency_level)?.label || job.urgency_level}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-3">{job.description}</p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-4 h-4" />
+                              {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {job.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              Start: {formatDate(job.start_date)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              Max Applicants: {job.max_applicants}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-2">
+                          {(job.status === 'draft' || job.status === 'paused') && (
+                            <>
+                              <button
+                                onClick={() => handleApproveJob(job.id)}
+                                disabled={processingJobIds.has(job.id)}
+                                className="text-sm bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+                              >
+                                {processingJobIds.has(job.id) ? '...' : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4" />
+                                    Approve & Activate
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleRejectJob(job.id)}
+                                disabled={processingJobIds.has(job.id)}
+                                className="text-sm bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+                              >
+                                {processingJobIds.has(job.id) ? '...' : (
+                                  <>
+                                    <X className="w-4 h-4" />
+                                    Reject
+                                  </>
+                                )}
+                              </button>
+                            </>
+                          )}
+                          {job.status === 'active' && (
+                            <span className="text-sm text-green-600 flex items-center gap-1">
+                              <CheckCircle className="w-4 h-4" />
+                              Approved & Active
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => openViewJob(job)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Employers List (by employer view) */}
+          {viewMode === 'by_employer' && (
           <div className="bg-white shadow-sm border border-gray-200 overflow-hidden rounded-md">
             {loading ? (
               <div className="p-6 text-gray-600">Loading employers...</div>
@@ -252,12 +521,14 @@ const AllEmployersAdministration: React.FC = () => {
                           ) : (cache?.jobs?.length || 0) === 0 ? (
                             <div className="text-gray-600">No jobs posted by this employer.</div>
                           ) : (
-                            <div className="grid md:grid-cols-2 gap-3">
+                              <div className="grid md:grid-cols-2 gap-3">
                               {cache.jobs.map((job) => (
                                 <div key={job.id} className="border border-gray-200 rounded p-4">
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="font-semibold text-gray-900 truncate pr-2">{job.title}</h4>
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">{job.status}</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(job.status)}`}>
+                                      {JOB_STATUS_OPTIONS.find(opt => opt.value === job.status)?.label || job.status}
+                                    </span>
                                   </div>
                                   <p className="text-sm text-gray-600 line-clamp-2 mb-2">{job.description}</p>
                                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
@@ -265,7 +536,35 @@ const AllEmployersAdministration: React.FC = () => {
                                     <span className="inline-flex items-center gap-1"><MapPin size={14} />{job.location}</span>
                                     <span className="inline-flex items-center gap-1"><Calendar size={14} />{new Date(job.start_date).toLocaleDateString()}</span>
                                   </div>
-                                  <div className="flex items-center justify-end">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1">
+                                      {(job.status === 'draft' || job.status === 'paused') && (
+                                        <>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleApproveJob(job.id);
+                                            }}
+                                            disabled={processingJobIds.has(job.id)}
+                                            className="text-xs bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Approve & Activate Job"
+                                          >
+                                            {processingJobIds.has(job.id) ? '...' : 'Approve'}
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRejectJob(job.id);
+                                            }}
+                                            disabled={processingJobIds.has(job.id)}
+                                            className="text-xs bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                                            title="Reject Job"
+                                          >
+                                            {processingJobIds.has(job.id) ? '...' : 'Reject'}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
                                     <button
                                       onClick={() => openViewJob(job)}
                                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -285,6 +584,7 @@ const AllEmployersAdministration: React.FC = () => {
               </ul>
             )}
           </div>
+          )}
 
           {/* Pagination */}
           {pagination.total_pages > 1 && (

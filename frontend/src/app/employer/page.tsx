@@ -186,18 +186,21 @@ const EmployerApplicationsPage = () => {
 
   // Fetch real applications for this employer
   const fetchEmployerApplications = async () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !userProfile?.id) {
+      console.log('Debug: Cannot fetch applications - missing user ID or profile ID');
+      return;
+    }
     
     try {
       setApplicationsLoading(true);
       
-     
+      // Fetch all applications
       const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
         ordering: '-applied_at'
       });
       
       console.log('Debug: All applications:', response.applications.length);
-      console.log('Debug: Current user ID:', currentUserId);
+      console.log('Debug: Current employer profile ID:', userProfile.id);
       console.log('Debug: Sample application data:', response.applications[0]);
       
       console.log('Debug: Fetching detailed data for', response.applications.length, 'applications');
@@ -216,9 +219,20 @@ const EmployerApplicationsPage = () => {
       );
       
       
-      const employerApplications = detailedApplications as JobApplicationWithDetails[];
+      const employerApplications = detailedApplications.filter((app: any) => {
+        // Check if the job's employer ID matches the current employer's profile ID
+        const jobEmployerId = app.job?.employer?.id || app.job_details?.employer;
+        const isMatch = jobEmployerId === userProfile.id;
+        
+        if (!isMatch) {
+          console.log(`Debug: Filtering out application ${app.id} - job employer ${jobEmployerId} doesn't match current employer ${userProfile.id}`);
+        }
+        
+        return isMatch;
+      }) as JobApplicationWithDetails[];
       
-      console.log('Debug: Filtered applications count:', employerApplications.length);
+      console.log('Debug: Filtered applications count (only this employer\'s jobs):', employerApplications.length);
+      console.log('Debug: Total applications before filtering:', detailedApplications.length);
       
       setRealApplications(employerApplications);
       
@@ -339,9 +353,11 @@ const EmployerApplicationsPage = () => {
   useEffect(() => {
     if (profileError) {
       console.error('Profile error:', profileError);
-      // Ensure profileError is a string
-      const errorMessage = typeof profileError === 'string' ? profileError : 'An error occurred with your profile';
-      toast.error(errorMessage);
+      
+      if (profileError !== "Employer profile not found") {
+        const errorMessage = typeof profileError === 'string' ? profileError : 'An error occurred with your profile';
+        toast.error(errorMessage);
+      }
       handleClearState();
     }
   }, [profileError, handleClearState]);

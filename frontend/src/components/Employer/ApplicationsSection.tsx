@@ -37,23 +37,32 @@ const EmployerApplicationsSection = () => {
   // Get current user/employer info
   const { user, userId } = useSelector((state: RootState) => state.auth);
   const currentUserId = userId || user?.user_id || user?.id;
+  
+  // Get employer profile to filter applications
+  const { userProfile: employerProfile } = useSelector((state: RootState) => state.employerProfiles);
 
   useEffect(() => {
-    if (currentUserId) {
+    if (currentUserId && employerProfile?.id) {
       fetchEmployerApplications();
     }
-  }, [currentUserId]);
+  }, [currentUserId, employerProfile?.id]);
 
   const fetchEmployerApplications = async () => {
+    if (!employerProfile?.id) {
+      console.log('EmployerApplicationsSection Debug: Cannot fetch - no employer profile ID');
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      // Fetch all applications and filter by employer
+      // Fetch all applications
       const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
         ordering: '-applied_at'
       });
       
-      // Fetch detailed information for each application
       console.log('EmployerApplicationsSection Debug: Fetching detailed data for', response.applications.length, 'applications');
+      console.log('EmployerApplicationsSection Debug: Current employer profile ID:', employerProfile.id);
       
       const detailedApplications = await Promise.all(
         response.applications.map(async (app) => {
@@ -62,15 +71,26 @@ const EmployerApplicationsSection = () => {
             return detailResponse.application;
           } catch (error) {
             console.warn('Could not fetch details for application', app.id, error);
-            return app; // Return original app if detailed fetch fails
+            return app; 
           }
         })
       );
       
-      // For now, show all detailed applications
-      const employerApplications = detailedApplications;
       
-      console.log('EmployerApplicationsSection Debug: Detailed applications count:', employerApplications.length);
+      const employerApplications = detailedApplications.filter((app: any) => {
+        // Check if the job's employer ID matches the current employer's profile ID
+        const jobEmployerId = app.job?.employer?.id || app.job_details?.employer;
+        const isMatch = jobEmployerId === employerProfile.id;
+        
+        if (!isMatch) {
+          console.log(`EmployerApplicationsSection Debug: Filtering out application ${app.id} - job employer ${jobEmployerId} doesn't match current employer ${employerProfile.id}`);
+        }
+        
+        return isMatch;
+      });
+      
+      console.log('EmployerApplicationsSection Debug: Filtered applications count (only this employer\'s jobs):', employerApplications.length);
+      console.log('EmployerApplicationsSection Debug: Total applications before filtering:', detailedApplications.length);
       
       setApplications(employerApplications as JobApplicationWithDetails[]);
     } catch (err: any) {

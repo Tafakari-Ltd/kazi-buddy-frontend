@@ -42,6 +42,10 @@ const AllWorkersAdministration: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [workerApplications, setWorkerApplications] = useState<WorkerApplicationsCache>({});
+  const [viewMode, setViewMode] = useState<'by_worker' | 'by_status'>('by_status');
+  const [applicationFilter, setApplicationFilter] = useState<'all' | ApplicationStatus>('all');
+  const [allApplications, setAllApplications] = useState<JobApplicationWithDetails[]>([]);
+  const [loadingAllApplications, setLoadingAllApplications] = useState(false);
 
   // Local application view modal state
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -63,13 +67,13 @@ const AllWorkersAdministration: React.FC = () => {
     
     for (let i = 0; i < enrichedApps.length; i++) {
       const app = enrichedApps[i];
-      // If app.job is already an object with full details, no need to fetch
+      
       if (app.job && typeof app.job === 'object' && 'title' in app.job) {
-        // Job details already embedded in the response
+        
         continue;
       }
       
-      // Only fetch if job is a string ID and job_details is missing
+      
       if (!app.job_details && app.job && typeof app.job === 'string') {
         try {
           // Check cache first
@@ -84,7 +88,7 @@ const AllWorkersAdministration: React.FC = () => {
           }
         } catch (error) {
           console.warn(`Failed to fetch job details for job ${app.job}:`, error);
-          // Don't break the loop, continue with other applications
+          
         }
       }
     }
@@ -93,24 +97,33 @@ const AllWorkersAdministration: React.FC = () => {
   };
 
   // Admin application management functions
-  const handleUpdateApplicationStatus = async (applicationId: string, status: ApplicationStatus, workerId: string) => {
+  const handleUpdateApplicationStatus = async (applicationId: string, status: ApplicationStatus, workerId?: string) => {
     try {
       setProcessingApplicationIds(prev => new Set([...prev, applicationId]));
       
       await JobApplicationApi.updateApplication(applicationId, { status });
 
-      // Update local cache for this worker
-      setWorkerApplications(prev => ({
-        ...prev,
-        [workerId]: {
-          ...prev[workerId],
-          applications: prev[workerId]?.applications.map(app => 
-            app.id === applicationId 
-              ? { ...app, status, responded_at: new Date().toISOString() }
-              : app
-          ) || []
-        }
-      }));
+      
+      if (workerId) {
+        setWorkerApplications(prev => ({
+          ...prev,
+          [workerId]: {
+            ...prev[workerId],
+            applications: prev[workerId]?.applications.map(app => 
+              app.id === applicationId 
+                ? { ...app, status, responded_at: new Date().toISOString() }
+                : app
+            ) || []
+          }
+        }));
+      }
+
+      // Update all applications list
+      setAllApplications(prev => prev.map(app => 
+        app.id === applicationId 
+          ? { ...app, status, responded_at: new Date().toISOString() }
+          : app
+      ));
 
       
       if (applicationToView?.id === applicationId) {
@@ -133,15 +146,15 @@ const AllWorkersAdministration: React.FC = () => {
     }
   };
 
-  const handleApproveApplication = (applicationId: string, workerId: string) => {
+  const handleApproveApplication = (applicationId: string, workerId?: string) => {
     handleUpdateApplicationStatus(applicationId, 'accepted', workerId);
   };
 
-  const handleRejectApplication = (applicationId: string, workerId: string) => {
+  const handleRejectApplication = (applicationId: string, workerId?: string) => {
     handleUpdateApplicationStatus(applicationId, 'rejected', workerId);
   };
 
-  const handleMoveToReviewed = (applicationId: string, workerId: string) => {
+  const handleMoveToReviewed = (applicationId: string, workerId?: string) => {
     handleUpdateApplicationStatus(applicationId, 'reviewed', workerId);
   };
 
@@ -194,7 +207,34 @@ const AllWorkersAdministration: React.FC = () => {
   // Initial fetch
   useEffect(() => {
     dispatch(fetchWorkerProfiles());
-  }, [dispatch]);
+    if (viewMode === 'by_status') {
+      fetchAllApplications();
+    }
+  }, [dispatch, viewMode]);
+
+  // Fetch all applications for status-based view
+  const fetchAllApplications = async () => {
+    setLoadingAllApplications(true);
+    try {
+      const resp = await JobApplicationApi.getAllApplications({ 
+        ordering: '-applied_at',
+        expand: 'job_details,worker_details,employer_details'
+      });
+      const allApps = resp.applications as JobApplicationWithDetails[];
+      const enrichedData = await enrichApplicationsWithJobDetails(allApps || []);
+      setAllApplications(enrichedData);
+    } catch (e: any) {
+      console.error('Failed to fetch all applications:', e);
+    } finally {
+      setLoadingAllApplications(false);
+    }
+  };
+
+  // Filter applications by status
+  const filteredApplications = useMemo(() => {
+    if (applicationFilter === 'all') return allApplications;
+    return allApplications.filter(app => app.status === applicationFilter);
+  }, [allApplications, applicationFilter]);
 
   // Filter profiles client-side by search (location, bio, hourly_rate)
   const filteredProfiles = useMemo(() => {
@@ -335,7 +375,7 @@ const AllWorkersAdministration: React.FC = () => {
         <div className="mx-auto container">
           {/* Header */}
           <div className="bg-white border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
               <h1 className="text-xl font-bold text-gray-800">Workers Administration</h1>
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-96">
@@ -367,9 +407,199 @@ const AllWorkersAdministration: React.FC = () => {
             {error && (
               <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">{error}</div>
             )}
+            
+            {/* View Mode Toggle */}
+            <div className="flex gap-2 mt-4 border-t pt-4">
+              <button
+                onClick={() => setViewMode('by_status')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  viewMode === 'by_status'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                View by Application Status
+              </button>
+              <button
+                onClick={() => setViewMode('by_worker')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  viewMode === 'by_worker'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                View by Worker
+              </button>
+            </div>
+            
+            {/* Application Status Filters (shown in by_status mode) */}
+            {viewMode === 'by_status' && (
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <button
+                  onClick={() => setApplicationFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    applicationFilter === 'all'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  All Applications ({allApplications.length})
+                </button>
+                <button
+                  onClick={() => setApplicationFilter('pending')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    applicationFilter === 'pending'
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Pending ({allApplications.filter(a => a.status === 'pending').length})
+                </button>
+                <button
+                  onClick={() => setApplicationFilter('reviewed')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    applicationFilter === 'reviewed'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Reviewed ({allApplications.filter(a => a.status === 'reviewed').length})
+                </button>
+                <button
+                  onClick={() => setApplicationFilter('accepted')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    applicationFilter === 'accepted'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Accepted ({allApplications.filter(a => a.status === 'accepted').length})
+                </button>
+                <button
+                  onClick={() => setApplicationFilter('rejected')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    applicationFilter === 'rejected'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Rejected ({allApplications.filter(a => a.status === 'rejected').length})
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Workers List */}
+          {/* Applications by Status View */}
+          {viewMode === 'by_status' && (
+            <div className="bg-white shadow-sm border border-gray-200 overflow-hidden rounded-md">
+              {loadingAllApplications ? (
+                <div className="p-6 text-gray-600">Loading applications...</div>
+              ) : filteredApplications.length === 0 ? (
+                <div className="p-6 text-gray-600">No applications found.</div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {filteredApplications.map((application) => (
+                    <div key={application.id} className="p-6 hover:bg-gray-50">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <User className="text-red-900" size={18} />
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {typeof application.worker === 'string' 
+                                ? application.worker_details?.full_name || `Worker ID: ${application.worker}` 
+                                : application.worker?.user?.full_name || application.worker_details?.full_name || 'Unknown Worker'}
+                            </h3>
+                            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getApplicationStatusColor(application.status)}`}>
+                              {getApplicationStatusIcon(application.status)}
+                              {application.status}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="w-4 h-4" />
+                              {application.job?.title || application.job_details?.title || 'Unknown Job'}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              Applied: {formatDate(application.applied_at)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-4 h-4" />
+                              Proposed: {formatCurrency(application.proposed_rate)}
+                            </span>
+                          </div>
+                          
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-sm text-gray-700 line-clamp-2">
+                              {application.cover_letter}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-2">
+                          {application.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleMoveToReviewed(application.id)}
+                                disabled={processingApplicationIds.has(application.id)}
+                                className="text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                              >
+                                {processingApplicationIds.has(application.id) ? '...' : 'Mark as Reviewed'}
+                              </button>
+                              <button
+                                onClick={() => handleApproveApplication(application.id)}
+                                disabled={processingApplicationIds.has(application.id)}
+                                className="text-sm bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                              >
+                                {processingApplicationIds.has(application.id) ? '...' : 'Accept'}
+                              </button>
+                              <button
+                                onClick={() => handleRejectApplication(application.id)}
+                                disabled={processingApplicationIds.has(application.id)}
+                                className="text-sm bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                              >
+                                {processingApplicationIds.has(application.id) ? '...' : 'Reject'}
+                              </button>
+                            </>
+                          )}
+                          {application.status === 'reviewed' && (
+                            <>
+                              <button
+                                onClick={() => handleApproveApplication(application.id)}
+                                disabled={processingApplicationIds.has(application.id)}
+                                className="text-sm bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                              >
+                                {processingApplicationIds.has(application.id) ? '...' : 'Accept'}
+                              </button>
+                              <button
+                                onClick={() => handleRejectApplication(application.id)}
+                                disabled={processingApplicationIds.has(application.id)}
+                                className="text-sm bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                              >
+                                {processingApplicationIds.has(application.id) ? '...' : 'Reject'}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => openViewApplication(application)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Workers List (by worker view) */}
+          {viewMode === 'by_worker' && (
           <div className="bg-white shadow-sm border border-gray-200 overflow-hidden rounded-md">
             {loading ? (
               <div className="p-6 text-gray-600">Loading workers...</div>
@@ -540,6 +770,7 @@ const AllWorkersAdministration: React.FC = () => {
               </ul>
             )}
           </div>
+          )}
 
           {/* Pagination */}
           {pagination.total_pages > 1 && (

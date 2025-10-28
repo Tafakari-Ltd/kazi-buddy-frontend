@@ -95,6 +95,10 @@ export const fetchUserEmployerProfile = createAsyncThunk<
       const response = await api.get(`/employers/employer-profiles/${userId}/`);
       return response.data || response;
     } catch (error: any) {
+    
+      if (error?.status === 404) {
+        return rejectWithValue("Employer profile not found");
+      }
       return rejectWithValue(
         error?.message || "Failed to fetch user employer profile"
       );
@@ -275,7 +279,15 @@ const employerProfilesSlice = createSlice({
       })
       .addCase(fetchUserEmployerProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        
+        const errorMsg = action.payload as string;
+        if (errorMsg === "Employer profile not found") {
+         
+          state.error = null;
+          state.userProfile = null;
+        } else {
+          state.error = errorMsg;
+        }
       });
 
     // Create employer profile
