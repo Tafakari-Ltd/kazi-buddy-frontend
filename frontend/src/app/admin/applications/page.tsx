@@ -45,7 +45,7 @@ const AdminApplicationsPage = () => {
       const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
         ordering: '-applied_at'
       });
-      setApplications(response.applications as JobApplicationWithDetails[]);
+      setApplications(response.applications as any);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch applications');
     } finally {
@@ -113,9 +113,9 @@ const AdminApplicationsPage = () => {
       });
     }
   };
-  };
+  
 
-  const filteredApplications = applications.filter(app => {
+  const filteredApplications = applications.filter(app  => {
     // Filter by status
     const statusMatch = filter === 'all' || app.status === filter;
     
@@ -585,6 +585,7 @@ const AdminApplicationsPage = () => {
         )}
       </AnimatePresence>
     </div>
+  
   );
 };
 
