@@ -22,13 +22,17 @@ export interface JobApplication {
   worker: string; // Worker ID
 }
 
-export interface JobApplicationWithDetails extends JobApplication {
+// Corrected JobApplicationWithDetails interface
+export type JobApplicationWithDetails = Omit<JobApplication, 'job' | 'worker'> & {
+  job?: FullJobDetails;
+  worker?: FullWorkerDetails;
   job_details?: JobDetails;
-  job?: FullJobDetails; // Full nested job object from API
   worker_details?: WorkerDetails;
-  worker?: FullWorkerDetails; // Full nested worker object from API
   employer_details?: EmployerDetails;
-}
+};
+
+
+
 
 // User info nested in worker/employer
 export interface UserInfo {

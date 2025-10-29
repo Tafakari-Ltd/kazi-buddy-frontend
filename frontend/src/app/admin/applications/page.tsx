@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { 
-  CheckCircle, 
-  Clock, 
-  User, 
-  Briefcase, 
-  Calendar, 
-  Mail, 
-  Phone, 
+import {
+  CheckCircle,
+  Clock,
+  User,
+  Briefcase,
+  Calendar,
+  Mail,
+  Phone,
   DollarSign,
   Eye,
   AlertCircle,
@@ -15,23 +15,26 @@ import {
   Search,
   Users,
   Building,
-  MapPin
+  MapPin,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { JobApplicationApi } from "@/services/jobApplicationApi";
-import { 
-  JobApplicationWithDetails, 
+import {
+  JobApplicationWithDetails,
   ApplicationStatus,
-  ApplicationListResponse 
+  ApplicationListResponse,
 } from "@/types/jobApplication.types";
 
 const AdminApplicationsPage = () => {
-  const [applications, setApplications] = useState<JobApplicationWithDetails[]>([]);
+  const [applications, setApplications] = useState<JobApplicationWithDetails[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted'>('all');
+  const [filter, setFilter] = useState<"all" | "pending" | "accepted">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<JobApplicationWithDetails | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<JobApplicationWithDetails | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
@@ -42,12 +45,27 @@ const AdminApplicationsPage = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
-        ordering: '-applied_at'
-      });
-      setApplications(response.applications as any);
+      const response: ApplicationListResponse =
+        await JobApplicationApi.getAllApplications({
+          ordering: "-applied_at",
+        });
+
+      // Debug: check the actual structure
+      console.log("First application:", response.applications[0]);
+      console.log("Job field type:", typeof response.applications[0]?.job);
+
+      // Proper type casting based on actual structure
+      if (typeof response.applications[0]?.job === "object") {
+        // If job is already an object, it matches JobApplicationWithDetails
+        setApplications(
+          response.applications as JobApplicationWithDetails[] | any
+        );
+      } else {
+        // If job is a string ID, we need to transform or use a different type
+        setApplications(response.applications as any); // Keep as any for now
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch applications');
+      setError(err.message || "Failed to fetch applications");
     } finally {
       setLoading(false);
     }
@@ -55,28 +73,31 @@ const AdminApplicationsPage = () => {
 
   const handleAcceptApplication = async (applicationId: string) => {
     try {
-      setProcessingIds(prev => new Set([...prev, applicationId]));
-      
+      setProcessingIds((prev) => new Set([...prev, applicationId]));
+
       await JobApplicationApi.updateApplication(applicationId, {
-        status: 'accepted'
+        status: "accepted",
       });
 
       // Update local state
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === applicationId 
-            ? { ...app, status: 'accepted', responded_at: new Date().toISOString() }
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId
+            ? {
+                ...app,
+                status: "accepted",
+                responded_at: new Date().toISOString(),
+              }
             : app
         )
       );
 
       // Show success message (you can add toast here)
-      console.log('Application accepted successfully');
-      
+      console.log("Application accepted successfully");
     } catch (err: any) {
-      setError(err.message || 'Failed to accept application');
+      setError(err.message || "Failed to accept application");
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(applicationId);
         return newSet;
@@ -86,46 +107,53 @@ const AdminApplicationsPage = () => {
 
   const handleRejectApplication = async (applicationId: string) => {
     try {
-      setProcessingIds(prev => new Set([...prev, applicationId]));
-      
+      setProcessingIds((prev) => new Set([...prev, applicationId]));
+
       await JobApplicationApi.updateApplication(applicationId, {
-        status: 'rejected'
+        status: "rejected",
       });
 
       // Update local state
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === applicationId 
-            ? { ...app, status: 'rejected', responded_at: new Date().toISOString() }
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId
+            ? {
+                ...app,
+                status: "rejected",
+                responded_at: new Date().toISOString(),
+              }
             : app
         )
       );
 
-      console.log('Application rejected successfully');
-      
+      console.log("Application rejected successfully");
     } catch (err: any) {
-      setError(err.message || 'Failed to reject application');
+      setError(err.message || "Failed to reject application");
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(applicationId);
         return newSet;
       });
     }
   };
-  
 
-  const filteredApplications = applications.filter(app  => {
+  const filteredApplications = applications.filter((app) => {
     // Filter by status
-    const statusMatch = filter === 'all' || app.status === filter;
-    
+    const statusMatch = filter === "all" || app.status === filter;
+
     // Get values from nested structure
-    const workerName = app.worker?.user?.full_name || app.worker_details?.full_name || '';
-    const jobTitle = app.job?.title || app.job_details?.title || '';
-    const companyName = app.job?.employer?.company_name || app.employer_details?.company_name || '';
-    
+    const workerName =
+      app.worker?.user?.full_name || app.worker_details?.full_name || "";
+    const jobTitle = app.job?.title || app.job_details?.title || "";
+    const companyName =
+      app.job?.employer?.company_name ||
+      app.employer_details?.company_name ||
+      "";
+
     // Filter by search query
-    const searchMatch = searchQuery === '' || 
+    const searchMatch =
+      searchQuery === "" ||
       workerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       companyName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,26 +163,26 @@ const AdminApplicationsPage = () => {
 
   const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'reviewed':
-        return 'bg-blue-100 text-blue-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "accepted":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "reviewed":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status: ApplicationStatus) => {
     switch (status) {
-      case 'pending':
+      case "pending":
         return <Clock className="w-4 h-4" />;
-      case 'accepted':
+      case "accepted":
         return <CheckCircle className="w-4 h-4" />;
-      case 'rejected':
+      case "rejected":
         return <AlertCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
@@ -162,24 +190,28 @@ const AdminApplicationsPage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatCurrency = (amount: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(parseFloat(amount));
   };
 
-  const pendingCount = applications.filter(app => app.status === 'pending').length;
-  const acceptedCount = applications.filter(app => app.status === 'accepted').length;
+  const pendingCount = applications.filter(
+    (app) => app.status === "pending"
+  ).length;
+  const acceptedCount = applications.filter(
+    (app) => app.status === "accepted"
+  ).length;
 
   if (loading) {
     return (
@@ -201,8 +233,12 @@ const AdminApplicationsPage = () => {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Job Applications Management</h1>
-        <p className="text-gray-600 mt-2">Review and manage all job applications</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Job Applications Management
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Review and manage all job applications
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -213,7 +249,9 @@ const AdminApplicationsPage = () => {
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Pending Applications</p>
+              <p className="text-sm font-medium text-gray-500">
+                Pending Applications
+              </p>
               <p className="text-2xl font-bold text-gray-900">{pendingCount}</p>
             </div>
           </div>
@@ -225,8 +263,12 @@ const AdminApplicationsPage = () => {
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Accepted Applications</p>
-              <p className="text-2xl font-bold text-gray-900">{acceptedCount}</p>
+              <p className="text-sm font-medium text-gray-500">
+                Accepted Applications
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {acceptedCount}
+              </p>
             </div>
           </div>
         </div>
@@ -237,8 +279,12 @@ const AdminApplicationsPage = () => {
               <Users className="h-8 w-8 text-blue-600" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Total Applications</p>
-              <p className="text-2xl font-bold text-gray-900">{applications.length}</p>
+              <p className="text-sm font-medium text-gray-500">
+                Total Applications
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {applications.length}
+              </p>
             </div>
           </div>
         </div>
@@ -262,31 +308,31 @@ const AdminApplicationsPage = () => {
           {/* Status Filter */}
           <div className="flex gap-2">
             <button
-              onClick={() => setFilter('all')}
+              onClick={() => setFilter("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === 'all'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                filter === "all"
+                  ? "bg-red-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               All ({applications.length})
             </button>
             <button
-              onClick={() => setFilter('pending')}
+              onClick={() => setFilter("pending")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === 'pending'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                filter === "pending"
+                  ? "bg-yellow-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Pending ({pendingCount})
             </button>
             <button
-              onClick={() => setFilter('accepted')}
+              onClick={() => setFilter("accepted")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === 'accepted'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                filter === "accepted"
+                  ? "bg-green-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               Accepted ({acceptedCount})
@@ -314,38 +360,53 @@ const AdminApplicationsPage = () => {
         {filteredApplications.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
             <Users className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No applications found
+            </h3>
             <p className="text-gray-600">
-              {searchQuery || filter !== 'all'
-                ? 'Try adjusting your search or filter criteria'
-                : 'Applications will appear here when workers apply for jobs'
-              }
+              {searchQuery || filter !== "all"
+                ? "Try adjusting your search or filter criteria"
+                : "Applications will appear here when workers apply for jobs"}
             </p>
           </div>
         ) : (
           filteredApplications.map((application) => (
-            <div key={application.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+            <div
+              key={application.id}
+              className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+            >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {application.worker?.user?.full_name || application.worker_details?.full_name || 'Unknown Worker'}
+                        {application.worker?.user?.full_name ||
+                          application.worker_details?.full_name ||
+                          "Unknown Worker"}
                       </h3>
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          application.status
+                        )}`}
+                      >
                         {getStatusIcon(application.status)}
-                        {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                        {application.status.charAt(0).toUpperCase() +
+                          application.status.slice(1)}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                       <span className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        {application.job?.title || application.job_details?.title || 'Unknown Job'}
+                        {application.job?.title ||
+                          application.job_details?.title ||
+                          "Unknown Job"}
                       </span>
                       <span className="flex items-center gap-1">
                         <Building className="w-4 h-4" />
-                        {application.job?.employer?.company_name || application.employer_details?.company_name || 'Unknown Company'}
+                        {application.job?.employer?.company_name ||
+                          application.employer_details?.company_name ||
+                          "Unknown Company"}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -360,12 +421,17 @@ const AdminApplicationsPage = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Available: {new Date(application.availability_start).toLocaleDateString()}
+                        Available:{" "}
+                        {new Date(
+                          application.availability_start
+                        ).toLocaleDateString()}
                       </span>
-                      {(application.job?.location || application.job_details?.location) && (
+                      {(application.job?.location ||
+                        application.job_details?.location) && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {application.job?.location || application.job_details?.location}
+                          {application.job?.location ||
+                            application.job_details?.location}
                         </span>
                       )}
                     </div>
@@ -383,10 +449,12 @@ const AdminApplicationsPage = () => {
                       <Eye className="w-4 h-4" />
                     </button>
 
-                    {application.status === 'pending' && (
+                    {application.status === "pending" && (
                       <>
                         <button
-                          onClick={() => handleAcceptApplication(application.id)}
+                          onClick={() =>
+                            handleAcceptApplication(application.id)
+                          }
                           disabled={processingIds.has(application.id)}
                           className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
@@ -398,7 +466,9 @@ const AdminApplicationsPage = () => {
                           Accept
                         </button>
                         <button
-                          onClick={() => handleRejectApplication(application.id)}
+                          onClick={() =>
+                            handleRejectApplication(application.id)
+                          }
                           disabled={processingIds.has(application.id)}
                           className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
@@ -415,7 +485,9 @@ const AdminApplicationsPage = () => {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Cover Letter</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Cover Letter
+                  </h4>
                   <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
                     {application.cover_letter}
                   </p>
@@ -444,11 +516,19 @@ const AdminApplicationsPage = () => {
               <div className="flex justify-between items-start p-6 border-b">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Application from {selectedApplication.worker?.user?.full_name || selectedApplication.worker_details?.full_name || 'Unknown Worker'}
+                    Application from{" "}
+                    {selectedApplication.worker?.user?.full_name ||
+                      selectedApplication.worker_details?.full_name ||
+                      "Unknown Worker"}
                   </h3>
-                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedApplication.status)}`}>
+                  <div
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                      selectedApplication.status
+                    )}`}
+                  >
                     {getStatusIcon(selectedApplication.status)}
-                    {selectedApplication.status.charAt(0).toUpperCase() + selectedApplication.status.slice(1)}
+                    {selectedApplication.status.charAt(0).toUpperCase() +
+                      selectedApplication.status.slice(1)}
                   </div>
                 </div>
                 <button
@@ -463,7 +543,9 @@ const AdminApplicationsPage = () => {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Cover Letter</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Cover Letter
+                    </h4>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                         {selectedApplication.cover_letter}
@@ -473,7 +555,9 @@ const AdminApplicationsPage = () => {
 
                   {selectedApplication.worker_notes && (
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Additional Notes</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3">
+                        Additional Notes
+                      </h4>
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <p className="text-gray-700 leading-relaxed">
                           {selectedApplication.worker_notes}
@@ -484,7 +568,9 @@ const AdminApplicationsPage = () => {
 
                   {/* Job Details */}
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Job Details</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Job Details
+                    </h4>
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                       <h5 className="font-medium text-blue-900 mb-2">
                         {selectedApplication.job_details?.title}
@@ -499,7 +585,8 @@ const AdminApplicationsPage = () => {
                         </span>
                         <span className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          {selectedApplication.job_details?.budget_min} - {selectedApplication.job_details?.budget_max}
+                          {selectedApplication.job_details?.budget_min} -{" "}
+                          {selectedApplication.job_details?.budget_max}
                         </span>
                       </div>
                     </div>
@@ -509,35 +596,49 @@ const AdminApplicationsPage = () => {
                 {/* Sidebar */}
                 <div className="space-y-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Application Info</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Application Info
+                    </h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Proposed Rate:</span>
-                        <span className="font-medium">{formatCurrency(selectedApplication.proposed_rate)}</span>
+                        <span className="font-medium">
+                          {formatCurrency(selectedApplication.proposed_rate)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Available From:</span>
                         <span className="font-medium">
-                          {new Date(selectedApplication.availability_start).toLocaleDateString()}
+                          {new Date(
+                            selectedApplication.availability_start
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Applied:</span>
-                        <span className="font-medium">{formatDate(selectedApplication.applied_at)}</span>
+                        <span className="font-medium">
+                          {formatDate(selectedApplication.applied_at)}
+                        </span>
                       </div>
                       {selectedApplication.responded_at && (
                         <div className="flex justify-between">
                           <span className="text-gray-600">Responded:</span>
-                          <span className="font-medium">{formatDate(selectedApplication.responded_at)}</span>
+                          <span className="font-medium">
+                            {formatDate(selectedApplication.responded_at)}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Worker Info</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Worker Info
+                    </h4>
                     <div className="space-y-2 text-sm">
-                      <p className="font-medium">{selectedApplication.worker_details?.full_name}</p>
+                      <p className="font-medium">
+                        {selectedApplication.worker_details?.full_name}
+                      </p>
                       <div className="flex items-center gap-1 text-gray-600">
                         <Mail className="w-4 h-4" />
                         {selectedApplication.worker_details?.email}
@@ -552,7 +653,7 @@ const AdminApplicationsPage = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  {selectedApplication.status === 'pending' && (
+                  {selectedApplication.status === "pending" && (
                     <div className="space-y-2">
                       <button
                         onClick={() => {
@@ -585,7 +686,6 @@ const AdminApplicationsPage = () => {
         )}
       </AnimatePresence>
     </div>
-  
   );
 };
 
