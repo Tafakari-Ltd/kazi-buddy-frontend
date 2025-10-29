@@ -220,7 +220,7 @@ const AllWorkersAdministration: React.FC = () => {
         ordering: '-applied_at',
         expand: 'job_details,worker_details,employer_details'
       });
-      const allApps = resp.applications as JobApplicationWithDetails[];
+      const allApps = resp.applications as any;
       const enrichedData = await enrichApplicationsWithJobDetails(allApps || []);
       setAllApplications(enrichedData);
     } catch (e: any) {
@@ -263,7 +263,7 @@ const AllWorkersAdministration: React.FC = () => {
           ordering: '-applied_at',
           expand: 'job_details,worker_details,employer_details'
         });
-        const allApps = resp.applications as JobApplicationWithDetails[];
+        const allApps = resp.applications as any;
         
        
         if (allApps && allApps.length > 0) {
@@ -273,7 +273,7 @@ const AllWorkersAdministration: React.FC = () => {
         }
         
         // Filter by worker ID - handle both string and object formats
-        const filteredData = (allApps || []).filter((app) => {
+        const filteredData = (allApps || []).filter((app : any) => {
           // Check if worker is a string (ID) or object
           const workerId = typeof app.worker === 'string' ? app.worker : app.worker?.id;
           return workerId === id || app.worker_details?.id === id;
@@ -326,7 +326,7 @@ const AllWorkersAdministration: React.FC = () => {
         ordering: '-applied_at',
         expand: 'job_details,worker_details,employer_details'
       });
-      const allApps = resp.applications as JobApplicationWithDetails[];
+      const allApps = resp.applications as any;
       
       // Debug: Log the structure for expandAll
       if (allApps && allApps.length > 0) {
@@ -934,7 +934,7 @@ const AllWorkersAdministration: React.FC = () => {
                       <>
                         <button
                           onClick={() => {
-                            const workerId = profiles.find(p => 
+                            const workerId = profiles.find((p : any) => 
                               p.user === applicationToView.worker || 
                               p.id === applicationToView.worker_details?.id
                             )?.id;
@@ -952,7 +952,7 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            const workerId = profiles.find(p => 
+                            const workerId = profiles.find((p : any) => 
                               p.user === applicationToView.worker || 
                               p.id === applicationToView.worker_details?.id
                             )?.id;
@@ -970,7 +970,7 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            const workerId = profiles.find(p => 
+                            const workerId = profiles.find((p : any) => 
                               p.user === applicationToView.worker || 
                               p.id === applicationToView.worker_details?.id
                             )?.id;
@@ -992,7 +992,7 @@ const AllWorkersAdministration: React.FC = () => {
                       <>
                         <button
                           onClick={() => {
-                            const workerId = profiles.find(p => 
+                            const workerId = profiles.find((p : any) => 
                               p.user === applicationToView.worker || 
                               p.id === applicationToView.worker_details?.id
                             )?.id;
@@ -1010,7 +1010,7 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            const workerId = profiles.find(p => 
+                            const workerId = profiles.find((p : any) => 
                               p.user === applicationToView.worker || 
                               p.id === applicationToView.worker_details?.id
                             )?.id;
