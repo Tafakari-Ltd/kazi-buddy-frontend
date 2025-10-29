@@ -33,6 +33,7 @@ import {
   formatAvailabilitySchedule,
   calculateProfileCompletion,
 } from "@/types/worker.types";
+import { JobStatus } from "@/types/job.types";
 
 const STATUS_OPTIONS = [
   "Dashboard",
@@ -272,7 +273,7 @@ const WorkerDashboardPage = () => {
       
       // Use the actual jobs API to fetch available jobs
       const result = await handleFetchJobs({ 
-        status: 'active', 
+        status:JobStatus.ACTIVE, 
         visibility: 'public',
         page: 1,
         limit: 50
@@ -280,11 +281,11 @@ const WorkerDashboardPage = () => {
       
       console.log('Raw jobs result:', result);
       
-      if (result) {
+      if (result ) {
         let jobsArray = [];
         
         // Handle different response formats
-        if (result.data && Array.isArray(result.data)) {
+        if (result.data && Array.isArray(result.data )) {
           jobsArray = result.data;
         } else if (Array.isArray(result)) {
           jobsArray = result;
