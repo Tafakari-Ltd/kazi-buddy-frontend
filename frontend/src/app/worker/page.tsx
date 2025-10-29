@@ -273,7 +273,7 @@ const WorkerDashboardPage = () => {
       
       // Use the actual jobs API to fetch available jobs
       const result = await handleFetchJobs({ 
-        status:JobStatus.ACTIVE, 
+        status: JobStatus.ACTIVE, 
         visibility: 'public',
         page: 1,
         limit: 50
@@ -281,51 +281,67 @@ const WorkerDashboardPage = () => {
       
       console.log('Raw jobs result:', result);
       
-      if (result ) {
-        let jobsArray = [];
+      let jobsArray = [];
+      
+      // Handle different response formats
+      if (typeof result === 'string') {
+        // If result is a string, it's likely an error message
+        console.error('API returned string error:', result);
+        setJobsError(result);
+        setAvailableJobs([]);
+        return;
+      } 
+      // Check if result has a data property that's an array
+      else if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
+        jobsArray = result.data;
+      } 
+      // Check if result has a jobs property that's an array
+      else if (result && typeof result === 'object' && 'jobs' in result && Array.isArray(result.jobs)) {
+        jobsArray = result.jobs;
+      } 
+      // Check if result is directly an array
+      else if (Array.isArray(result)) {
+        jobsArray = result;
+      }
+      // Check if result is an object with results property (common in paginated APIs)
+      else if (result && typeof result === 'object' && 'results' in result && Array.isArray(result.results)) {
+        jobsArray = result.results;
+      }
+      else {
+        console.log('Unexpected result format:', result);
+        setAvailableJobs([]);
+        return;
+      }
+      
+      console.log('Jobs array to transform:', jobsArray);
+      
+      if (jobsArray.length > 0) {
+        // Transform Job[] to JobDetails[] format
+        const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          location: job.location,
+          location_text: job.location_text || job.location,
+          job_type: job.job_type,
+          urgency_level: job.urgency_level,
+          budget_min: job.budget_min,
+          budget_max: job.budget_max,
+          payment_type: job.payment_type,
+          start_date: job.start_date,
+          end_date: job.end_date,
+          estimated_hours: job.estimated_hours,
+          max_applicants: job.max_applicants,
+          status: job.status,
+          visibility: job.visibility,
+          employer: job.employer,
+          category: job.category
+        }));
         
-        // Handle different response formats
-        if (result.data && Array.isArray(result.data )) {
-          jobsArray = result.data;
-        } else if (Array.isArray(result)) {
-          jobsArray = result;
-        } else if (result.jobs && Array.isArray(result.jobs)) {
-          jobsArray = result.jobs;
-        }
-        
-        console.log('Jobs array to transform:', jobsArray);
-        
-        if (jobsArray.length > 0) {
-          // Transform Job[] to JobDetails[] format
-          const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
-            id: job.id,
-            title: job.title,
-            description: job.description,
-            location: job.location,
-            location_text: job.location_text || job.location,
-            job_type: job.job_type,
-            urgency_level: job.urgency_level,
-            budget_min: job.budget_min,
-            budget_max: job.budget_max,
-            payment_type: job.payment_type,
-            start_date: job.start_date,
-            end_date: job.end_date,
-            estimated_hours: job.estimated_hours,
-            max_applicants: job.max_applicants,
-            status: job.status,
-            visibility: job.visibility,
-            employer: job.employer,
-            category: job.category
-          }));
-          
-          console.log('Transformed jobs:', transformedJobs);
-          setAvailableJobs(transformedJobs);
-        } else {
-          console.log('No jobs found in result');
-          setAvailableJobs([]);
-        }
+        console.log('Transformed jobs:', transformedJobs);
+        setAvailableJobs(transformedJobs);
       } else {
-        console.log('No result returned from API');
+        console.log('No jobs found in result');
         setAvailableJobs([]);
       }
     } catch (err: any) {
