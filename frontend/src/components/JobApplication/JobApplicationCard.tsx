@@ -111,29 +111,29 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({
             {showJobDetails && (application.job || application.job_details) && (
               <div className="mb-2">
                 <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  {application.job?.title || application.job_details?.title || 'Job Application'}
+                  {(typeof application.job !== 'string' ? application.job?.title : undefined) || application.job_details?.title || 'Job Application'}
                 </h3>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  {(application.job?.location_text || application.job_details?.location_text) && (
+                  {((typeof application.job !== 'string' ? application.job?.location_text : undefined) || application.job_details?.location_text) && (
                     <span className="flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {application.job?.location_text || application.job_details?.location_text}
+                      {(typeof application.job !== 'string' ? application.job?.location_text : undefined) || application.job_details?.location_text}
                     </span>
                   )}
-                  {((application.job?.budget_min && application.job?.budget_max) || (application.job_details?.budget_min && application.job_details?.budget_max)) && (
+                  {(((typeof application.job !== 'string' ? (application.job?.budget_min && application.job?.budget_max) : false)) || (application.job_details?.budget_min && application.job_details?.budget_max)) && (
                     <span className="flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
-                      ${application.job?.budget_min || application.job_details?.budget_min} - ${application.job?.budget_max || application.job_details?.budget_max}
+                      ${(typeof application.job !== 'string' ? application.job?.budget_min : undefined) || application.job_details?.budget_min} - ${(typeof application.job !== 'string' ? application.job?.budget_max : undefined) || application.job_details?.budget_max}
                     </span>
                   )}
-                  {(application.job?.job_type || application.job_details?.job_type) && (
+                  {((typeof application.job !== 'string' ? application.job?.job_type : undefined) || application.job_details?.job_type) && (
                     <span className="capitalize">
-                      {(application.job?.job_type || application.job_details?.job_type || '').replace('_', ' ')}
+                      {((typeof application.job !== 'string' ? application.job?.job_type : undefined) || application.job_details?.job_type || '').replace('_', ' ')}
                     </span>
                   )}
                 </div>
@@ -147,19 +147,19 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({
                   {application.worker_details?.profile_photo_url ? (
                     <img
                       src={application.worker_details.profile_photo_url}
-                      alt={application.worker?.user?.full_name || application.worker_details?.full_name || 'Worker'}
+                      alt={(typeof application.worker !== 'string' ? application.worker?.user?.full_name : undefined) || application.worker_details?.full_name || 'Worker'}
                       className="w-8 h-8 rounded-full mr-3"
                     />
                   ) : (
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
                       <span className="text-sm font-medium text-gray-600">
-                        {(application.worker?.user?.full_name || application.worker_details?.full_name || 'U').charAt(0)}
+                        {((typeof application.worker !== 'string' ? application.worker?.user?.full_name : undefined) || application.worker_details?.full_name || 'U').charAt(0)}
                       </span>
                     </div>
                   )}
                   <div>
                     <h3 className="text-lg font-medium text-gray-900">
-                      {application.worker?.user?.full_name || application.worker_details?.full_name || 'Unknown Worker'}
+                      {(typeof application.worker !== 'string' ? application.worker?.user?.full_name : undefined) || application.worker_details?.full_name || 'Unknown Worker'}
                     </h3>
                     <p className="text-sm text-gray-600">@{application.worker_details?.username || 'worker'}</p>
                   </div>

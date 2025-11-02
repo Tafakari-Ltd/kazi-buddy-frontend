@@ -41,7 +41,7 @@ const ApplicationNotifications = () => {
   useEffect(() => {
     if (currentUserId) {
       fetchApplicationUpdates();
-      // Poll for updates every 30 seconds
+      
       const interval = setInterval(fetchApplicationUpdates, 30000);
       return () => clearInterval(interval);
     }
@@ -54,7 +54,7 @@ const ApplicationNotifications = () => {
         ordering: '-responded_at'
       });
       
-      // Filter applications that have been responded to (accepted/rejected)
+      // Filter applications that have been accepted
       const respondedApplications = response.applications.filter(app => 
         app.responded_at && 
         (app.status === 'accepted' || app.status === 'rejected')
@@ -64,12 +64,12 @@ const ApplicationNotifications = () => {
       const newNotifications: NotificationItem[] = respondedApplications.map(app => ({
         id: `${app.id}-${app.responded_at}`,
         type: app.status === 'accepted' ? 'accepted' : 'rejected',
-        application: app as JobApplicationWithDetails,
+        application: app as unknown as JobApplicationWithDetails,
         timestamp: app.responded_at || app.applied_at,
-        read: false 
+        read: false
       }));
 
-      // Sort by timestamp (most recent first)
+      //  (most recent first)
       newNotifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       setNotifications(newNotifications.slice(0, 10)); // Keep last 10 notifications

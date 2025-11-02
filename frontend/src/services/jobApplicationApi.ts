@@ -374,7 +374,7 @@ export class JobApplicationApi {
       responded_at: application.responded_at ? new Date(application.responded_at).toISOString() : null,
       
       proposed_rate: parseFloat(application.proposed_rate).toFixed(2)
-    };
+    } as unknown as JobApplicationWithDetails;
   }
 }
 

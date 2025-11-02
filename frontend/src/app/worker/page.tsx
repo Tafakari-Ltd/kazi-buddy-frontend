@@ -272,23 +272,22 @@ const WorkerDashboardPage = () => {
       
       // Use the actual jobs API to fetch available jobs
       const result = await handleFetchJobs({ 
-        status: 'active', 
-        visibility: 'public',
+        status: 'active' as any,
         page: 1,
         limit: 50
       });
       
       console.log('Raw jobs result:', result);
       
-      if (result) {
+      if (result && typeof result !== 'string') {
         let jobsArray = [];
         
         // Handle different response formats
-        if (result.data && Array.isArray(result.data)) {
+        if ('data' in result && result.data && Array.isArray(result.data)) {
           jobsArray = result.data;
         } else if (Array.isArray(result)) {
           jobsArray = result;
-        } else if (result.jobs && Array.isArray(result.jobs)) {
+        } else if ('jobs' in result && Array.isArray(result.jobs)) {
           jobsArray = result.jobs;
         }
         

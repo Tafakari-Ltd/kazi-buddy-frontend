@@ -59,7 +59,7 @@ export const fetchJobs = createAsyncThunk<
       console.log('Fetching jobs from URL:', url);
       const response = await api.get(url);
       console.log('Jobs response:', response);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error?.message || "Failed to fetch jobs"
@@ -181,7 +181,7 @@ export const fetchJobsByEmployer = createAsyncThunk<
   async (employerId, { rejectWithValue }) => {
     try {
       console.log('Fetching jobs for employer ID:', employerId);
-      // Try with employer_id parameter first
+      
       const response = await api.get(`/jobs/employers/?employer_id=${employerId}`);
       console.log('Jobs fetch response:', response.data);
       return response.data;

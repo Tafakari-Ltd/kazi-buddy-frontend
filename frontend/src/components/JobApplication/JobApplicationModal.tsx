@@ -32,7 +32,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const handleSuccess = () => {
     toast.success('Application submitted successfully!');
-    onSuccess?.(); // Call external success handler if provided
+    onSuccess?.();
     hideJobModal();
   };
 

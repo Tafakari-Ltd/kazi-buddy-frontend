@@ -91,14 +91,14 @@ const EmployerApplicationsPage = () => {
     }
   }, [searchParams]);
   
-  // Auth state with defensive checks
+ 
   const authState = useSelector((state: RootState) => state.auth || {});
   const { user, userId, isAuthenticated } = authState;
   
   // Get the actual user ID 
   const currentUserId = userId || user?.user_id || user?.id;
   
-  // Employer profiles hook with error handling
+  // Employer profiles hook 
   let employerProfiles;
   try {
     employerProfiles = useEmployerProfiles();
@@ -221,7 +221,7 @@ const EmployerApplicationsPage = () => {
       
       const employerApplications = detailedApplications.filter((app: any) => {
         // Check if the job's employer ID matches the current employer's profile ID
-        const jobEmployerId = app.job?.employer?.id || app.job_details?.employer;
+        const jobEmployerId = (typeof app.job !== 'string' ? app.job?.employer?.id : undefined) || app.job_details?.employer;
         const isMatch = jobEmployerId === userProfile.id;
         
         if (!isMatch) {
@@ -239,11 +239,11 @@ const EmployerApplicationsPage = () => {
       
       const convertedApplications: Application[] = employerApplications.map((app, index) => ({
         id: parseInt(app.id) || index + 1,
-        applicantName: app.worker?.user?.full_name || app.worker_details?.full_name || 'Unknown Worker',
-        jobTitle: app.job?.title || app.job_details?.title || 'Unknown Job',
+        applicantName: (typeof app.worker !== 'string' ? app.worker?.user?.full_name : undefined) || app.worker_details?.full_name || 'Unknown Worker',
+        jobTitle: (typeof app.job !== 'string' ? app.job?.title : undefined) || app.job_details?.title || 'Unknown Job',
         appliedDate: new Date(app.applied_at).toISOString().split('T')[0],
         phone: app.worker_details?.phone_number || 'N/A',
-        email: app.worker?.user?.email || app.worker_details?.email || '',
+        email: (typeof app.worker !== 'string' ? app.worker?.user?.email : undefined) || app.worker_details?.email || '',
         experience: app.worker_details?.experience_level || 'Not specified',
         availability: new Date(app.availability_start).toLocaleDateString(),
         status: mapApplicationStatus(app.status),
@@ -278,7 +278,7 @@ const EmployerApplicationsPage = () => {
     }
   };
 
-  // Map real application status to old stage format
+  
   const mapApplicationStage = (status: string): ApplicationStage => {
     switch (status) {
       case 'pending':

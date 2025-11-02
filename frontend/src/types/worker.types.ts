@@ -15,7 +15,7 @@ export interface WorkerUserInfo {
 // Worker Profile Interface
 export interface WorkerProfile {
   id: string;
-  user: string | WorkerUserInfo; // Can be user ID (string) or nested user object
+  user: string | WorkerUserInfo; 
   location: string;
   location_text: string;
   is_available: boolean;

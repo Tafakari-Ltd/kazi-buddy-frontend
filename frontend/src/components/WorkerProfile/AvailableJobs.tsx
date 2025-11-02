@@ -40,7 +40,7 @@ export const AvailableJobs: React.FC<AvailableJobsProps> = ({
     const mergedJobs = jobs.map(job => {
       // Handle both app.job as string (ID) or object
       const application = applications.find(app => {
-        const jobId = typeof app.job === 'string' ? app.job : app.job?.id;
+        const jobId = typeof app.job === 'string' ? app.job : (app.job as any)?.id;
         return jobId === job.id;
       });
       return {

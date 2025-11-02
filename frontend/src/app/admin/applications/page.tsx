@@ -43,9 +43,24 @@ const AdminApplicationsPage = () => {
     try {
       setLoading(true);
       const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
-        ordering: '-applied_at'
+        ordering: '-applied_at',
+        expand: 'job_details,worker_details,employer_details'
       });
-      setApplications(response.applications as JobApplicationWithDetails[]);
+      
+      // Fetch detailed data for each application
+      const detailedApplications = await Promise.all(
+        response.applications.map(async (app) => {
+          try {
+            const detailResponse = await JobApplicationApi.getApplicationDetails(app.id);
+            return detailResponse.application;
+          } catch (error) {
+            console.warn('Could not fetch details for application', app.id, error);
+            return app as unknown as JobApplicationWithDetails;
+          }
+        })
+      );
+      
+      setApplications(detailedApplications);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch applications');
     } finally {
@@ -70,7 +85,7 @@ const AdminApplicationsPage = () => {
         )
       );
 
-      // Show success message (you can add toast here)
+      // Show success message
       console.log('Application accepted successfully');
       
     } catch (err: any) {
@@ -113,18 +128,17 @@ const AdminApplicationsPage = () => {
       });
     }
   };
-  };
 
   const filteredApplications = applications.filter(app => {
-    // Filter by status
+    
     const statusMatch = filter === 'all' || app.status === filter;
     
     // Get values from nested structure
-    const workerName = app.worker?.user?.full_name || app.worker_details?.full_name || '';
-    const jobTitle = app.job?.title || app.job_details?.title || '';
-    const companyName = app.job?.employer?.company_name || app.employer_details?.company_name || '';
+    const workerName = (typeof app.worker !== 'string' ? app.worker?.user?.full_name : undefined) || app.worker_details?.full_name || '';
+    const jobTitle = (typeof app.job !== 'string' ? app.job?.title : undefined) || app.job_details?.title || '';
+    const companyName = (typeof app.job !== 'string' ? app.job?.employer?.company_name : undefined) || app.employer_details?.company_name || '';
     
-    // Filter by search query
+    
     const searchMatch = searchQuery === '' || 
       workerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -330,7 +344,7 @@ const AdminApplicationsPage = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {application.worker?.user?.full_name || application.worker_details?.full_name || 'Unknown Worker'}
+                        {(typeof application.worker !== 'string' ? application.worker?.user?.full_name : undefined) || application.worker_details?.full_name || 'Unknown Worker'}
                       </h3>
                       <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
                         {getStatusIcon(application.status)}
@@ -341,11 +355,11 @@ const AdminApplicationsPage = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                       <span className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        {application.job?.title || application.job_details?.title || 'Unknown Job'}
+                        {(typeof application.job !== 'string' ? application.job?.title : undefined) || application.job_details?.title || 'Unknown Job'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Building className="w-4 h-4" />
-                        {application.job?.employer?.company_name || application.employer_details?.company_name || 'Unknown Company'}
+                        {(typeof application.job !== 'string' ? application.job?.employer?.company_name : undefined) || application.employer_details?.company_name || 'Unknown Company'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -362,10 +376,10 @@ const AdminApplicationsPage = () => {
                         <Calendar className="w-4 h-4" />
                         Available: {new Date(application.availability_start).toLocaleDateString()}
                       </span>
-                      {(application.job?.location || application.job_details?.location) && (
+                      {((typeof application.job !== 'string' ? application.job?.location : undefined) || application.job_details?.location) && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {application.job?.location || application.job_details?.location}
+                          {(typeof application.job !== 'string' ? application.job?.location : undefined) || application.job_details?.location}
                         </span>
                       )}
                     </div>
@@ -444,7 +458,7 @@ const AdminApplicationsPage = () => {
               <div className="flex justify-between items-start p-6 border-b">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Application from {selectedApplication.worker?.user?.full_name || selectedApplication.worker_details?.full_name || 'Unknown Worker'}
+                    Application from {(typeof selectedApplication.worker !== 'string' ? selectedApplication.worker?.user?.full_name : undefined) || selectedApplication.worker_details?.full_name || 'Unknown Worker'}
                   </h3>
                   <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedApplication.status)}`}>
                     {getStatusIcon(selectedApplication.status)}

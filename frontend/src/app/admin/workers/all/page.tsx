@@ -60,7 +60,6 @@ const AllWorkersAdministration: React.FC = () => {
     setApplicationToView(null); 
   };
 
-  // Helper function to enrich applications with job details
   const enrichApplicationsWithJobDetails = async (applications: JobApplicationWithDetails[]) => {
     const enrichedApps = [...applications];
     const jobCache = new Map();
@@ -220,7 +219,7 @@ const AllWorkersAdministration: React.FC = () => {
         ordering: '-applied_at',
         expand: 'job_details,worker_details,employer_details'
       });
-      const allApps = resp.applications as JobApplicationWithDetails[];
+      const allApps = resp.applications as unknown as JobApplicationWithDetails[];
       const enrichedData = await enrichApplicationsWithJobDetails(allApps || []);
       setAllApplications(enrichedData);
     } catch (e: any) {
@@ -263,7 +262,7 @@ const AllWorkersAdministration: React.FC = () => {
           ordering: '-applied_at',
           expand: 'job_details,worker_details,employer_details'
         });
-        const allApps = resp.applications as JobApplicationWithDetails[];
+        const allApps = resp.applications as unknown as JobApplicationWithDetails[];
         
        
         if (allApps && allApps.length > 0) {
@@ -272,14 +271,14 @@ const AllWorkersAdministration: React.FC = () => {
           console.log('Job details:', allApps[0].job_details);
         }
         
-        // Filter by worker ID - handle both string and object formats
+        // Filter by worker ID
         const filteredData = (allApps || []).filter((app) => {
-          // Check if worker is a string (ID) or object
+          // Check if worker is a  (ID) or object
           const workerId = typeof app.worker === 'string' ? app.worker : app.worker?.id;
           return workerId === id || app.worker_details?.id === id;
         });
         
-        // Enrich applications with missing job details
+        
         const enrichedData = await enrichApplicationsWithJobDetails(filteredData);
         
         setWorkerApplications((prev) => ({
@@ -326,9 +325,9 @@ const AllWorkersAdministration: React.FC = () => {
         ordering: '-applied_at',
         expand: 'job_details,worker_details,employer_details'
       });
-      const allApps = resp.applications as JobApplicationWithDetails[];
+      const allApps = resp.applications as unknown as JobApplicationWithDetails[];
       
-      // Debug: Log the structure for expandAll
+      // Debug
       if (allApps && allApps.length > 0) {
         console.log('ExpandAll - First application structure:', allApps[0]);
         console.log('ExpandAll - Job details:', allApps[0].job_details);
@@ -340,7 +339,7 @@ const AllWorkersAdministration: React.FC = () => {
       setWorkerApplications((prev) => {
         const next = { ...prev } as WorkerApplicationsCache;
         toFetch.forEach((id) => {
-          // Filter by worker ID - handle both string and object formats
+          // Filter by worker ID 
           const data = enrichedAllApps.filter((app) => {
             const workerId = typeof app.worker === 'string' ? app.worker : app.worker?.id;
             return workerId === id || app.worker_details?.id === id;
@@ -432,7 +431,7 @@ const AllWorkersAdministration: React.FC = () => {
               </button>
             </div>
             
-            {/* Application Status Filters (shown in by_status mode) */}
+            {/* Application Status Filters */}
             {viewMode === 'by_status' && (
               <div className="flex gap-2 mt-3 flex-wrap">
                 <button
@@ -518,7 +517,7 @@ const AllWorkersAdministration: React.FC = () => {
                           <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                             <span className="flex items-center gap-1">
                               <Briefcase className="w-4 h-4" />
-                              {application.job?.title || application.job_details?.title || 'Unknown Job'}
+                              {(typeof application.job !== 'string' ? application.job?.title : undefined) || application.job_details?.title || 'Unknown Job'}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
@@ -664,7 +663,7 @@ const AllWorkersAdministration: React.FC = () => {
                                 <div key={application.id} className="border border-gray-200 rounded p-4">
                                   <div className="flex items-center justify-between mb-1">
                                     <h4 className="font-semibold text-gray-900 truncate pr-2">
-                                      {application.job?.title || application.job_details?.title || 
+                                      {(typeof application.job !== 'string' ? application.job?.title : undefined) || application.job_details?.title || 
                                        (application.job ? `Job ID: ${typeof application.job === 'string' ? application.job : application.job.id}` : 'Unknown Job')}
                                     </h4>
                                     <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getApplicationStatusColor(application.status)}`}>
@@ -673,7 +672,7 @@ const AllWorkersAdministration: React.FC = () => {
                                     </span>
                                   </div>
                                   <p className="text-xs text-gray-600 mb-2">
-                                    {application.job?.employer?.company_name || application.employer_details?.company_name || 'Unknown Company'}
+                                    {(typeof application.job !== 'string' ? application.job?.employer?.company_name : undefined) || application.employer_details?.company_name || 'Unknown Company'}
                                   </p>
                                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
                                     <span className="inline-flex items-center gap-1">
@@ -860,22 +859,22 @@ const AllWorkersAdministration: React.FC = () => {
                         <div className="flex items-center gap-2 mb-2">
                           <Briefcase className="text-blue-900" size={18} />
                           <h5 className="font-medium text-blue-900">
-                            {applicationToView.job?.title || applicationToView.job_details?.title || 
+                            {(typeof applicationToView.job !== 'string' ? applicationToView.job?.title : undefined) || applicationToView.job_details?.title || 
                              (applicationToView.job ? `Job ID: ${typeof applicationToView.job === 'string' ? applicationToView.job : applicationToView.job.id}` : 'Unknown Job')}
                           </h5>
                         </div>
                         <p className="text-blue-800 text-sm mb-2">
-                          {applicationToView.job?.employer?.company_name || applicationToView.employer_details?.company_name || 'Unknown Company'}
+                          {(typeof applicationToView.job !== 'string' ? applicationToView.job?.employer?.company_name : undefined) || applicationToView.employer_details?.company_name || 'Unknown Company'}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-blue-700">
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={14} />
-                            {applicationToView.job?.location || applicationToView.job_details?.location}
+                            {(typeof applicationToView.job !== 'string' ? applicationToView.job?.location : undefined) || applicationToView.job_details?.location}
                           </span>
-                          {((applicationToView.job?.budget_min && applicationToView.job?.budget_max) || (applicationToView.job_details?.budget_min && applicationToView.job_details?.budget_max)) && (
+                          {(((typeof applicationToView.job !== 'string' ? (applicationToView.job?.budget_min && applicationToView.job?.budget_max) : false)) || (applicationToView.job_details?.budget_min && applicationToView.job_details?.budget_max)) && (
                             <span className="inline-flex items-center gap-1">
                               <DollarSign size={14} />
-                              {formatCurrency(applicationToView.job?.budget_min || applicationToView.job_details?.budget_min)} - {formatCurrency(applicationToView.job?.budget_max || applicationToView.job_details?.budget_max)}
+                              {formatCurrency((typeof applicationToView.job !== 'string' ? applicationToView.job?.budget_min : undefined) || applicationToView.job_details?.budget_min)} - {formatCurrency((typeof applicationToView.job !== 'string' ? applicationToView.job?.budget_max : undefined) || applicationToView.job_details?.budget_max)}
                             </span>
                           )}
                         </div>
@@ -914,11 +913,11 @@ const AllWorkersAdministration: React.FC = () => {
                     <div>
                       <h5 className="font-semibold text-gray-900 mb-3">Worker Details</h5>
                       <div className="space-y-2 text-sm">
-                        {(applicationToView.worker?.user?.full_name || applicationToView.worker_details?.full_name) && (
-                          <p className="font-medium">{applicationToView.worker?.user?.full_name || applicationToView.worker_details?.full_name}</p>
+                        {((typeof applicationToView.worker !== 'string' ? applicationToView.worker?.user?.full_name : undefined) || applicationToView.worker_details?.full_name) && (
+                          <p className="font-medium">{(typeof applicationToView.worker !== 'string' ? applicationToView.worker?.user?.full_name : undefined) || applicationToView.worker_details?.full_name}</p>
                         )}
-                        {(applicationToView.worker?.user?.email || applicationToView.worker_details?.email) && (
-                          <p className="text-gray-600">{applicationToView.worker?.user?.email || applicationToView.worker_details?.email}</p>
+                        {((typeof applicationToView.worker !== 'string' ? applicationToView.worker?.user?.email : undefined) || applicationToView.worker_details?.email) && (
+                          <p className="text-gray-600">{(typeof applicationToView.worker !== 'string' ? applicationToView.worker?.user?.email : undefined) || applicationToView.worker_details?.email}</p>
                         )}
                         {applicationToView.worker_details?.phone_number && (
                           <p className="text-gray-600">{applicationToView.worker_details.phone_number}</p>
@@ -934,9 +933,12 @@ const AllWorkersAdministration: React.FC = () => {
                       <>
                         <button
                           onClick={() => {
+                            const workerIdString = typeof applicationToView.worker === 'string' 
+                              ? applicationToView.worker 
+                              : applicationToView.worker_details?.id;
                             const workerId = profiles.find(p => 
-                              p.user === applicationToView.worker || 
-                              p.id === applicationToView.worker_details?.id
+                              (typeof p.user === 'string' ? p.user : p.user?.id) === workerIdString || 
+                              p.id === workerIdString
                             )?.id;
                             if (workerId) handleMoveToReviewed(applicationToView.id, workerId);
                           }}
@@ -952,9 +954,12 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
+                            const workerIdString = typeof applicationToView.worker === 'string' 
+                              ? applicationToView.worker 
+                              : applicationToView.worker_details?.id;
                             const workerId = profiles.find(p => 
-                              p.user === applicationToView.worker || 
-                              p.id === applicationToView.worker_details?.id
+                              (typeof p.user === 'string' ? p.user : p.user?.id) === workerIdString || 
+                              p.id === workerIdString
                             )?.id;
                             if (workerId) handleApproveApplication(applicationToView.id, workerId);
                           }}
@@ -970,9 +975,12 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
+                            const workerIdString = typeof applicationToView.worker === 'string' 
+                              ? applicationToView.worker 
+                              : applicationToView.worker_details?.id;
                             const workerId = profiles.find(p => 
-                              p.user === applicationToView.worker || 
-                              p.id === applicationToView.worker_details?.id
+                              (typeof p.user === 'string' ? p.user : p.user?.id) === workerIdString || 
+                              p.id === workerIdString
                             )?.id;
                             if (workerId) handleRejectApplication(applicationToView.id, workerId);
                           }}
@@ -992,9 +1000,12 @@ const AllWorkersAdministration: React.FC = () => {
                       <>
                         <button
                           onClick={() => {
+                            const workerIdString = typeof applicationToView.worker === 'string' 
+                              ? applicationToView.worker 
+                              : applicationToView.worker_details?.id;
                             const workerId = profiles.find(p => 
-                              p.user === applicationToView.worker || 
-                              p.id === applicationToView.worker_details?.id
+                              (typeof p.user === 'string' ? p.user : p.user?.id) === workerIdString || 
+                              p.id === workerIdString
                             )?.id;
                             if (workerId) handleApproveApplication(applicationToView.id, workerId);
                           }}
@@ -1010,9 +1021,12 @@ const AllWorkersAdministration: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
+                            const workerIdString = typeof applicationToView.worker === 'string' 
+                              ? applicationToView.worker 
+                              : applicationToView.worker_details?.id;
                             const workerId = profiles.find(p => 
-                              p.user === applicationToView.worker || 
-                              p.id === applicationToView.worker_details?.id
+                              (typeof p.user === 'string' ? p.user : p.user?.id) === workerIdString || 
+                              p.id === workerIdString
                             )?.id;
                             if (workerId) handleRejectApplication(applicationToView.id, workerId);
                           }}

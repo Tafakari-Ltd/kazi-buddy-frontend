@@ -6,7 +6,6 @@ import { MyApplicationsSection } from '../components/WorkerProfile/MyApplication
 import { JobDetails } from '../types/jobApplication.types';
 import { useJobs } from '../Redux/Functions/useJobs';
 
-// Example Worker Profile Page showing how to integrate both components
 export default function WorkerProfilePage() {
   const [availableJobs, setAvailableJobs] = useState<JobDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,34 +14,32 @@ export default function WorkerProfilePage() {
   
   const { handleFetchJobs } = useJobs();
 
-  // Function to fetch available jobs from API
+ 
   const fetchAvailableJobs = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Use the actual jobs API to fetch available jobs
+      
       const result = await handleFetchJobs({ 
-        status: 'active', 
-        visibility: 'public',
+        status: 'active' as any,
         page: 1,
         limit: 50
       });
       
-      if (result) {
+      if (result && typeof result !== 'string') {
         let jobsArray = [];
         
-        // Handle different response formats
-        if (result.data && Array.isArray(result.data)) {
+        if ('data' in result && result.data && Array.isArray(result.data)) {
           jobsArray = result.data;
         } else if (Array.isArray(result)) {
           jobsArray = result;
-        } else if (result.jobs && Array.isArray(result.jobs)) {
+        } else if ('jobs' in result && Array.isArray(result.jobs)) {
           jobsArray = result.jobs;
         }
         
         if (jobsArray.length > 0) {
-          // Transform Job[] to JobDetails[] format
+          
           const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
             id: job.id,
             title: job.title,
@@ -178,24 +175,7 @@ export default function WorkerProfilePage() {
           )}
         </div>
 
-        {/* Alternative Layout: Side by Side (if you prefer both visible) */}
-        {/* Uncomment this section to show both components side by side instead of tabs */}
-        {/*
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <AvailableJobs
-              jobs={availableJobs}
-              loading={loading}
-              error={error}
-              onRefresh={handleRefreshJobs}
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <MyApplicationsSection maxItems={5} />
-          </div>
-        </div>
-        */}
+       
       </div>
     </div>
   );

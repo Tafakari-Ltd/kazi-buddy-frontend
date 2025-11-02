@@ -214,7 +214,7 @@ export const MyApplicationsSection: React.FC<MyApplicationsSectionProps> = ({
           {displayApplications.map((application) => (
             <JobApplicationCard
               key={application.id}
-              application={application}
+              application={application as any}
               onView={handleView}
               onUpdate={handleUpdate}
               onDelete={handleDelete}

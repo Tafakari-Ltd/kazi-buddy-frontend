@@ -22,7 +22,7 @@ export default function MyApplicationsPage() {
   };
 
   const handleUpdate = (applicationId: string) => {
-    // Navigate to edit page or open modal
+    
     router.push(`/applications/${applicationId}/edit`);
   };
 
@@ -144,7 +144,7 @@ export default function MyApplicationsPage() {
 
         {/* Applications List */}
         <JobApplicationList
-          applications={applications}
+          applications={applications as any}
           loading={isLoading}
           error={apiError}
           onView={handleView}
