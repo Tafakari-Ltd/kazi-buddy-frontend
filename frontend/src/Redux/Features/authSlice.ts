@@ -3,6 +3,65 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/lib/axios";
 import type { ILoginResponse } from "@/types";
 
+export interface ApproveUserData {
+    profile_photo?: File;
+    username: string;
+    phone_number: string;
+    email: string;
+    full_name: string;
+    password: string;
+    user_type: string;
+}
+
+export const approveUser = createAsyncThunk<
+    {
+        message: string;
+        user: {
+            id: string;
+            phone_number: string;
+            is_verified: boolean;
+            email_verified: boolean;
+            phone_verified: boolean;
+        };
+    },
+    { userId: string; data: ApproveUserData },
+    { rejectValue: string }
+>("auth/approveUser", async ({ userId, data }, { rejectWithValue }) => {
+    try {
+        const formData = new FormData();
+       
+        // Add all fields to FormData
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                formData.append(key, value as any);
+            }
+        });
+
+        const res = await api.post(
+            `/adminpanel/users/${userId}/approve/`,
+            formData,
+            {
+                headers: { "Content-Type": "multipart/form-data" },
+            }
+        );
+
+        return res as unknown as {
+            message: string;
+            user: {
+                id: string;
+                phone_number: string;
+                is_verified: boolean;
+                email_verified: boolean;
+                phone_verified: boolean;
+            };
+        };
+    } catch (err: any) {
+        return rejectWithValue(
+            err.message || "Failed to approve user"
+        );
+    }
+});
+
 export const login = createAsyncThunk<
     {
         accessToken: string;
@@ -122,6 +181,20 @@ const authSlice = createSlice({
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload ?? "Login failed";
+            });
+       
+        // Approve User
+        builder
+            .addCase(approveUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(approveUser.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(approveUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload ?? "Approval failed";
             });
     },
 });
