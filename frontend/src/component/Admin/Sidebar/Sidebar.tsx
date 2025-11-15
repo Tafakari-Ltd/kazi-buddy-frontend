@@ -45,7 +45,7 @@ const Sidebar = () => {
   };
 
   const quickActions = [
-    { label: "Analytics", icon: BarChart3, href: "/analytics" },
+    { label: "Analytics", icon: BarChart3, href: "/admin/jobs/analytics" },
     { label: "Reports", icon: FileText, href: "/reports" },
     { label: "Schedule", icon: Calendar, href: "/schedule" },
     { label: "Approvals", icon: UserCheck, href: "/approvals", badge: "3" },
@@ -96,18 +96,67 @@ const Sidebar = () => {
                 return (
                   <div key={item.id} className="space-y-1">
                     {/* Main Item */}
-                    <div
-                      onClick={() => hasSubmenu && toggleSection(item.id)}
-                      className={`
-                        flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
-                        hover:bg-gray-50 group
-                        ${
-                          item.id === "dashboard"
-                            ? "bg-red-50 text-red-700 border border-red-100"
-                            : "text-gray-700"
-                        }
-                      `}
-                    >
+                    {hasSubmenu ? (
+                      <div
+                        onClick={() => toggleSection(item.id)}
+                        className={`
+                          flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
+                          hover:bg-gray-50 group
+                          ${
+                            item.id === "dashboard"
+                              ? "bg-red-50 text-red-700 border border-red-100"
+                              : "text-gray-700"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            className={`w-5 h-5 ${
+                              item.id === "dashboard"
+                                ? "text-red-600"
+                                : "text-gray-500 group-hover:text-red-600"
+                            }`}
+                          />
+                          <span className="font-medium text-sm">
+                            {item.label}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {item.badge && (
+                            <span
+                              className={`
+                              px-2 py-0.5 text-xs font-medium rounded-full
+                              ${
+                                item.id === "dashboard"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700 group-hover:bg-red-100 group-hover:text-red-700"
+                              }
+                            `}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                          <ChevronDown
+                            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <a
+                        href={item.href}
+                        className={`
+                          flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200
+                          hover:bg-gray-50 group
+                          ${
+                            item.id === "dashboard"
+                              ? "bg-red-50 text-red-700 border border-red-100"
+                              : "text-gray-700"
+                          }
+                        `}
+                      >
                       <div className="flex items-center gap-3">
                         <Icon
                           className={`w-5 h-5 ${
@@ -121,30 +170,24 @@ const Sidebar = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {item.badge && (
-                          <span
-                            className={`
-                            px-2 py-0.5 text-xs font-medium rounded-full
-                            ${
-                              item.id === "dashboard"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700 group-hover:bg-red-100 group-hover:text-red-700"
-                            }
-                          `}
-                          >
-                            {item.badge}
-                          </span>
-                        )}
-                        {hasSubmenu && (
-                          <ChevronDown
-                            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                              isExpanded ? "rotate-180" : ""
-                            }`}
-                          />
-                        )}
-                      </div>
-                    </div>
+                        <div className="flex items-center gap-2">
+                          {item.badge && (
+                            <span
+                              className={`
+                              px-2 py-0.5 text-xs font-medium rounded-full
+                              ${
+                                item.id === "dashboard"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700 group-hover:bg-red-100 group-hover:text-red-700"
+                              }
+                            `}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </a>
+                    )}
 
                     {/* Submenu */}
                     {hasSubmenu && isExpanded && (

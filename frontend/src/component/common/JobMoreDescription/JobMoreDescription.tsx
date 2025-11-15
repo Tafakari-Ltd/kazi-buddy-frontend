@@ -6,44 +6,82 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   selectJobDescriptionOpen,
   closeJobDescription,
+  selectSelectedJob,
 } from "@/Redux/Features/JobDescriptionSlice";
 
-import { AppDispatch } from "@/Redux/Store/Store";
-
+import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { openJobModal } from "@/Redux/Features/ApplyJobSlice";
+import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const JobMoreDescription = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const isOpen = useSelector(selectJobDescriptionOpen);
+  const jobData = useSelector(selectSelectedJob);
+  const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
+  const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
 
+  // If no job data, return null
+  if (!jobData) return null;
+
+  // Format the job data from backend
   const job = {
-    title: "House Cleaner Wanted",
-    jobType: "Part-Time",
-    category: "Cleaning",
-    location: "Mombasa, Kenya",
-    rate: "KSh 500/Day",
-    description:
-      "We are seeking a reliable and detail-oriented house cleaner to join our team for 3 days per week...",
-    image:
-      "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    postedDate: "2 days ago",
-    urgency: "Hiring Immediately",
-    requirements: [
-      "Reliable and punctual",
-      "Attention to detail",
-      "Physical ability to perform cleaning tasks",
-      "Basic communication skills",
-      "Own transportation preferred",
+    id: jobData.id,
+    title: jobData.title || "Job Title",
+    jobType: jobData.jobType || jobData.job_type || "Full-Time",
+    category: typeof jobData.category === 'string' ? jobData.category : jobData.category?.name || "General",
+    location: (jobData as any).location_address || jobData.location_text || jobData.location || "Location not specified",
+    rate: jobData.budget_min && jobData.budget_max 
+      ? `KSh ${jobData.budget_min} - ${jobData.budget_max}`
+      : "Negotiable",
+    description: jobData.description || "No description available",
+    image: (jobData as any).job_image || (jobData as any).image || "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    postedDate: jobData.created_at ? new Date(jobData.created_at).toLocaleDateString() : (jobData as any).postedDate || "Recently",
+    urgency: (jobData as any).is_urgent || jobData.urgency_level === 'urgent' ? "Hiring Immediately" : "Open Position",
+    requirements: (jobData as any).requirements || [
+      "Please contact employer for details",
     ],
-    benefits: [
-      "Flexible schedule",
-      "Competitive daily rate",
-      "Friendly work environment",
-      "Performance bonuses available",
+    benefits: (jobData as any).benefits || [
+      "Competitive compensation",
+      "Professional work environment",
     ],
   };
 
-  const handleApply = (jobTitle: string) => {
+  const handleApply = async (jobTitle: string, jobId: string) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Redirect to login page with return URL
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+        sessionStorage.setItem('pendingJobApplication', jobId);
+        window.location.href = '/auth/login';
+      }
+      return;
+    }
+    
+    // Check if user has a worker profile
+    if (!userProfile && userId) {
+      // Try to fetch user's worker profile
+      try {
+        const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+        
+        if (!result) {
+          // No worker profile exists, redirect to create one
+          toast.info("Please create a worker profile to apply for jobs");
+          router.push('/worker');
+          return;
+        }
+      } catch (error) {
+        // Error fetching profile, redirect to create one
+        toast.info("Please create a worker profile to apply for jobs");
+        router.push('/worker');
+        return;
+      }
+    }
+    
+    // User has a worker profile, open the application modal
     dispatch(openJobModal());
   };
 
@@ -206,7 +244,7 @@ const JobMoreDescription = () => {
           >
             <button
               className="flex-1 bg-gradient-to-r from-red-700 to-red-600 hover:from-red-800 hover:to-red-700 text-white font-semibold py-4 px-6 transition-all rounded-sm duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              onClick={() => handleApply(job.title)}
+              onClick={() => handleApply(job.title, job.id)}
             >
               Apply Now
             </button>

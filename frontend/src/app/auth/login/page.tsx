@@ -1,3 +1,6 @@
+
+
+
 "use client";
 
 import React, { useState } from "react";
@@ -6,6 +9,8 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/Redux/Features/authSlice";
+import { isApprovalNeededError } from "@/lib/approvalUtils";
+import { toast } from "sonner";
 
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 
@@ -26,11 +31,78 @@ const LoginPage: React.FC = () => {
     const password = formData.get("password") as string;
 
     try {
-      await dispatch(login({ email, password })).unwrap();
+      const result = await dispatch(login({ email, password })).unwrap();
+      
+      // Check if user was trying to apply for a job
+      const pendingJobApplication = sessionStorage.getItem('pendingJobApplication');
+      const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
+      
+      // Clear the pending application flag
+      if (pendingJobApplication) {
+        sessionStorage.removeItem('pendingJobApplication');
+      }
+      
+      if (redirectAfterLogin) {
+        sessionStorage.removeItem('redirectAfterLogin');
+      }
+      
+      // Determine redirect based on user role and intent
       const returnTo = searchParams.get("returnTo");
-      router.push(returnTo || "/employer");
+      
+      // If user was applying for a job, they need to become a worker
+      if (pendingJobApplication) {
+        // Check if user already has a worker profile
+        const user = result.user;
+        
+        // Redirect to worker profile creation/page
+        router.push('/worker');
+        toast.success('Please complete your worker profile to apply for jobs', { duration: 4000 });
+      } else if (returnTo) {
+        router.push(returnTo);
+      } else if (redirectAfterLogin) {
+        router.push(redirectAfterLogin);
+      } else {
+        // Default redirect based on user type
+        const user = result.user;
+        if (user?.user_type === 'worker') {
+          router.push('/worker');
+        } else if (user?.user_type === 'employer') {
+          router.push('/employer');
+        } else {
+          router.push('/employer'); // Default fallback
+        }
+      }
     } catch (err: any) {
-      setFormError(err || "Login failed");
+      // Extract error message from various error formats
+      let errorMessage = "Login failed";
+     
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.error) {
+        errorMessage = err.error;
+      }
+     
+      console.log('Login error:', err);
+     
+      // Check if user needs admin approval
+      if (isApprovalNeededError(errorMessage)) {
+        toast.info(
+          "Your account is pending admin approval. Please wait for approval notification via email.",
+          { duration: 5000 }
+        );
+        setFormError(
+          "Your account is pending admin approval. You will be able to login once approved."
+        );
+      } else if (errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('invalid')) {
+        setFormError("Invalid email or password");
+      } else if (errorMessage.toLowerCase().includes('verified')) {
+        setFormError("Please verify your email before logging in");
+      } else {
+        setFormError(errorMessage);
+        toast.error(errorMessage, { duration: 4000 });
+      }
     }
   };
 

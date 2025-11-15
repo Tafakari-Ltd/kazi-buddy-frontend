@@ -12,7 +12,8 @@ import {
   X,
   Users,
   Briefcase,
-  CheckCircle
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import ProtectedRoute from "@/component/Authentication/ProtectedRoute";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
@@ -39,6 +40,7 @@ const AllEmployersAdministration: React.FC = () => {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [loadingAllJobs, setLoadingAllJobs] = useState(false);
   const [processingJobIds, setProcessingJobIds] = useState<Set<string>>(new Set());
+  const [pendingJobIds, setPendingJobIds] = useState<Set<string>>(new Set());
 
   // Local job view modal state
   const [showJobViewModal, setShowJobViewModal] = useState(false);
@@ -71,6 +73,7 @@ const AllEmployersAdministration: React.FC = () => {
     if (viewMode === 'by_status') {
       fetchAllJobs();
     }
+    fetchPendingJobs();
   }, [dispatch, viewMode]);
 
   // Fetch all jobs for status-based view
@@ -87,7 +90,19 @@ const AllEmployersAdministration: React.FC = () => {
     }
   };
 
-  // Handle job status update (approve/reject)
+  // Fetch IDs of jobs currently awaiting admin approval
+  const fetchPendingJobs = async () => {
+    try {
+      const resp = await api.get('/adminpanel/jobs/pending/');
+      const raw = (resp && (resp as any).data) ? (resp as any).data : Array.isArray(resp) ? resp : [];
+      const ids = new Set<string>((raw as any[]).map(j => j.id).filter(Boolean));
+      setPendingJobIds(ids);
+    } catch (e: any) {
+      console.error('Failed to fetch pending admin jobs:', e);
+    }
+  };
+
+  // Handle job status update (generic status changes like reject)
   const handleUpdateJobStatus = async (jobId: string, newStatus: string) => {
     try {
       setProcessingJobIds(prev => new Set([...prev, jobId]));
@@ -117,6 +132,13 @@ const AllEmployersAdministration: React.FC = () => {
       if (jobToView?.id === jobId) {
         setJobToView(prev => prev ? { ...prev, status: newStatus as any } : null);
       }
+
+      // Once status changes (e.g. to cancelled), treat it as no longer pending approval
+      setPendingJobIds(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
       
     } catch (e: any) {
       console.error('Error updating job status:', e);
@@ -129,8 +151,56 @@ const AllEmployersAdministration: React.FC = () => {
     }
   };
 
-  const handleApproveJob = (jobId: string) => {
-    handleUpdateJobStatus(jobId, 'active');
+  const handleApproveJob = async (jobId: string) => {
+    try {
+      setProcessingJobIds(prev => new Set([...prev, jobId]));
+
+      // Call adminpanel approve endpoint so admin_approved is set to true
+      const resp = await api.post(`/adminpanel/jobs/${jobId}/approve/`);
+      const wrapper = resp as any;
+      const updatedJob = (wrapper && wrapper.data) ? wrapper.data : wrapper;
+
+      // Update all jobs list
+      setAllJobs(prev => prev.map(job => 
+        job.id === jobId
+          ? { ...job, ...updatedJob }
+          : job
+      ));
+
+      // Update employer jobs cache
+      setEmployerJobs(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(employerId => {
+          next[employerId] = {
+            ...next[employerId],
+            jobs: next[employerId].jobs.map(job => 
+              job.id === jobId ? { ...job, ...updatedJob } : job
+            )
+          };
+        });
+        return next;
+      });
+
+      // Update modal if viewing this job
+      if (jobToView?.id === jobId) {
+        setJobToView(prev => prev ? { ...prev, ...updatedJob } : null);
+      }
+
+      // Approved jobs should no longer be considered pending
+      setPendingJobIds(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+    } catch (e: any) {
+      console.error('Error approving job:', e);
+    } finally {
+      setProcessingJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    }
   };
 
   const handleRejectJob = (jobId: string) => {
@@ -249,6 +319,9 @@ const AllEmployersAdministration: React.FC = () => {
         <div className="mx-auto container">
           {/* Header */}
           <div className="bg-white border border-gray-200 p-6 mb-6">
+            <div className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4 font-bold text-center">
+              👥 YOU ARE ON: EMPLOYERS PAGE (Route: /admin/employers/all)
+            </div>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
               <h1 className="text-xl font-bold text-gray-800">Employers Administration</h1>
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -450,7 +523,13 @@ const AllEmployersAdministration: React.FC = () => {
                               </button>
                             </>
                           )}
-                          {job.status === 'active' && (
+                          {pendingJobIds.has(job.id) && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Awaiting Admin Approval
+                            </span>
+                          )}
+                          {!pendingJobIds.has(job.id) && job.status === 'active' && (
                             <span className="text-sm text-green-600 flex items-center gap-1">
                               <CheckCircle className="w-4 h-4" />
                               Approved & Active

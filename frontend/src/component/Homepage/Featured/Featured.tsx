@@ -1,49 +1,78 @@
 "use client";
 import { Clock, Heart, Locate, Star, Sparkles, ArrowRight, Award } from "lucide-react";
-import React, { useState, useMemo, useCallback } from "react";
-
-import { jobs } from "../HotJobs/Jobs";
-
-import { useShowJobModal } from "@/Redux/Functions/jobs";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 
 import { openJobDescription } from "@/Redux/Features/JobDescriptionSlice";
+import { openJobModal } from "@/Redux/Features/ApplyJobSlice";
+import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { AppDispatch } from "@/Redux/Store/Store";
-
-// Types
-interface Job {
-  id: number;
-  title: string;
-  jobType: string;
-  category: string;
-  location: string;
-  rate: string;
-  description: string;
-  image: string;
-  colorFilter: string;
-}
+import { AppDispatch, RootState } from "@/Redux/Store/Store";
+import { Job } from "@/types/job.types";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
 
 const Featured = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
+  const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
-  const [hoveredJob, setHoveredJob] = useState<number | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [hoveredJob, setHoveredJob] = useState<string | null>(null);
+  
+  // Local state for featured jobs to avoid Redux conflict with HotJobs
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 6,
+    total_pages: 0,
+  });
 
-  const jobsPerPage = 6; // Increased for better display
-  const totalJobs = jobs.length;
-  const { showJobModal } = useShowJobModal();
+  const jobsPerPage = 6;
 
-  const totalPages = Math.ceil(totalJobs / jobsPerPage);
+  // Fetch featured jobs from backend on component mount
+  useEffect(() => {
+    const fetchFeaturedJobs = async () => {
+      setLoading(true);
+      try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', currentPage.toString());
+        queryParams.append('limit', jobsPerPage.toString());
+        queryParams.append('status', 'approved');
+        queryParams.append('urgency_level', 'urgent'); // Featured jobs are urgent jobs
+        
+        const response = await api.get(`/jobs/?${queryParams.toString()}`);
+        
+        if (response.data) {
+          setJobs(response.data);
+        } else if (Array.isArray(response)) {
+          setJobs(response);
+        }
+        
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
+      } catch (error) {
+        console.error('Error fetching featured jobs:', error);
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFeaturedJobs();
+  }, [currentPage]);
 
-  // Memoized calculations
-  const paginatedJobs = useMemo(() => {
-    const indexOfLastJob = currentPage * jobsPerPage;
-    const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-    return jobs.slice(indexOfFirstJob, indexOfLastJob);
-  }, [currentPage, jobsPerPage]);
+  const totalJobs = pagination.total;
+  const totalPages = pagination.total_pages;
+  const paginatedJobs = jobs;
+
 
   const paginationInfo = useMemo(() => {
     const indexOfLastJob = currentPage * jobsPerPage;
@@ -62,21 +91,77 @@ const Featured = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [totalPages]);
 
-  const handleApply = useCallback((jobTitle: string, jobId: number) => {
-    showJobModal();
-    console.log(`Applied for featured job: ${jobTitle} (ID: ${jobId})`);
-  }, [showJobModal]);
+  const handleApply = useCallback(
+    async (jobTitle: string, jobId: string, jobData: Job) => {
+      // Check if user is authenticated
+      if (!isAuthenticated) {
+        // Redirect to login page with return URL
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+          sessionStorage.setItem('pendingJobApplication', jobId);
+          window.location.href = '/auth/login';
+        }
+        return;
+      }
+      
+      // Check if user has a worker profile
+      if (!userProfile && userId) {
+        // Try to fetch user's worker profile
+        try {
+          const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+          
+          if (!result) {
+            // No worker profile exists, redirect to create one
+            toast.info("Please create a worker profile to apply for jobs");
+            router.push('/worker');
+            return;
+          }
+        } catch (error) {
+          // Error fetching profile, redirect to create one
+          toast.info("Please create a worker profile to apply for jobs");
+          router.push('/worker');
+          return;
+        }
+      }
+      
+      // User has a worker profile, open the application modal with job data
+      dispatch(openJobDescription({
+        id: String(jobData.id),
+        title: jobData.title,
+        jobType: jobData.job_type,
+        category: typeof jobData.category === 'string' ? jobData.category : (jobData.category as any)?.name || 'General',
+        location: (jobData as any).location_address || jobData.location_text || jobData.location || 'Not specified',
+        rate: jobData.budget_min && jobData.budget_max ? `KSh ${jobData.budget_min} - ${jobData.budget_max}` : 'Negotiable',
+        description: jobData.description,
+        image: (jobData as any).job_image || '',
+      } as any));
+      
+      dispatch(openJobModal());
+      console.log(`Applied for featured job: ${jobTitle} (ID: ${jobId})`);
+    },
+    [dispatch, isAuthenticated, userProfile, userId, router]
+  );
 
-  const handleJobDescription = useCallback((job: Job) => {
-    dispatch(
-      openJobDescription({
-        ...job,
-        id: String(job.id),
-      })
-    );
-  }, [dispatch]);
+  const handleJobDescription = useCallback(
+    (job: Job) => {
+      // Transform the job data to match the expected format
+      dispatch(
+        openJobDescription({
+          id: String(job.id),
+          title: job.title,
+          jobType: job.job_type,
+          category: typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General',
+          location: (job as any).location_address || job.location_text || job.location || 'Not specified',
+          rate: job.budget_min && job.budget_max ? `KSh ${job.budget_min} - ${job.budget_max}` : 'Negotiable',
+          description: job.description,
+          image: (job as any).job_image || '',
+        } as any)
+      );
+    },
+    [dispatch]
+  );
 
-  const toggleFavorite = useCallback((jobId: number, e: React.MouseEvent) => {
+  const toggleFavorite = useCallback((jobId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setFavorites(prev => {
       const newFavorites = new Set(prev);
@@ -149,7 +234,16 @@ const Featured = () => {
       </div>
 
       {/* Featured Jobs Grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="text-center py-20">
+          <p className="text-gray-600 text-lg">No featured jobs available at the moment. Check back later!</p>
+        </div>
+      ) : (
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
         {paginatedJobs.map((job, index) => (
           <div
             key={job.id}
@@ -168,12 +262,12 @@ const Featured = () => {
             {/* Image Section */}
             <div className="relative h-48 overflow-hidden">
               <img
-                src={job.image}
+                src={(job as any).job_image || "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"}
                 alt={job.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div
-                className={`absolute inset-0 ${job.colorFilter} mix-blend-multiply transition-opacity duration-300 ${
+                className={`absolute inset-0 bg-gradient-to-br from-[#800000]/60 to-gray-900/60 mix-blend-multiply transition-opacity duration-300 ${
                   hoveredJob === job.id ? 'opacity-50' : 'opacity-70'
                 }`}
                 aria-hidden="true"
@@ -200,7 +294,7 @@ const Featured = () => {
               {/* Job Type Badge */}
               <div className="absolute bottom-3 left-3">
                 <span className="bg-[#800000] text-white px-3 py-1 rounded-sm text-xs font-semibold shadow-lg">
-                  {job.jobType}
+                  {job.job_type}
                 </span>
               </div>
 
@@ -229,19 +323,21 @@ const Featured = () => {
                   <div className="p-1 bg-green-100 rounded-sm">
                     <Locate className="w-3 h-3 text-green-700" />
                   </div>
-                  <span>{job.location}</span>
+                  <span>{(job as any).location_address || job.location_text || job.location || 'Not specified'}</span>
                 </div>
                 
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <div className="p-1 bg-blue-100 rounded-sm">
                     <Clock className="w-3 h-3 text-blue-700" />
                   </div>
-                  <span className="font-bold text-[#800000] text-base">{job.rate}</span>
+                  <span className="font-bold text-[#800000] text-base">
+                    {job.budget_min && job.budget_max ? `KSh ${job.budget_min} - ${job.budget_max}` : 'Negotiable'}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="bg-gradient-to-r from-green-100 to-green-200 text-green-800 px-3 py-1 rounded-sm text-xs font-semibold border border-green-300">
-                    {job.category}
+                    {typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General'}
                   </span>
                   <span className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 px-3 py-1 rounded-sm text-xs font-semibold border border-amber-300">
                     Premium
@@ -260,7 +356,7 @@ const Featured = () => {
                 </button>
 
                 <button
-                  onClick={() => handleApply(job.title, job.id)}
+                  onClick={() => handleApply(job.title, job.id, job)}
                   className="w-full bg-gradient-to-r from-[#800000] via-[#600000] to-amber-600 text-white px-4 py-2 rounded-sm text-sm font-bold hover:from-[#600000] hover:via-[#400000] hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 relative overflow-hidden"
                 >
                   <span className="relative z-10">Apply Now - Featured</span>
@@ -279,6 +375,7 @@ const Featured = () => {
           </div>
         ))}
       </div>
+      )}
 
       {/* Enhanced Pagination */}
       <div className="flex flex-col lg:flex-row justify-between items-center bg-gradient-to-r from-white to-amber-50 rounded-sm shadow-lg p-6 border-2 border-amber-100">

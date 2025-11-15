@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
             { label: "Worker", href: "/worker" },
             { label: "Employer", href: "/employer" },
             { label: "Post Job", href: "/employer?postjob=1" },
-            { label: "Admin", href: "/admin/employers/all" },
+            { label: "Admin", href: "/admin" },
           ].map(({ label, href }) => (
             <Link key={label} href={href}>
               <button className="apply-button">{label}</button>
