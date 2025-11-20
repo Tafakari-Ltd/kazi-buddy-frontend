@@ -1,6 +1,4 @@
 
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -48,22 +46,27 @@ const LoginPage: React.FC = () => {
       
       // Determine redirect based on user role and intent
       const returnTo = searchParams.get("returnTo");
+      const user = result.user;
+      const isAdmin =
+        user?.is_staff ||
+        user?.is_superuser ||
+        user?.role === 'admin' ||
+        user?.user_type === 'admin';
       
       // If user was applying for a job, they need to become a worker
       if (pendingJobApplication) {
-        // Check if user already has a worker profile
-        const user = result.user;
-        
-        // Redirect to worker profile creation/page
+        // Redirect to worker dashboard/profile setup
         router.push('/worker');
         toast.success('Please complete your worker profile to apply for jobs', { duration: 4000 });
       } else if (returnTo) {
         router.push(returnTo);
       } else if (redirectAfterLogin) {
         router.push(redirectAfterLogin);
+      } else if (isAdmin) {
+        // Admins go straight to the admin dashboard
+        router.push('/admin');
       } else {
         // Default redirect based on user type
-        const user = result.user;
         if (user?.user_type === 'worker') {
           router.push('/worker');
         } else if (user?.user_type === 'employer') {

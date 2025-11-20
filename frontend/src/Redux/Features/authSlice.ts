@@ -85,11 +85,15 @@ export const login = createAsyncThunk<
         const accessToken = res.tokens.access;
         const refreshToken = res.tokens.refresh;
         const userId = res.user_id;
+        const userType = res.user_type; // "worker", "employer", "admin", etc.
 
         // Fetch user details
-        const user = await api.get("/accounts/me/", {
+        const userFromApi = await api.get("/accounts/me/", {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
+
+        // Ensure the stored user object always has user_type so role checks work
+        const user = { ...userFromApi, user_type: userFromApi.user_type ?? userType };
 
         if (typeof window !== "undefined") {
             sessionStorage.setItem("user", JSON.stringify(user));
@@ -176,7 +180,7 @@ const authSlice = createSlice({
                 sessionStorage.setItem("refreshToken", action.payload.refreshToken);
                 sessionStorage.setItem("userId", action.payload.userId);
                 sessionStorage.setItem("user", JSON.stringify(action.payload.user));
-                sessionStorage.setItem("isAuthenticated", "true"); // ✅ persist
+                sessionStorage.setItem("isAuthenticated", "true"); t
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
