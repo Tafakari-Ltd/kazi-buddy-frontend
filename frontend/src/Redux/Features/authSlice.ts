@@ -180,7 +180,7 @@ const authSlice = createSlice({
                 sessionStorage.setItem("refreshToken", action.payload.refreshToken);
                 sessionStorage.setItem("userId", action.payload.userId);
                 sessionStorage.setItem("user", JSON.stringify(action.payload.user));
-                sessionStorage.setItem("isAuthenticated", "true"); t
+                sessionStorage.setItem("isAuthenticated", "true"); 
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;

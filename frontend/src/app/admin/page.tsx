@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -321,8 +321,8 @@ const AdminDashboard: React.FC = () => {
 
  return (
  <ProtectedRoute>
- <div className="min-h-screen bg-gray-50 p-6">
- <div className="max-w-7xl mx-auto space-y-8">
+ <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
+ <div className="container space-y-8">
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
  <div>
