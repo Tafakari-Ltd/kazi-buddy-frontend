@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-
 export interface Job {
   id: string;
   title: string;
@@ -77,7 +76,6 @@ const moreJobDescriptionSlice = createSlice({
 });
 
 export const {
-    
   openJobDescription,
 
   closeJobDescription,
@@ -89,7 +87,6 @@ export const {
   updateJobData,
 
   resetState,
-
 } = moreJobDescriptionSlice.actions;
 
 export const selectJobDescriptionOpen = (state: RootState): boolean =>

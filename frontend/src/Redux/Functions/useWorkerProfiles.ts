@@ -40,7 +40,7 @@ export const useWorkerProfiles = () => {
     (filters?: WorkerProfileFilters) => {
       return dispatch(fetchWorkerProfiles(filters));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Fetch single worker profile by ID
@@ -48,7 +48,7 @@ export const useWorkerProfiles = () => {
     (profileId: string) => {
       return dispatch(fetchWorkerProfileById(profileId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Fetch current user's worker profile
@@ -56,7 +56,7 @@ export const useWorkerProfiles = () => {
     (userId: string) => {
       return dispatch(fetchUserWorkerProfile(userId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Create new worker profile
@@ -64,7 +64,7 @@ export const useWorkerProfiles = () => {
     (profileData: CreateWorkerProfileData) => {
       return dispatch(createWorkerProfile(profileData));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Update worker profile
@@ -72,7 +72,7 @@ export const useWorkerProfiles = () => {
     (profileId: string, data: UpdateWorkerProfileData) => {
       return dispatch(updateWorkerProfile({ profileId, data }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Clear all profiles from state
@@ -100,7 +100,7 @@ export const useWorkerProfiles = () => {
     (newFilters: WorkerProfileFilters) => {
       dispatch(setFilters(newFilters));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Clear filters
@@ -113,7 +113,7 @@ export const useWorkerProfiles = () => {
     (page: number, limit?: number) => {
       dispatch(setPagination({ page, limit }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Helper function to get profile by ID from current profiles
@@ -121,7 +121,7 @@ export const useWorkerProfiles = () => {
     (profileId: string) => {
       return profiles.find((profile) => profile.id === profileId) || null;
     },
-    [profiles]
+    [profiles],
   );
 
   // Helper function to check if user has a profile
@@ -133,18 +133,18 @@ export const useWorkerProfiles = () => {
   const isProfileVerified = useCallback(
     (profileId?: string) => {
       const profile = profileId ? getProfileById(profileId) : userProfile;
-      return profile?.verification_status === 'verified';
+      return profile?.verification_status === "verified";
     },
-    [getProfileById, userProfile]
+    [getProfileById, userProfile],
   );
 
   // Helper function to check if profile is pending
   const isProfilePending = useCallback(
     (profileId?: string) => {
       const profile = profileId ? getProfileById(profileId) : userProfile;
-      return profile?.verification_status === 'pending';
+      return profile?.verification_status === "pending";
     },
-    [getProfileById, userProfile]
+    [getProfileById, userProfile],
   );
 
   // Helper function to check if worker is currently available
@@ -153,7 +153,7 @@ export const useWorkerProfiles = () => {
       const profile = profileId ? getProfileById(profileId) : userProfile;
       return profile ? isWorkerCurrentlyAvailable(profile) : false;
     },
-    [getProfileById, userProfile]
+    [getProfileById, userProfile],
   );
 
   // Helper function to get available workers only
@@ -165,10 +165,10 @@ export const useWorkerProfiles = () => {
   const getWorkersByLocation = useCallback(
     (location: string) => {
       return profiles.filter((profile) =>
-        profile.location.toLowerCase().includes(location.toLowerCase())
+        profile.location.toLowerCase().includes(location.toLowerCase()),
       );
     },
-    [profiles]
+    [profiles],
   );
 
   // Helper function to get workers by experience level
@@ -181,7 +181,7 @@ export const useWorkerProfiles = () => {
           : experience >= minExperience;
       });
     },
-    [profiles]
+    [profiles],
   );
 
   // Helper function to get workers by hourly rate range
@@ -189,25 +189,24 @@ export const useWorkerProfiles = () => {
     (minRate: number, maxRate?: number) => {
       return profiles.filter((profile) => {
         const rate = parseFloat(profile.hourly_rate);
-        return maxRate
-          ? rate >= minRate && rate <= maxRate
-          : rate >= minRate;
+        return maxRate ? rate >= minRate && rate <= maxRate : rate >= minRate;
       });
     },
-    [profiles]
+    [profiles],
   );
 
   // Helper function to search workers by bio/skills
   const searchWorkers = useCallback(
     (query: string) => {
       const lowerQuery = query.toLowerCase();
-      return profiles.filter((profile) =>
-        profile.bio.toLowerCase().includes(lowerQuery) ||
-        profile.location.toLowerCase().includes(lowerQuery) ||
-        profile.location_text.toLowerCase().includes(lowerQuery)
+      return profiles.filter(
+        (profile) =>
+          profile.bio.toLowerCase().includes(lowerQuery) ||
+          profile.location.toLowerCase().includes(lowerQuery) ||
+          profile.location_text.toLowerCase().includes(lowerQuery),
       );
     },
-    [profiles]
+    [profiles],
   );
 
   return {

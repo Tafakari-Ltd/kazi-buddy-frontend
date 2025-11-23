@@ -40,26 +40,33 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
     bio: initialData?.bio || "",
   });
 
-  const handleInputChange = (field: keyof CreateWorkerProfileData, value: any) => {
+  const handleInputChange = (
+    field: keyof CreateWorkerProfileData,
+    value: any,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleScheduleChange = (day: string, timeIndex: number, value: string) => {
+  const handleScheduleChange = (
+    day: string,
+    timeIndex: number,
+    value: string,
+  ) => {
     setFormData((prev) => {
       const newSchedule = { ...prev.availability_schedule };
       if (!newSchedule[day]) {
         newSchedule[day] = ["", ""];
       }
       newSchedule[day][timeIndex] = value;
-      
+
       // Remove the day if both times are empty
       if (!newSchedule[day][0] && !newSchedule[day][1]) {
         delete newSchedule[day];
       }
-      
+
       return {
         ...prev,
         availability_schedule: newSchedule,
@@ -94,7 +101,7 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
   };
 
   const availableDays = DAYS_OF_WEEK.filter(
-    (day) => !formData.availability_schedule[day]
+    (day) => !formData.availability_schedule[day],
   );
 
   return (
@@ -105,7 +112,7 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
           <MapPin className="w-5 h-5" />
           Location Information
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -141,10 +148,14 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
               }`}
               placeholder="e.g., Near CBD, Downtown area"
               value={formData.location_text}
-              onChange={(e) => handleInputChange("location_text", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("location_text", e.target.value)
+              }
             />
             {errors.location_text && (
-              <p className="text-xs text-red-600 mt-1">{errors.location_text}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {errors.location_text}
+              </p>
             )}
           </div>
         </div>
@@ -156,7 +167,7 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
           <DollarSign className="w-5 h-5" />
           Experience & Rate
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -167,7 +178,9 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
                 errors.years_experience ? "border-red-500" : "border-gray-300"
               }`}
               value={formData.years_experience}
-              onChange={(e) => handleInputChange("years_experience", parseInt(e.target.value))}
+              onChange={(e) =>
+                handleInputChange("years_experience", parseInt(e.target.value))
+              }
             >
               {EXPERIENCE_LEVELS.map((level) => (
                 <option key={level.value} value={level.value}>
@@ -176,7 +189,9 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
               ))}
             </select>
             {errors.years_experience && (
-              <p className="text-xs text-red-600 mt-1">{errors.years_experience}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {errors.years_experience}
+              </p>
             )}
           </div>
 
@@ -213,17 +228,24 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
             <input
               type="checkbox"
               checked={formData.is_available}
-              onChange={(e) => handleInputChange("is_available", e.target.checked)}
+              onChange={(e) =>
+                handleInputChange("is_available", e.target.checked)
+              }
               className="rounded border-gray-300 text-red-600 focus:ring-red-500"
             />
-            <span className="text-sm font-medium text-gray-700">Currently Available</span>
+            <span className="text-sm font-medium text-gray-700">
+              Currently Available
+            </span>
           </label>
         </div>
 
         {/* Schedule */}
         <div className="space-y-3">
           {Object.keys(formData.availability_schedule).map((day) => (
-            <div key={day} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div
+              key={day}
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+            >
               <div className="w-20 text-sm font-medium text-gray-700 capitalize">
                 {day}
               </div>
@@ -297,7 +319,7 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
           <FileText className="w-5 h-5" />
           About You
         </h3>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Bio *
@@ -312,9 +334,7 @@ const WorkerProfileForm: React.FC<WorkerProfileFormProps> = ({
             onChange={(e) => handleInputChange("bio", e.target.value)}
           />
           <div className="flex justify-between items-center mt-1">
-            {errors.bio && (
-              <p className="text-xs text-red-600">{errors.bio}</p>
-            )}
+            {errors.bio && <p className="text-xs text-red-600">{errors.bio}</p>}
             <span className="text-xs text-gray-500 ml-auto">
               {formData.bio.length}/500 characters
             </span>

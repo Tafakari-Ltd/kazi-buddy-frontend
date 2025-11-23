@@ -81,8 +81,8 @@ const ApplicationCard = ({
                   isCompleted
                     ? "bg-green-500 border-green-600 text-white"
                     : isCurrent
-                    ? "bg-yellow-100 border-yellow-400 text-yellow-600"
-                    : "bg-gray-100 border-gray-300 text-gray-400"
+                      ? "bg-yellow-100 border-yellow-400 text-yellow-600"
+                      : "bg-gray-100 border-gray-300 text-gray-400"
                 }`}
               >
                 {isCompleted ? (
@@ -131,9 +131,7 @@ const ViewApplications = () => {
   return (
     <div className="px-6 py-10  mx-auto">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-bold text-purple-dark">
-          My Applications
-        </h1>
+        <h1 className="text-3xl font-bold text-purple-dark">My Applications</h1>
         <button
           onClick={handleAdd}
           className="flex items-center gap-2 px-4 py-2 bg-maroon text-white text-sm rounded-lg hover:bg-redish transition"

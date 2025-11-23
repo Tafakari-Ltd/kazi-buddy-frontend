@@ -71,8 +71,8 @@ const Testimonials: React.FC = () => {
       paginate(1);
     }, 2000);
 
-    return () => clearInterval(interval); 
-  }, [index]); 
+    return () => clearInterval(interval);
+  }, [index]);
 
   const testimonial = testimonials[index];
 
@@ -115,7 +115,7 @@ const Testimonials: React.FC = () => {
           <ChevronRight className="w-5 h-5" />
         </button>
       </div> */}
-      <Stats/>
+      <Stats />
     </div>
   );
 };

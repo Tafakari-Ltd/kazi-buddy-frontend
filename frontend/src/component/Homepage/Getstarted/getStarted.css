@@ -1,67 +1,66 @@
 .getstarted-container {
-    position: relative;
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #000;
-  }
-  
-  .background-video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    z-index: 0;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
-    filter: brightness(0.5);
-    max-height: 250px;
-  }
-  
-  .content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    max-width:1200px; /* wider to fit job list */
-    padding: 20px;
-    color: white;
-    /* Remove margin-top: 200px */
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
 
-    overflow-y: auto;
-    background:rgba(0, 0, 0, 0.6);
-  }
-  
-  /* Jobs list styles to overlay nicely on video */
-  .jobs-list h4 {
-    color: white;
-  }
-  
-  .jobs-list ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .jobs-list li.job-item {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid #800000;
-    transition: box-shadow 0.3s ease;
-  }
-  
-  .jobs-list li.job-item:hover {
-    box-shadow: 0 4px 15px rgba(128, 0, 0, 0.7);
-  }
-  
-  .jobs-list li.job-item h5 {
-    color: #ffdddd;
-  }
-  
-  .jobs-list li.job-item p {
-    color: #eee;
-  }
-  
+.background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  filter: brightness(0.5);
+  max-height: 250px;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 1200px; /* wider to fit job list */
+  padding: 20px;
+  color: white;
+  /* Remove margin-top: 200px */
+
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Jobs list styles to overlay nicely on video */
+.jobs-list h4 {
+  color: white;
+}
+
+.jobs-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.jobs-list li.job-item {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #800000;
+  transition: box-shadow 0.3s ease;
+}
+
+.jobs-list li.job-item:hover {
+  box-shadow: 0 4px 15px rgba(128, 0, 0, 0.7);
+}
+
+.jobs-list li.job-item h5 {
+  color: #ffdddd;
+}
+
+.jobs-list li.job-item p {
+  color: #eee;
+}

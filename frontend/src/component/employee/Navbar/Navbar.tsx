@@ -44,7 +44,8 @@ const Navbar = () => {
   };
 
   // Get user ID from auth state - try userId field first, then user.user_id
-  const userId = useSelector((state: RootState) => state.auth.userId) || user?.user_id;
+  const userId =
+    useSelector((state: RootState) => state.auth.userId) || user?.user_id;
   const displayId = userId ? userId.slice(0, 8) : "N/A";
 
   return (
@@ -140,7 +141,9 @@ const Navbar = () => {
                   className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2 origin-top-right"
                 >
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-800">{user?.full_name}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {user?.full_name}
+                    </p>
                     <p className="text-xs text-gray-500" title={userId}>
                       ID: {displayId}
                     </p>

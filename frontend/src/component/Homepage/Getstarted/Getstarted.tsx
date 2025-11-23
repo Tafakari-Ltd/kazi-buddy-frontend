@@ -1,11 +1,10 @@
-"use client"
+"use client";
 
 import React from "react";
 
 import "./getStarted.css";
 
 import { useRouter } from "next/navigation";
-
 
 const Getstarted = () => {
   const router = useRouter();

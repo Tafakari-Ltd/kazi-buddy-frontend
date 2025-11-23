@@ -1,2 +1,2 @@
-export * from "./ILoginResponse"
-export * from "./jobApplication.types"
+export * from "./ILoginResponse";
+export * from "./jobApplication.types";

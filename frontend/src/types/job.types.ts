@@ -167,48 +167,48 @@ export interface JobEmployerResponse {
 
 // Enums
 export enum JobType {
-  FULL_TIME = 'full_time',
-  PART_TIME = 'part_time',
-  CONTRACT = 'contract',
-  FREELANCE = 'freelance',
-  TEMPORARY = 'temporary',
-  INTERNSHIP = 'internship'
+  FULL_TIME = "full_time",
+  PART_TIME = "part_time",
+  CONTRACT = "contract",
+  FREELANCE = "freelance",
+  TEMPORARY = "temporary",
+  INTERNSHIP = "internship",
 }
 
 export enum UrgencyLevel {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent'
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export enum PaymentType {
-  FIXED = 'fixed',
-  HOURLY = 'hourly',
-  MILESTONE = 'milestone'
+  FIXED = "fixed",
+  HOURLY = "hourly",
+  MILESTONE = "milestone",
 }
 
 export enum JobStatus {
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  PAUSED = 'paused',
-  CLOSED = 'closed',
-  EXPIRED = 'expired',
-  FILLED = 'filled',
-  CANCELLED = 'cancelled'
+  DRAFT = "draft",
+  ACTIVE = "active",
+  PAUSED = "paused",
+  CLOSED = "closed",
+  EXPIRED = "expired",
+  FILLED = "filled",
+  CANCELLED = "cancelled",
 }
 
 export enum JobVisibility {
-  PUBLIC = 'public',
-  PRIVATE = 'private',
-  INVITED_ONLY = 'invited_only'
+  PUBLIC = "public",
+  PRIVATE = "private",
+  INVITED_ONLY = "invited_only",
 }
 
 export enum SkillLevel {
-  BEGINNER = 'beginner',
-  INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced',
-  EXPERT = 'expert'
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+  EXPERT = "expert",
 }
 
 // State Interfaces
@@ -250,46 +250,90 @@ export interface JobFormErrors {
 
 // Constants for dropdown options
 export const JOB_TYPE_OPTIONS = [
-  { value: JobType.FULL_TIME, label: 'Full Time' },
-  { value: JobType.PART_TIME, label: 'Part Time' },
-  { value: JobType.CONTRACT, label: 'Contract' },
-  { value: JobType.FREELANCE, label: 'Freelance' },
-  { value: JobType.TEMPORARY, label: 'Temporary' },
-  { value: JobType.INTERNSHIP, label: 'Internship' }
+  { value: JobType.FULL_TIME, label: "Full Time" },
+  { value: JobType.PART_TIME, label: "Part Time" },
+  { value: JobType.CONTRACT, label: "Contract" },
+  { value: JobType.FREELANCE, label: "Freelance" },
+  { value: JobType.TEMPORARY, label: "Temporary" },
+  { value: JobType.INTERNSHIP, label: "Internship" },
 ];
 
 export const URGENCY_LEVEL_OPTIONS = [
-  { value: UrgencyLevel.LOW, label: 'Low', color: 'text-green-600 bg-green-100' },
-  { value: UrgencyLevel.MEDIUM, label: 'Medium', color: 'text-yellow-600 bg-yellow-100' },
-  { value: UrgencyLevel.HIGH, label: 'High', color: 'text-orange-600 bg-orange-100' },
-  { value: UrgencyLevel.URGENT, label: 'Urgent', color: 'text-red-600 bg-red-100' }
+  {
+    value: UrgencyLevel.LOW,
+    label: "Low",
+    color: "text-green-600 bg-green-100",
+  },
+  {
+    value: UrgencyLevel.MEDIUM,
+    label: "Medium",
+    color: "text-yellow-600 bg-yellow-100",
+  },
+  {
+    value: UrgencyLevel.HIGH,
+    label: "High",
+    color: "text-orange-600 bg-orange-100",
+  },
+  {
+    value: UrgencyLevel.URGENT,
+    label: "Urgent",
+    color: "text-red-600 bg-red-100",
+  },
 ];
 
 export const PAYMENT_TYPE_OPTIONS = [
-  { value: PaymentType.FIXED, label: 'Fixed Price' },
-  { value: PaymentType.HOURLY, label: 'Hourly Rate' },
-  { value: PaymentType.MILESTONE, label: 'Milestone Based' }
+  { value: PaymentType.FIXED, label: "Fixed Price" },
+  { value: PaymentType.HOURLY, label: "Hourly Rate" },
+  { value: PaymentType.MILESTONE, label: "Milestone Based" },
 ];
 
 export const JOB_STATUS_OPTIONS = [
-  { value: JobStatus.DRAFT, label: 'Draft', color: 'text-gray-600 bg-gray-100' },
-  { value: JobStatus.ACTIVE, label: 'Active', color: 'text-green-600 bg-green-100' },
-  { value: JobStatus.PAUSED, label: 'Paused', color: 'text-yellow-600 bg-yellow-100' },
-  { value: JobStatus.CLOSED, label: 'Closed', color: 'text-red-600 bg-red-100' },
-  { value: JobStatus.EXPIRED, label: 'Expired', color: 'text-red-600 bg-red-100' },
-  { value: JobStatus.FILLED, label: 'Filled', color: 'text-blue-600 bg-blue-100' },
-  { value: JobStatus.CANCELLED, label: 'Cancelled', color: 'text-gray-600 bg-gray-100' }
+  {
+    value: JobStatus.DRAFT,
+    label: "Draft",
+    color: "text-gray-600 bg-gray-100",
+  },
+  {
+    value: JobStatus.ACTIVE,
+    label: "Active",
+    color: "text-green-600 bg-green-100",
+  },
+  {
+    value: JobStatus.PAUSED,
+    label: "Paused",
+    color: "text-yellow-600 bg-yellow-100",
+  },
+  {
+    value: JobStatus.CLOSED,
+    label: "Closed",
+    color: "text-red-600 bg-red-100",
+  },
+  {
+    value: JobStatus.EXPIRED,
+    label: "Expired",
+    color: "text-red-600 bg-red-100",
+  },
+  {
+    value: JobStatus.FILLED,
+    label: "Filled",
+    color: "text-blue-600 bg-blue-100",
+  },
+  {
+    value: JobStatus.CANCELLED,
+    label: "Cancelled",
+    color: "text-gray-600 bg-gray-100",
+  },
 ];
 
 export const VISIBILITY_OPTIONS = [
-  { value: JobVisibility.PUBLIC, label: 'Public' },
-  { value: JobVisibility.PRIVATE, label: 'Private' },
-  { value: JobVisibility.INVITED_ONLY, label: 'Invited Only' }
+  { value: JobVisibility.PUBLIC, label: "Public" },
+  { value: JobVisibility.PRIVATE, label: "Private" },
+  { value: JobVisibility.INVITED_ONLY, label: "Invited Only" },
 ];
 
 export const SKILL_LEVEL_OPTIONS = [
-  { value: SkillLevel.BEGINNER, label: 'Beginner' },
-  { value: SkillLevel.INTERMEDIATE, label: 'Intermediate' },
-  { value: SkillLevel.ADVANCED, label: 'Advanced' },
-  { value: SkillLevel.EXPERT, label: 'Expert' }
+  { value: SkillLevel.BEGINNER, label: "Beginner" },
+  { value: SkillLevel.INTERMEDIATE, label: "Intermediate" },
+  { value: SkillLevel.ADVANCED, label: "Advanced" },
+  { value: SkillLevel.EXPERT, label: "Expert" },
 ];

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Star, Quote } from "lucide-react";
 import { useState } from "react";
 
@@ -11,7 +11,7 @@ const testimonials = [
     service: "Furniture Assembly",
     rating: 5,
     image: "https://randomuser.me/api/portraits/women/44.jpg",
-    location: "Nairobi, Kenya"
+    location: "Nairobi, Kenya",
   },
   {
     id: 2,
@@ -21,7 +21,7 @@ const testimonials = [
     service: "House Cleaning",
     rating: 4,
     image: "https://randomuser.me/api/portraits/men/32.jpg",
-    location: "Mombasa, Kenya"
+    location: "Mombasa, Kenya",
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ const testimonials = [
     service: "Plumbing",
     rating: 5,
     image: "https://randomuser.me/api/portraits/women/68.jpg",
-    location: "Kisumu, Kenya"
+    location: "Kisumu, Kenya",
   },
   {
     id: 4,
@@ -41,7 +41,7 @@ const testimonials = [
     service: "TV Installation",
     rating: 5,
     image: "https://randomuser.me/api/portraits/men/51.jpg",
-    location: "Nakuru, Kenya"
+    location: "Nakuru, Kenya",
   },
   {
     id: 5,
@@ -51,7 +51,7 @@ const testimonials = [
     service: "Security Services",
     rating: 5,
     image: "https://randomuser.me/api/portraits/women/12.jpg",
-    location: "Eldoret, Kenya"
+    location: "Eldoret, Kenya",
   },
   {
     id: 6,
@@ -61,7 +61,7 @@ const testimonials = [
     service: "House Cleaning",
     rating: 4,
     image: "https://randomuser.me/api/portraits/men/18.jpg",
-    location: "Thika, Kenya"
+    location: "Thika, Kenya",
   },
   {
     id: 7,
@@ -71,7 +71,7 @@ const testimonials = [
     service: "Plumbing",
     rating: 5,
     image: "https://randomuser.me/api/portraits/women/52.jpg",
-    location: "Machakos, Kenya"
+    location: "Machakos, Kenya",
   },
   {
     id: 8,
@@ -81,7 +81,7 @@ const testimonials = [
     service: "Furniture Assembly",
     rating: 5,
     image: "https://randomuser.me/api/portraits/men/61.jpg",
-    location: "Nyeri, Kenya"
+    location: "Nyeri, Kenya",
   },
 ];
 
@@ -89,9 +89,9 @@ const StarRating = ({ rating }: { rating: number }) => {
   return (
     <div className="flex gap-1">
       {[...Array(5)].map((_, i) => (
-        <Star 
-          key={i} 
-          size={16} 
+        <Star
+          key={i}
+          size={16}
           className={`${i < rating ? "text-amber-400 fill-amber-400" : "text-gray-300"} transition-colors`}
         />
       ))}
@@ -110,7 +110,8 @@ const Testimonials = () => {
             Success Stories from Our Clients
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Discover what our satisfied customers have to say about their experience with our trusted service providers
+            Discover what our satisfied customers have to say about their
+            experience with our trusted service providers
           </p>
         </div>
 
@@ -140,7 +141,9 @@ const Testimonials = () => {
                     <h4 className="font-bold text-[#800000] text-lg group-hover:text-[#600000] transition-colors">
                       {testimonial.name}
                     </h4>
-                    <p className="text-sm text-gray-500 mb-1">{testimonial.location}</p>
+                    <p className="text-sm text-gray-500 mb-1">
+                      {testimonial.location}
+                    </p>
                     <StarRating rating={testimonial.rating} />
                   </div>
                 </div>
@@ -152,27 +155,39 @@ const Testimonials = () => {
                 </div>
 
                 <blockquote className="text-gray-700 text-sm leading-relaxed italic relative">
-                  <span className="text-2xl text-[#800000]/30 absolute -top-2 -left-1">"</span>
+                  <span className="text-2xl text-[#800000]/30 absolute -top-2 -left-1">
+                    "
+                  </span>
                   <p className="pl-4">{testimonial.feedback}</p>
-                  <span className="text-2xl text-[#800000]/30 absolute -bottom-6 right-0">"</span>
+                  <span className="text-2xl text-[#800000]/30 absolute -bottom-6 right-0">
+                    "
+                  </span>
                 </blockquote>
 
-                <div className={`mt-6 pt-4 border-t border-gray-100 transition-all duration-300 ${
-                  hoveredCard === testimonial.id ? "border-[#800000]/20" : ""
-                }`}>
+                <div
+                  className={`mt-6 pt-4 border-t border-gray-100 transition-all duration-300 ${
+                    hoveredCard === testimonial.id ? "border-[#800000]/20" : ""
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400 font-medium">Verified Review</span>
+                    <span className="text-xs text-gray-400 font-medium">
+                      Verified Review
+                    </span>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-sm"></div>
-                      <span className="text-xs text-green-600 font-medium">Completed</span>
+                      <span className="text-xs text-green-600 font-medium">
+                        Completed
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className={`h-1 bg-gradient-to-r from-[#800000] via-[#600000] to-amber-600 transform transition-transform duration-300 ${
-                hoveredCard === testimonial.id ? "scale-x-100" : "scale-x-0"
-              } origin-left`}></div>
+              <div
+                className={`h-1 bg-gradient-to-r from-[#800000] via-[#600000] to-amber-600 transform transition-transform duration-300 ${
+                  hoveredCard === testimonial.id ? "scale-x-100" : "scale-x-0"
+                } origin-left`}
+              ></div>
             </div>
           ))}
         </div>

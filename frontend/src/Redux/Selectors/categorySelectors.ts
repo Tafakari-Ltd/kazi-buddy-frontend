@@ -7,8 +7,7 @@ export const selectAllCategories = (state: RootState) =>
 export const selectCategoryLoading = (state: RootState) =>
   state.categories.loading;
 
-export const selectCategoryError = (state: RootState) =>
-  state.categories.error;
+export const selectCategoryError = (state: RootState) => state.categories.error;
 
 export const selectCategorySuccess = (state: RootState) =>
   state.categories.successMessage;
@@ -24,7 +23,7 @@ export const selectCategoryById = (state: RootState, categoryId: string) =>
 
 export const selectCategoryByName = (state: RootState, name: string) =>
   state.categories.categories.find((cat) =>
-    cat.name.toLowerCase().includes(name.toLowerCase())
+    cat.name.toLowerCase().includes(name.toLowerCase()),
   );
 
 export const selectCategoriesCount = (state: RootState) =>

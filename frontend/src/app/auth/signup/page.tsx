@@ -20,7 +20,7 @@ interface IFormData {
 const Signup: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, successMessage } = useSelector(
-    (state: RootState) => state.worker
+    (state: RootState) => state.worker,
   );
 
   const router = useRouter();
@@ -41,9 +41,12 @@ const Signup: React.FC = () => {
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
-      toast.info("Please check your email for the verification code. Don't forget to check your spam folder!", {
-        duration: 6000
-      });
+      toast.info(
+        "Please check your email for the verification code. Don't forget to check your spam folder!",
+        {
+          duration: 6000,
+        },
+      );
       setFormData({
         profile_photo: undefined,
         username: "",
@@ -55,22 +58,20 @@ const Signup: React.FC = () => {
       });
       dispatch(clearState());
     }
-   
   }, [successMessage, dispatch]);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-    
-  
+
     if (fieldErrors[name]) {
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
     }
-    
+
     if (name === "profile_photo" && files) {
       setFormData({ ...formData, profile_photo: files[0] });
     } else {
@@ -87,7 +88,7 @@ const Signup: React.FC = () => {
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clear previous field errors
     setFieldErrors({});
 
@@ -100,7 +101,7 @@ const Signup: React.FC = () => {
     // Password strength check
     if (!validatePassword(formData.password)) {
       toast.error(
-        "Password must be at least 6 characters and include lowercase, uppercase, number, and special character."
+        "Password must be at least 6 characters and include lowercase, uppercase, number, and special character.",
       );
       return;
     }
@@ -110,62 +111,83 @@ const Signup: React.FC = () => {
         registerWorker({
           ...formData,
           user_type: "worker",
-        })
+        }),
       );
 
       if (registerWorker.fulfilled.match(resultAction)) {
         // Successful registration
         const userId = resultAction.payload.user_id;
         const userEmail = formData.email;
-        
+
         // Pass email along with userId for resend functionality
-        router.push(`/auth/verify-email?userId=${userId}&email=${encodeURIComponent(userEmail)}`);
+        router.push(
+          `/auth/verify-email?userId=${userId}&email=${encodeURIComponent(userEmail)}`,
+        );
       } else if (registerWorker.rejected.match(resultAction)) {
-        
         console.log("=== DEBUGGING ERROR ===");
         console.log("Full resultAction:", resultAction);
         console.log("Payload type:", typeof resultAction.payload);
         console.log("Payload value:", resultAction.payload);
-        
+
         const errorPayload = resultAction.payload;
-        
-        if (errorPayload && typeof errorPayload === 'object' && 'fieldErrors' in errorPayload) {
+
+        if (
+          errorPayload &&
+          typeof errorPayload === "object" &&
+          "fieldErrors" in errorPayload
+        ) {
           const errors: Record<string, string> = {};
-          const payloadWithErrors = errorPayload as { fieldErrors: Record<string, string[]> };
-          
-          Object.entries(payloadWithErrors.fieldErrors).forEach(([field, messages]) => {
-            if (Array.isArray(messages) && messages.length > 0) {
-              errors[field] = messages[0];
-            }
-          });
+          const payloadWithErrors = errorPayload as {
+            fieldErrors: Record<string, string[]>;
+          };
+
+          Object.entries(payloadWithErrors.fieldErrors).forEach(
+            ([field, messages]) => {
+              if (Array.isArray(messages) && messages.length > 0) {
+                errors[field] = messages[0];
+              }
+            },
+          );
           setFieldErrors(errors);
-          toast.error(`Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''} in the form`);
+          toast.error(
+            `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`,
+          );
           return;
         }
-        
-        if (typeof errorPayload === 'string') {
+
+        if (typeof errorPayload === "string") {
           try {
             const parsedError = JSON.parse(errorPayload);
             console.log("Parsed error from string:", parsedError);
-            
-            if (parsedError?.fieldErrors && Object.keys(parsedError.fieldErrors).length > 0) {
+
+            if (
+              parsedError?.fieldErrors &&
+              Object.keys(parsedError.fieldErrors).length > 0
+            ) {
               const errors: Record<string, string> = {};
-              Object.entries(parsedError.fieldErrors).forEach(([field, messages]) => {
-                if (Array.isArray(messages) && messages.length > 0) {
-                  errors[field] = messages[0];
-                }
-              });
+              Object.entries(parsedError.fieldErrors).forEach(
+                ([field, messages]) => {
+                  if (Array.isArray(messages) && messages.length > 0) {
+                    errors[field] = messages[0];
+                  }
+                },
+              );
               setFieldErrors(errors);
-              toast.error(`Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''} in the form`);
+              toast.error(
+                `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`,
+              );
               return;
             }
           } catch (e) {
             console.log("Not valid JSON, treating as plain message");
           }
         }
-        
-     
-        toast.error(typeof errorPayload === 'string' ? errorPayload : "Registration failed");
+
+        toast.error(
+          typeof errorPayload === "string"
+            ? errorPayload
+            : "Registration failed",
+        );
       }
     } catch (err: any) {
       console.error("Unexpected error:", err);
@@ -179,20 +201,28 @@ const Signup: React.FC = () => {
         <h2 className="text-3xl font-bold text-center text-maroon mb-6">
           Sign Up
         </h2>
-        
+
         {/* Display field errors summary */}
         {Object.keys(fieldErrors).length > 0 && (
           <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md shadow-sm">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3 flex-1">
                 <h3 className="text-sm font-semibold text-red-800">
-                  {Object.keys(fieldErrors).length === 1 
-                    ? 'Please fix the following error:' 
+                  {Object.keys(fieldErrors).length === 1
+                    ? "Please fix the following error:"
                     : `Please fix the following ${Object.keys(fieldErrors).length} errors:`}
                 </h3>
                 <div className="mt-2 text-sm text-red-700 max-h-32 overflow-y-auto">
@@ -201,7 +231,10 @@ const Signup: React.FC = () => {
                       <li key={field} className="flex items-start">
                         <span className="mr-2 text-red-500">•</span>
                         <span>
-                          <strong className="capitalize">{field.replace(/_/g, ' ')}:</strong> {error}
+                          <strong className="capitalize">
+                            {field.replace(/_/g, " ")}:
+                          </strong>{" "}
+                          {error}
                         </span>
                       </li>
                     ))}
@@ -211,11 +244,14 @@ const Signup: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {/* Profile Photo */}
           <div>
-            <label htmlFor="profile_photo" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="profile_photo"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Profile Photo
             </label>
             <input
@@ -235,7 +271,10 @@ const Signup: React.FC = () => {
 
           {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Username
             </label>
             <input
@@ -246,18 +285,25 @@ const Signup: React.FC = () => {
               value={formData.username}
               onChange={handleChange}
               className={`w-full border rounded-md px-4 py-2 ${
-                fieldErrors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+                fieldErrors.username
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-maroon"
               }`}
               required
             />
             {fieldErrors.username && (
-              <p className="text-xs text-red-600 mt-1">{fieldErrors.username}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.username}
+              </p>
             )}
           </div>
 
           {/* Phone Number */}
           <div>
-            <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="phone_number"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Phone Number
             </label>
             <input
@@ -268,18 +314,25 @@ const Signup: React.FC = () => {
               value={formData.phone_number}
               onChange={handleChange}
               className={`w-full border rounded-md px-4 py-2 ${
-                fieldErrors.phone_number ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+                fieldErrors.phone_number
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-maroon"
               }`}
               required
             />
             {fieldErrors.phone_number && (
-              <p className="text-xs text-red-600 mt-1">{fieldErrors.phone_number}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.phone_number}
+              </p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
             <input
@@ -290,7 +343,9 @@ const Signup: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               className={`w-full border rounded-md px-4 py-2 ${
-                fieldErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-maroon'
+                fieldErrors.email
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-maroon"
               }`}
               required
             />
@@ -301,7 +356,10 @@ const Signup: React.FC = () => {
 
           {/* Full Name */}
           <div>
-            <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="full_name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Full Name
             </label>
             <input
@@ -318,7 +376,10 @@ const Signup: React.FC = () => {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
@@ -339,7 +400,10 @@ const Signup: React.FC = () => {
 
           {/* Confirm Password */}
           <div>
-            <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="confirm_password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Confirm Password
             </label>
             <input

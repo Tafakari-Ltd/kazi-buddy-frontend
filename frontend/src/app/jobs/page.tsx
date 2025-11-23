@@ -10,7 +10,8 @@ import { Job } from "@/types/job.types";
 
 const JobListPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { jobs, loading, handleFetchJobs, handleFetchJobsByCategory } = useJobs();
+  const { jobs, loading, handleFetchJobs, handleFetchJobsByCategory } =
+    useJobs();
   const { categories, handleFetchCategories } = useCategories();
 
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
@@ -80,14 +81,26 @@ const JobListPage = () => {
           >
             <div className="p-5 space-y-3">
               <h4 className="text-lg font-bold text-[#800000]">{job.title}</h4>
-              <p className="text-gray-600 text-sm line-clamp-3">{job.description}</p>
+              <p className="text-gray-600 text-sm line-clamp-3">
+                {job.description}
+              </p>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <span className="flex items-center gap-1"><Locate className="w-4 h-4" />{job.location}</span>
-                <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{job.job_type.replace('_',' ')}</span>
+                <span className="flex items-center gap-1">
+                  <Locate className="w-4 h-4" />
+                  {job.location}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {job.job_type.replace("_", " ")}
+                </span>
                 <span className="font-medium text-[#800000]">
-                  {job.budget_min ? `KSh ${job.budget_min.toLocaleString()}` : '—'}
-                  {job.budget_max ? ` - KSh ${job.budget_max.toLocaleString()}` : ''}
+                  {job.budget_min
+                    ? `KSh ${job.budget_min.toLocaleString()}`
+                    : "—"}
+                  {job.budget_max
+                    ? ` - KSh ${job.budget_max.toLocaleString()}`
+                    : ""}
                 </span>
               </div>
 

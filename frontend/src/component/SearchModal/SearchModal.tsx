@@ -39,11 +39,11 @@ const SearchModal = () => {
     () =>
       throttle((term: string) => {
         const results = jobList.filter((job) =>
-          job.toLowerCase().includes(term.toLowerCase())
+          job.toLowerCase().includes(term.toLowerCase()),
         );
         setFilteredJobs(results);
       }, 500), // 500ms throttle delay
-    []
+    [],
   );
 
   useEffect(() => {

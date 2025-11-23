@@ -66,7 +66,7 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
     if (!profile.is_available) {
       return { text: "Not Available", color: "bg-gray-100 text-gray-800" };
     }
-    
+
     const isCurrentlyAvailable = isWorkerCurrentlyAvailable(profile);
     return isCurrentlyAvailable
       ? { text: "Available Now", color: "bg-green-100 text-green-800" }
@@ -74,14 +74,17 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
   };
 
   const availabilityStatus = getAvailabilityStatus();
-  const completionColor = profile.profile_completion_percentage >= 80 
-    ? "text-green-600" 
-    : profile.profile_completion_percentage >= 60 
-    ? "text-yellow-600" 
-    : "text-red-600";
+  const completionColor =
+    profile.profile_completion_percentage >= 80
+      ? "text-green-600"
+      : profile.profile_completion_percentage >= 60
+        ? "text-yellow-600"
+        : "text-red-600";
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow ${className}`}>
+    <div
+      className={`bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow ${className}`}
+    >
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -93,17 +96,22 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
               Worker #{profile.id.substring(0, 8)}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getVerificationColor(profile.verification_status)}`}>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getVerificationColor(profile.verification_status)}`}
+              >
                 {getVerificationIcon(profile.verification_status)}
-                {profile.verification_status.charAt(0).toUpperCase() + profile.verification_status.slice(1)}
+                {profile.verification_status.charAt(0).toUpperCase() +
+                  profile.verification_status.slice(1)}
               </span>
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${availabilityStatus.color}`}>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${availabilityStatus.color}`}
+              >
                 {availabilityStatus.text}
               </span>
             </div>
           </div>
         </div>
-        
+
         {/* Profile Completion */}
         <div className="text-right">
           <div className={`text-sm font-medium ${completionColor}`}>
@@ -112,11 +120,11 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
           <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
             <div
               className={`h-2 rounded-full transition-all ${
-                profile.profile_completion_percentage >= 80 
-                  ? "bg-green-500" 
-                  : profile.profile_completion_percentage >= 60 
-                  ? "bg-yellow-500" 
-                  : "bg-red-500"
+                profile.profile_completion_percentage >= 80
+                  ? "bg-green-500"
+                  : profile.profile_completion_percentage >= 60
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
               }`}
               style={{ width: `${profile.profile_completion_percentage}%` }}
             />
@@ -138,7 +146,9 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
           <div>
             <div className="font-medium">{profile.location}</div>
             {profile.location_text && (
-              <div className="text-xs text-gray-500">{profile.location_text}</div>
+              <div className="text-xs text-gray-500">
+                {profile.location_text}
+              </div>
             )}
           </div>
         </div>
@@ -172,8 +182,12 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
 
       {/* Timestamps */}
       <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-        <span>Created: {new Date(profile.created_at).toLocaleDateString()}</span>
-        <span>Updated: {new Date(profile.updated_at).toLocaleDateString()}</span>
+        <span>
+          Created: {new Date(profile.created_at).toLocaleDateString()}
+        </span>
+        <span>
+          Updated: {new Date(profile.updated_at).toLocaleDateString()}
+        </span>
       </div>
 
       {/* Admin Notes (if any) */}
@@ -181,7 +195,9 @@ const WorkerProfileCard: React.FC<WorkerProfileCardProps> = ({
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <Shield className="w-4 h-4 text-yellow-600" />
-            <span className="text-sm font-medium text-yellow-800">Admin Note</span>
+            <span className="text-sm font-medium text-yellow-800">
+              Admin Note
+            </span>
           </div>
           <p className="text-sm text-yellow-700">{profile.admin_notes}</p>
         </div>

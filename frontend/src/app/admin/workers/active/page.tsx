@@ -12,7 +12,7 @@ const AllWorkersAdministration = () => {
   const filteredWorkers = workers.filter(
     (worker) =>
       worker.name.toLowerCase().includes(search.toLowerCase()) ||
-      worker.skills.toLowerCase().includes(search.toLowerCase())
+      worker.skills.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (

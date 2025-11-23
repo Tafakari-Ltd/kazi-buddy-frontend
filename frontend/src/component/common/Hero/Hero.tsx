@@ -15,11 +15,13 @@ const Hero = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [selectedJobType, setSelectedJobType] = useState<string | null>(null);
-  const [categoryJobCounts, setCategoryJobCounts] = useState<Record<string, number>>({});
+  const [categoryJobCounts, setCategoryJobCounts] = useState<
+    Record<string, number>
+  >({});
 
   const dispatch = useDispatch<AppDispatch>();
   const { categories, loading, error } = useSelector(
-    (state: RootState) => state.categories
+    (state: RootState) => state.categories,
   );
   const { jobs } = useSelector((state: RootState) => state.jobs);
 
@@ -34,7 +36,8 @@ const Hero = () => {
   useEffect(() => {
     const counts: Record<string, number> = {};
     jobs.forEach((job: any) => {
-      const categoryId = typeof job.category === 'string' ? job.category : job.category?.id;
+      const categoryId =
+        typeof job.category === "string" ? job.category : job.category?.id;
       if (categoryId) {
         counts[categoryId] = (counts[categoryId] || 0) + 1;
       }
@@ -47,7 +50,7 @@ const Hero = () => {
     const filters: any = {
       page: 1,
       limit: 12,
-      status: 'approved'
+      status: "approved",
     };
 
     // Add search query if provided
@@ -63,7 +66,7 @@ const Hero = () => {
     // Add category if not "All categories"
     if (selectedCategory && selectedCategory !== "All categories") {
       // Find the category ID from the categories list
-      const category = categories.find(cat => cat.name === selectedCategory);
+      const category = categories.find((cat) => cat.name === selectedCategory);
       if (category) {
         filters.category = category.id;
       }
@@ -81,23 +84,27 @@ const Hero = () => {
     const searchTerms = [];
     if (searchQuery) searchTerms.push(`"${searchQuery}"`);
     if (locationQuery) searchTerms.push(`in ${locationQuery}`);
-    if (selectedCategory !== "All categories") searchTerms.push(`(${selectedCategory})`);
+    if (selectedCategory !== "All categories")
+      searchTerms.push(`(${selectedCategory})`);
     if (selectedJobType) {
-      const jobTypeLabel = selectedJobType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      const jobTypeLabel = selectedJobType
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
       searchTerms.push(`[${jobTypeLabel}]`);
     }
-    
+
     if (searchTerms.length > 0) {
-      toast.success(`Searching for ${searchTerms.join(' ')}`);
+      toast.success(`Searching for ${searchTerms.join(" ")}`);
     }
 
     // Scroll to jobs section
-    const jobsSection = document.getElementById('jobs-section');
+    const jobsSection = document.getElementById("jobs-section");
     if (jobsSection) {
-      jobsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      jobsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       // If no specific section, scroll down
-      window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+      window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
     }
   };
 
@@ -114,7 +121,10 @@ const Hero = () => {
   return (
     <div className="relative bg-gradient-to-br from-maroon via-purple-dark to-redish">
       <Navbar />
-      <div className="text-white py-16 pb-24 px-6 md:px-12 relative flex flex-col items-center justify-start md:justify-center container" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <div
+        className="text-white py-16 pb-24 px-6 md:px-12 relative flex flex-col items-center justify-start md:justify-center container"
+        style={{ minHeight: "calc(100vh - 80px)" }}
+      >
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h3 className="text-4xl md:text-5xl font-extrabold leading-tight">
             Find the job that fits your life
@@ -152,7 +162,10 @@ const Hero = () => {
             </div>
 
             {/* Categories Dropdown */}
-            <div className="relative" title="Click to see job categories with job counts">
+            <div
+              className="relative"
+              title="Click to see job categories with job counts"
+            >
               <div
                 onClick={() => setDropdownOpen((prev) => !prev)}
                 className="flex justify-between items-center gap-2 border border-neutral-300 rounded-md px-3 py-2 cursor-pointer hover:border-purple-600 focus-within:ring-2 focus-within:ring-purple-600 transition"
@@ -208,7 +221,7 @@ const Hero = () => {
                         {categories.map((cat) => {
                           const jobCount = categoryJobCounts[cat.id] || 0;
                           const hasJobs = jobCount > 0;
-                          
+
                           return (
                             <li
                               key={cat.id}
@@ -216,22 +229,28 @@ const Hero = () => {
                               className={`px-4 py-2 cursor-pointer transition flex items-center justify-between group ${
                                 selectedCategory === cat.name
                                   ? "bg-[#800000] text-white font-medium"
-                                  : hasJobs 
+                                  : hasJobs
                                     ? "hover:bg-gray-100 text-gray-800"
                                     : "hover:bg-gray-50 text-gray-400"
                               }`}
                             >
-                              <span className={!hasJobs ? "opacity-60" : ""}>{cat.name}</span>
+                              <span className={!hasJobs ? "opacity-60" : ""}>
+                                {cat.name}
+                              </span>
                               {hasJobs ? (
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                  selectedCategory === cat.name
-                                    ? "bg-white/20 text-white"
-                                    : "bg-green-100 text-green-700 group-hover:bg-green-200"
-                                }`}>
-                                  {jobCount} {jobCount === 1 ? 'job' : 'jobs'}
+                                <span
+                                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                    selectedCategory === cat.name
+                                      ? "bg-white/20 text-white"
+                                      : "bg-green-100 text-green-700 group-hover:bg-green-200"
+                                  }`}
+                                >
+                                  {jobCount} {jobCount === 1 ? "job" : "jobs"}
                                 </span>
                               ) : (
-                                <span className="text-xs text-gray-400 italic">No jobs</span>
+                                <span className="text-xs text-gray-400 italic">
+                                  No jobs
+                                </span>
                               )}
                             </li>
                           );
@@ -263,8 +282,8 @@ const Hero = () => {
               </p>
               <div className="flex flex-wrap gap-2">
                 {categories
-                  .filter(cat => (categoryJobCounts[cat.id] || 0) > 0)
-                  .map(cat => (
+                  .filter((cat) => (categoryJobCounts[cat.id] || 0) > 0)
+                  .map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
@@ -288,9 +307,7 @@ const Hero = () => {
 
           {/* Job Type Quick Filters */}
           <div className="mt-6 text-purple-100">
-            <p className="text-sm font-semibold uppercase mb-2">
-              Job Type
-            </p>
+            <p className="text-sm font-semibold uppercase mb-2">Job Type</p>
             <div className="flex flex-wrap justify-center gap-2">
               {[
                 { label: "Full Time", value: "full_time" },
@@ -300,7 +317,11 @@ const Hero = () => {
               ].map((type) => (
                 <button
                   key={type.value}
-                  onClick={() => setSelectedJobType(selectedJobType === type.value ? null : type.value)}
+                  onClick={() =>
+                    setSelectedJobType(
+                      selectedJobType === type.value ? null : type.value,
+                    )
+                  }
                   className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
                     selectedJobType === type.value
                       ? "bg-white text-[#800000] shadow-md"
@@ -328,7 +349,7 @@ const Hero = () => {
                   >
                     {keyword}
                   </button>
-                )
+                ),
               )}
             </div>
           </div>

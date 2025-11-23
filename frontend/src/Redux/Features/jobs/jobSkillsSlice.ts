@@ -103,7 +103,7 @@
 //       const updateData: any = {};
 //       if (experience_level !== undefined) updateData.experience_level = experience_level;
 //       if (is_required !== undefined) updateData.is_required = is_required;
-      
+
 //       const response = await api.put(`/api/jobs/skills/update/${skillId}/`, updateData);
 //       return response.data || response;
 //     } catch (error: any) {
@@ -124,9 +124,9 @@
 //   async (skillId, { rejectWithValue }) => {
 //     try {
 //       const response = await api.delete(`/api/jobs/skills/delete/${skillId}/`);
-//       return { 
-//         message: response?.message || "Job skill deleted successfully", 
-//         skillId 
+//       return {
+//         message: response?.message || "Job skill deleted successfully",
+//         skillId
 //       };
 //     } catch (error: any) {
 //       return rejectWithValue(
@@ -183,7 +183,7 @@
 //         state.loading = false;
 //         state.error = action.payload as string;
 //       })
-      
+
 //       // Get job skill details
 //       .addCase(getJobSkillDetails.pending, (state) => {
 //         state.loading = true;
@@ -201,7 +201,7 @@
 //         state.loading = false;
 //         state.error = action.payload as string;
 //       })
-      
+
 //       // Create job skill
 //       .addCase(createJobSkill.pending, (state) => {
 //         state.loading = true;
@@ -216,7 +216,7 @@
 //         state.loading = false;
 //         state.error = action.payload as string;
 //       })
-      
+
 //       // Update job skill
 //       .addCase(updateJobSkill.pending, (state) => {
 //         state.loading = true;
@@ -234,7 +234,7 @@
 //         state.loading = false;
 //         state.error = action.payload as string;
 //       })
-      
+
 //       // Delete job skill
 //       .addCase(deleteJobSkill.pending, (state) => {
 //         state.loading = true;
@@ -249,7 +249,7 @@
 //         state.loading = false;
 //         state.error = action.payload as string;
 //       })
-      
+
 //       // Legacy fetch job skills
 //       .addCase(fetchJobSkills.pending, (state) => {
 //         state.loading = true;

@@ -1,5 +1,3 @@
-// File: src/services/jobApplicationApi.ts
-
 import api from '../lib/axios';
 import {
   JobApplicationRequest,
@@ -12,9 +10,11 @@ import {
   ApplicationQueryParams
 } from '../types/jobApplication.types';
 
+/**
+ * Handles all job application-related API calls 
+ */
 export class JobApplicationApi {
   private static readonly BASE_ENDPOINT = '/applications';
-  // Add the admin endpoint base
   private static readonly ADMIN_ENDPOINT = '/adminpanel/applications'; 
 
   /**
@@ -28,10 +28,8 @@ export class JobApplicationApi {
   ): Promise<{ message: string; application: JobApplicationWithDetails }> {
     try {
       const url = `${this.ADMIN_ENDPOINT}/${applicationId}/status/`;
-      
       const payload: any = { status };
       
-      // Add notes if provided (mapped to employer_notes based on your API response)
       if (notes) {
         payload.employer_notes = notes;
       }
@@ -46,6 +44,7 @@ export class JobApplicationApi {
 
   /**
    * Apply for a job
+   * POST /api/applications/{job_id}/apply/
    */
   static async applyForJob(
     jobId: string, 
@@ -56,12 +55,14 @@ export class JobApplicationApi {
       const response = await api.post(url, applicationData);
       return response as any;
     } catch (error: any) {
+      console.error('Error applying for job:', error);
       throw this.handleApiError(error);
     }
   }
 
   /**
    * Get current user's applications
+   * GET /api/applications/me/
    */
   static async getMyApplications(
     params?: ApplicationQueryParams
@@ -78,6 +79,7 @@ export class JobApplicationApi {
 
   /**
    * Get specific application details
+   * GET /api/applications/{application_id}/
    */
   static async getApplicationDetails(
     applicationId: string
@@ -93,6 +95,7 @@ export class JobApplicationApi {
 
   /**
    * Get applications for a specific job
+   * GET /api/applications/job/{job_id}/
    */
   static async getJobApplications(
     jobId: string,
@@ -111,6 +114,7 @@ export class JobApplicationApi {
 
   /**
    * Get all applications (admin/employer access)
+   * GET /api/applications/all/
    */
   static async getAllApplications(
     params?: ApplicationQueryParams
@@ -129,6 +133,7 @@ export class JobApplicationApi {
 
   /**
    * Update an application
+   * PUT /api/applications/{application_id}/
    */
   static async updateApplication(
     applicationId: string,
@@ -147,6 +152,7 @@ export class JobApplicationApi {
 
   /**
    * Delete/withdraw an application
+   * DELETE /api/applications/{application_id}/
    */
   static async deleteApplication(applicationId: string): Promise<{ message: string }> {
     try {
@@ -157,19 +163,85 @@ export class JobApplicationApi {
     }
   }
 
+  /**
+   * Check if user has already applied to a job
+   */
   static async hasUserApplied(jobId: string): Promise<boolean> {
     try {
-      const response = await this.getMyApplications({ search: jobId, per_page: 1 });
+      const response = await this.getMyApplications({
+        search: jobId,
+        per_page: 1
+      });
       return response.applications.some(app => app.job === jobId);
     } catch (error: any) {
-      return false;
+      return false; 
     }
+  }
+
+  /**
+   * Get application statistics for a job (for employers)
+   */
+  static async getJobApplicationStats(jobId: string): Promise<{
+    total: number;
+    pending: number;
+    reviewed: number;
+    accepted: number;
+    rejected: number;
+  }> {
+    try {
+      const response = await this.getJobApplications(jobId);
+      const applications = response.applications;
+      
+      return {
+        total: applications.length,
+        pending: applications.filter(app => app.status === 'pending').length,
+        reviewed: applications.filter(app => app.status === 'reviewed').length,
+        accepted: applications.filter(app => app.status === 'accepted').length,
+        rejected: applications.filter(app => app.status === 'rejected').length,
+      };
+    } catch (error: any) {
+      throw this.handleApiError(error);
+    }
+  }
+
+  /**
+   * Bulk update application statuses (for employers)
+   */
+  static async bulkUpdateApplications(
+    applicationIds: string[],
+    status: 'reviewed' | 'accepted' | 'rejected'
+  ): Promise<{ success: boolean; updated: number; errors: string[] }> {
+    const results = {
+      success: true,
+      updated: 0,
+      errors: [] as string[]
+    };
+
+    const concurrencyLimit = 5;
+    const chunks = this.chunkArray(applicationIds, concurrencyLimit);
+
+    for (const chunk of chunks) {
+      const promises = chunk.map(async (id) => {
+        try {
+          await this.updateApplication(id, { status });
+          results.updated++;
+        } catch (error: any) {
+          results.errors.push(`Failed to update application ${id}: ${error.message}`);
+          results.success = false;
+        }
+      });
+
+      await Promise.all(promises);
+    }
+
+    return results;
   }
 
   // --- Utility Methods ---
 
   private static buildQueryParams(params?: ApplicationQueryParams): string {
     if (!params) return '';
+
     const queryParams = new URLSearchParams();
 
     if (params.status?.length) params.status.forEach(status => queryParams.append('status', status));
@@ -194,13 +266,70 @@ export class JobApplicationApi {
     return new Error('An unexpected error occurred');
   }
 
-  // Utility to chunk arrays for batch processing
   private static chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks: T[][] = [];
     for (let i = 0; i < array.length; i += chunkSize) {
       chunks.push(array.slice(i, i + chunkSize));
     }
     return chunks;
+  }
+
+  /**
+   * Validate application data before submission
+   */
+  static validateApplicationData(data: JobApplicationRequest): {
+    isValid: boolean;
+    errors: Record<string, string>;
+  } {
+    const errors: Record<string, string> = {};
+
+    if (!data.cover_letter?.trim()) {
+      errors.cover_letter = 'Cover letter is required';
+    } else if (data.cover_letter.length < 50) {
+      errors.cover_letter = 'Cover letter must be at least 50 characters';
+    } else if (data.cover_letter.length > 2000) {
+      errors.cover_letter = 'Cover letter must not exceed 2000 characters';
+    }
+
+    if (!data.proposed_rate || data.proposed_rate <= 0) {
+      errors.proposed_rate = 'Proposed rate must be greater than 0';
+    } else if (data.proposed_rate > 10000) {
+      errors.proposed_rate = 'Proposed rate seems too high. Please verify.';
+    }
+
+    if (!data.availability_start) {
+      errors.availability_start = 'Availability start date is required';
+    } else {
+      const startDate = new Date(data.availability_start);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (startDate < today) {
+        errors.availability_start = 'Availability start date cannot be in the past';
+      }
+    }
+
+    if (data.worker_notes && data.worker_notes.length > 1000) {
+      errors.worker_notes = 'Worker notes must not exceed 1000 characters';
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Format application data for display
+   */
+  static formatApplicationForDisplay(application: JobApplication): JobApplicationWithDetails {
+    return {
+      ...application,
+      applied_at: new Date(application.applied_at).toISOString(),
+      reviewed_at: application.reviewed_at ? new Date(application.reviewed_at).toISOString() : null,
+      responded_at: application.responded_at ? new Date(application.responded_at).toISOString() : null,
+      proposed_rate: parseFloat(application.proposed_rate).toFixed(2)
+    } as unknown as JobApplicationWithDetails;
   }
 }
 

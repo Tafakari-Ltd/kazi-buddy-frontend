@@ -1,23 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  DollarSign, 
-  Clock, 
-  Users, 
+import {
+  Search,
+  Filter,
+  MapPin,
+  DollarSign,
+  Clock,
+  Users,
   RefreshCw,
   ChevronDown,
-  X
+  X,
 } from "lucide-react";
 import WorkerProfileCard from "./WorkerProfileCard";
-import { 
-  WorkerProfile, 
+import {
+  WorkerProfile,
   WorkerProfileFilters,
   LOCATION_OPTIONS,
-  VerificationStatus 
+  VerificationStatus,
 } from "@/types/worker.types";
 
 interface WorkerProfilesListProps {
@@ -60,19 +60,21 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
     onFilterChange?.({});
   };
 
-  const hasActiveFilters = Object.keys(filters).some(key => 
-    filters[key as keyof WorkerProfileFilters] !== undefined && 
-    filters[key as keyof WorkerProfileFilters] !== ""
+  const hasActiveFilters = Object.keys(filters).some(
+    (key) =>
+      filters[key as keyof WorkerProfileFilters] !== undefined &&
+      filters[key as keyof WorkerProfileFilters] !== "",
   );
 
   const getFilteredProfiles = () => {
     if (!searchQuery) return profiles;
-    
+
     const query = searchQuery.toLowerCase();
-    return profiles.filter(profile => 
-      profile.bio.toLowerCase().includes(query) ||
-      profile.location.toLowerCase().includes(query) ||
-      profile.location_text.toLowerCase().includes(query)
+    return profiles.filter(
+      (profile) =>
+        profile.bio.toLowerCase().includes(query) ||
+        profile.location.toLowerCase().includes(query) ||
+        profile.location_text.toLowerCase().includes(query),
     );
   };
 
@@ -111,7 +113,9 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
                 {Object.keys(filters).length}
               </span>
             )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+            />
           </button>
 
           {onRefresh && (
@@ -120,7 +124,9 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           )}
@@ -131,7 +137,9 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
       {showFilters && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Filter Workers</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Filter Workers
+            </h3>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
@@ -153,7 +161,9 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
               <select
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 value={filters.location || ""}
-                onChange={(e) => handleFilterChange({ location: e.target.value || undefined })}
+                onChange={(e) =>
+                  handleFilterChange({ location: e.target.value || undefined })
+                }
               >
                 <option value="">All locations</option>
                 {LOCATION_OPTIONS.map((location) => (
@@ -173,9 +183,13 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
               <select
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 value={filters.min_experience || ""}
-                onChange={(e) => handleFilterChange({ 
-                  min_experience: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
+                onChange={(e) =>
+                  handleFilterChange({
+                    min_experience: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  })
+                }
               >
                 <option value="">Any experience</option>
                 <option value="0">Entry level</option>
@@ -199,9 +213,11 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
                 placeholder="50.00"
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 value={filters.max_hourly_rate || ""}
-                onChange={(e) => handleFilterChange({ 
-                  max_hourly_rate: e.target.value || undefined 
-                })}
+                onChange={(e) =>
+                  handleFilterChange({
+                    max_hourly_rate: e.target.value || undefined,
+                  })
+                }
               />
             </div>
 
@@ -213,10 +229,18 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
               </label>
               <select
                 className="w-full p-2 border border-gray-300 rounded-lg"
-                value={filters.is_available !== undefined ? filters.is_available.toString() : ""}
-                onChange={(e) => handleFilterChange({ 
-                  is_available: e.target.value ? e.target.value === "true" : undefined 
-                })}
+                value={
+                  filters.is_available !== undefined
+                    ? filters.is_available.toString()
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFilterChange({
+                    is_available: e.target.value
+                      ? e.target.value === "true"
+                      : undefined,
+                  })
+                }
               >
                 <option value="">All workers</option>
                 <option value="true">Available only</option>
@@ -232,9 +256,12 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
               <select
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 value={filters.verification_status || ""}
-                onChange={(e) => handleFilterChange({ 
-                  verification_status: e.target.value as VerificationStatus || undefined 
-                })}
+                onChange={(e) =>
+                  handleFilterChange({
+                    verification_status:
+                      (e.target.value as VerificationStatus) || undefined,
+                  })
+                }
               >
                 <option value="">All statuses</option>
                 <option value={VerificationStatus.VERIFIED}>Verified</option>
@@ -250,13 +277,11 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-600">
-          {loading ? (
-            "Loading workers..."
-          ) : (
-            `${filteredProfiles.length} worker${filteredProfiles.length !== 1 ? 's' : ''} found`
-          )}
+          {loading
+            ? "Loading workers..."
+            : `${filteredProfiles.length} worker${filteredProfiles.length !== 1 ? "s" : ""} found`}
         </p>
-        
+
         {hasActiveFilters && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">Active filters:</span>
@@ -287,7 +312,10 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
+            <div
+              key={index}
+              className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse"
+            >
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
                 <div className="flex-1">
@@ -309,7 +337,9 @@ const WorkerProfilesList: React.FC<WorkerProfilesListProps> = ({
       ) : filteredProfiles.length === 0 ? (
         <div className="text-center py-12">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No workers found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No workers found
+          </h3>
           <p className="text-gray-600 mb-4">
             {hasActiveFilters
               ? "Try adjusting your filters to see more results."

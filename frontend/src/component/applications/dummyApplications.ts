@@ -1,4 +1,4 @@
-import { Application } from "@/types/job.types"
+import { Application } from "@/types/job.types";
 const dummyApplications: Application[] = [
   {
     id: 1,
@@ -68,4 +68,4 @@ const dummyApplications: Application[] = [
   },
 ];
 
-export  { dummyApplications };
+export { dummyApplications };

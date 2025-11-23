@@ -31,73 +31,71 @@ export const fetchCategories = createAsyncThunk<
   Category[],
   void,
   { rejectValue: string }
->(
-  "categories/fetchCategories",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.get("/jobs/categories/");
-    
-      return response.data || response;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.message || "Failed to fetch categories"
-      );
-    }
+>("categories/fetchCategories", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/jobs/categories/");
+
+    return response.data || response;
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to fetch categories");
   }
-);
+});
 
 // Fetch single category
 export const fetchCategoryById = createAsyncThunk<
   Category,
   string,
   { rejectValue: string }
->(
-  "categories/fetchCategoryById",
-  async (categoryId, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/jobs/categories/${categoryId}/`);
-      // Handle the nested data structure from your API
-      return response.data || response;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.message || "Failed to fetch category"
-      );
-    }
+>("categories/fetchCategoryById", async (categoryId, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/jobs/categories/${categoryId}/`);
+    // Handle the nested data structure from your API
+    return response.data || response;
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to fetch category");
   }
-);
+});
 // Create category
 export const createCategory = createAsyncThunk<
   Category,
   { name: string; description: string },
-  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
->(
-  "categories/createCategory",
-  async (data, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/jobs/categories/create/", data);
-      return response.data || response;
-    } catch (error: any) {
-      if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
-        return rejectWithValue({
-          message: "Validation errors occurred",
-          fieldErrors: error.fieldErrors,
-        } as any);
-      }
-      return rejectWithValue(error?.message || "Failed to create category");
-    }
+  {
+    rejectValue:
+      | string
+      | { message: string; fieldErrors: Record<string, string[]> };
   }
-);
+>("categories/createCategory", async (data, { rejectWithValue }) => {
+  try {
+    const response = await api.post("/jobs/categories/create/", data);
+    return response.data || response;
+  } catch (error: any) {
+    if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
+      return rejectWithValue({
+        message: "Validation errors occurred",
+        fieldErrors: error.fieldErrors,
+      } as any);
+    }
+    return rejectWithValue(error?.message || "Failed to create category");
+  }
+});
 
 // Update category
 export const updateCategory = createAsyncThunk<
   Category,
   { categoryId: string; data: { name: string; description: string } },
-  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
+  {
+    rejectValue:
+      | string
+      | { message: string; fieldErrors: Record<string, string[]> };
+  }
 >(
   "categories/updateCategory",
   async ({ categoryId, data }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/jobs/categories/update/${categoryId}/`, data);
+      const response = await api.put(
+        `/jobs/categories/update/${categoryId}/`,
+        data,
+      );
       return response.data || response;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
@@ -108,7 +106,7 @@ export const updateCategory = createAsyncThunk<
       }
       return rejectWithValue(error?.message || "Failed to update category");
     }
-  }
+  },
 );
 
 // Delete category
@@ -116,38 +114,30 @@ export const deleteCategory = createAsyncThunk<
   string,
   string,
   { rejectValue: string }
->(
-  "categories/deleteCategory",
-  async (categoryId, { rejectWithValue }) => {
-    try {
-      await api.delete(`/jobs/categories/delete/${categoryId}/`);
-      return categoryId;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.message || "Failed to delete category"
-      );
-    }
+>("categories/deleteCategory", async (categoryId, { rejectWithValue }) => {
+  try {
+    await api.delete(`/jobs/categories/delete/${categoryId}/`);
+    return categoryId;
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to delete category");
   }
-);
+});
 
 // Fetch jobs in category
 export const fetchJobsByCategory = createAsyncThunk<
   any[],
   string,
   { rejectValue: string }
->(
-  "categories/fetchJobsByCategory",
-  async (categoryId, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/jobs/categories/${categoryId}/jobs/`);
-      return response.data || response;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.message || "Failed to fetch jobs in category"
-      );
-    }
+>("categories/fetchJobsByCategory", async (categoryId, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/jobs/categories/${categoryId}/jobs/`);
+    return response.data || response;
+  } catch (error: any) {
+    return rejectWithValue(
+      error?.message || "Failed to fetch jobs in category",
+    );
   }
-);
+});
 
 const categoriesSlice = createSlice({
   name: "categories",
@@ -186,14 +176,17 @@ const categoriesSlice = createSlice({
           state.categories = action.payload;
 
           if (typeof window !== "undefined") {
-            sessionStorage.setItem("categories", JSON.stringify(action.payload));
+            sessionStorage.setItem(
+              "categories",
+              JSON.stringify(action.payload),
+            );
           }
-        }
+        },
       )
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-    });
+      });
 
     // Fetch single category
     builder
@@ -206,7 +199,7 @@ const categoriesSlice = createSlice({
         (state, action: PayloadAction<Category>) => {
           state.loading = false;
           state.currentCategory = action.payload;
-        }
+        },
       )
       .addCase(fetchCategoryById.rejected, (state, action) => {
         state.loading = false;
@@ -228,15 +221,19 @@ const categoriesSlice = createSlice({
           state.successMessage = "Category created successfully";
 
           if (typeof window !== "undefined") {
-            sessionStorage.setItem("categories", JSON.stringify(state.categories));
+            sessionStorage.setItem(
+              "categories",
+              JSON.stringify(state.categories),
+            );
           }
-        }
+        },
       )
       .addCase(createCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = typeof action.payload === "string"
-          ? action.payload
-          : "Failed to create category";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Failed to create category";
       });
 
     // Update category
@@ -251,7 +248,7 @@ const categoriesSlice = createSlice({
         (state, action: PayloadAction<Category>) => {
           state.loading = false;
           const index = state.categories.findIndex(
-            (cat) => cat.id === action.payload.id
+            (cat) => cat.id === action.payload.id,
           );
           if (index !== -1) {
             state.categories[index] = action.payload;
@@ -260,15 +257,19 @@ const categoriesSlice = createSlice({
           state.successMessage = "Category updated successfully";
 
           if (typeof window !== "undefined") {
-            sessionStorage.setItem("categories", JSON.stringify(state.categories));
+            sessionStorage.setItem(
+              "categories",
+              JSON.stringify(state.categories),
+            );
           }
-        }
+        },
       )
       .addCase(updateCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = typeof action.payload === "string"
-          ? action.payload
-          : "Failed to update category";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Failed to update category";
       });
 
     // Delete category
@@ -282,7 +283,7 @@ const categoriesSlice = createSlice({
         (state, action: PayloadAction<string>) => {
           state.loading = false;
           state.categories = state.categories.filter(
-            (cat) => cat.id !== action.payload
+            (cat) => cat.id !== action.payload,
           );
           if (state.currentCategory?.id === action.payload) {
             state.currentCategory = null;
@@ -290,9 +291,12 @@ const categoriesSlice = createSlice({
           state.successMessage = "Category deleted successfully";
 
           if (typeof window !== "undefined") {
-            sessionStorage.setItem("categories", JSON.stringify(state.categories));
+            sessionStorage.setItem(
+              "categories",
+              JSON.stringify(state.categories),
+            );
           }
-        }
+        },
       )
       .addCase(deleteCategory.rejected, (state, action) => {
         state.loading = false;
@@ -310,7 +314,7 @@ const categoriesSlice = createSlice({
         (state, action: PayloadAction<any[]>) => {
           state.loading = false;
           state.categoryJobs = action.payload;
-        }
+        },
       )
       .addCase(fetchJobsByCategory.rejected, (state, action) => {
         state.loading = false;
@@ -319,6 +323,10 @@ const categoriesSlice = createSlice({
   },
 });
 
-export const { clearCategories, hydrateCategories, clearState, clearCurrentCategory } =
-  categoriesSlice.actions;
+export const {
+  clearCategories,
+  hydrateCategories,
+  clearState,
+  clearCurrentCategory,
+} = categoriesSlice.actions;
 export default categoriesSlice;

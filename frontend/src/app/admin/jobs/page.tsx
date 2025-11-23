@@ -4,12 +4,12 @@ import { useSelector } from "react-redux";
 import { useJobs } from "@/Redux/Functions/useJobs";
 import { useCategories } from "@/Redux/Functions/useCategories";
 import { RootState } from "@/Redux/Store/Store";
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Eye, 
-  AlertCircle, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  AlertCircle,
   Filter,
   Search,
   Calendar,
@@ -23,14 +23,14 @@ import {
   Briefcase,
   Save,
   Building,
-  Clock
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  JobStatus, 
-  JobType, 
-  UrgencyLevel, 
-  PaymentType, 
+import {
+  JobStatus,
+  JobType,
+  UrgencyLevel,
+  PaymentType,
   Job,
   CreateJobData,
   JobFormErrors,
@@ -39,14 +39,14 @@ import {
   JOB_TYPE_OPTIONS,
   URGENCY_LEVEL_OPTIONS,
   PAYMENT_TYPE_OPTIONS,
-  VISIBILITY_OPTIONS
+  VISIBILITY_OPTIONS,
 } from "@/types/job.types";
 import { useSearchParams } from "next/navigation";
 
 const JobsManagementPage = () => {
   const searchParams = useSearchParams();
-  const statusParam = searchParams?.get('status') as JobStatus | null;
-  const jobIdParam = searchParams?.get('jobId');
+  const statusParam = searchParams?.get("status") as JobStatus | null;
+  const jobIdParam = searchParams?.get("jobId");
 
   const {
     jobs,
@@ -64,9 +64,11 @@ const JobsManagementPage = () => {
   } = useJobs();
 
   const { categories, handleFetchCategories } = useCategories();
-  
+
   // Get auth state for employer ID
-  const { user, userId, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, userId, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<string | null>(null);
@@ -75,7 +77,7 @@ const JobsManagementPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Create job form state
   const [createFormData, setCreateFormData] = useState<Partial<CreateJobData>>({
     title: "",
@@ -95,7 +97,7 @@ const JobsManagementPage = () => {
     status: JobStatus.DRAFT,
     visibility: JobVisibility.PUBLIC,
   });
-  
+
   const [createFormErrors, setCreateFormErrors] = useState<JobFormErrors>({});
   const [localFilters, setLocalFilters] = useState({
     status: statusParam || "",
@@ -121,7 +123,7 @@ const JobsManagementPage = () => {
   // Open view modal if jobId is provided in query params and jobs are loaded
   useEffect(() => {
     if (jobIdParam && !loading && jobs.length > 0) {
-      const job = jobs.find(j => j.id === jobIdParam);
+      const job = jobs.find((j) => j.id === jobIdParam);
       if (job) {
         setJobToView(job);
         setShowViewModal(true);
@@ -141,28 +143,28 @@ const JobsManagementPage = () => {
     if (debouncedSearch.trim()) {
       processedFilters.search_query = debouncedSearch;
     }
-    
-    if (localFilters.status && localFilters.status !== '') {
+
+    if (localFilters.status && localFilters.status !== "") {
       processedFilters.status = localFilters.status;
     }
-    
-    if (localFilters.category && localFilters.category !== '') {
+
+    if (localFilters.category && localFilters.category !== "") {
       processedFilters.category = localFilters.category;
     }
-    
-    if (localFilters.job_type !== '') {
+
+    if (localFilters.job_type !== "") {
       processedFilters.job_type = localFilters.job_type;
     }
-    
-    if (localFilters.payment_type !== '') {
+
+    if (localFilters.payment_type !== "") {
       processedFilters.payment_type = localFilters.payment_type;
     }
-    
-    if (localFilters.urgency_level !== '') {
+
+    if (localFilters.urgency_level !== "") {
       processedFilters.urgency_level = localFilters.urgency_level;
     }
-    
-    if (localFilters.location && localFilters.location.trim() !== '') {
+
+    if (localFilters.location && localFilters.location.trim() !== "") {
       processedFilters.location = localFilters.location;
     }
 
@@ -215,33 +217,33 @@ const JobsManagementPage = () => {
   };
 
   const getStatusColor = (status: JobStatus) => {
-    const option = JOB_STATUS_OPTIONS.find(opt => opt.value === status);
-    return option?.color || 'text-gray-600 bg-gray-100';
+    const option = JOB_STATUS_OPTIONS.find((opt) => opt.value === status);
+    return option?.color || "text-gray-600 bg-gray-100";
   };
 
   const getUrgencyColor = (urgency: UrgencyLevel) => {
-    const option = URGENCY_LEVEL_OPTIONS.find(opt => opt.value === urgency);
-    return option?.color || 'text-gray-600 bg-gray-100';
+    const option = URGENCY_LEVEL_OPTIONS.find((opt) => opt.value === urgency);
+    return option?.color || "text-gray-600 bg-gray-100";
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category?.name || 'Unknown Category';
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category?.name || "Unknown Category";
   };
 
   // Apply local category filter
@@ -249,31 +251,44 @@ const JobsManagementPage = () => {
     if (!localFilters.category) return jobs;
     return jobs.filter((j: any) => {
       const catRaw = j?.category;
-      const catId: string = typeof catRaw === 'string'
-        ? catRaw
-        : (catRaw?.id ? String(catRaw.id) : '');
+      const catId: string =
+        typeof catRaw === "string"
+          ? catRaw
+          : catRaw?.id
+            ? String(catRaw.id)
+            : "";
       return catId === localFilters.category;
     });
   }, [jobs, localFilters.category]);
 
   // Group current jobs by category for sectioned rendering
   const groupedByCategory = useMemo(() => {
-    if (!displayedJobs || displayedJobs.length === 0) return [] as { categoryId: string; categoryName: string; jobs: Job[] }[];
-    const map = new Map<string, { categoryId: string; categoryName: string; jobs: Job[] }>();
+    if (!displayedJobs || displayedJobs.length === 0)
+      return [] as { categoryId: string; categoryName: string; jobs: Job[] }[];
+    const map = new Map<
+      string,
+      { categoryId: string; categoryName: string; jobs: Job[] }
+    >();
     displayedJobs.forEach((j: any) => {
       const catRaw = j?.category;
-      const catId: string = typeof catRaw === 'string' 
-        ? catRaw 
-        : (catRaw?.id ? String(catRaw.id) : 'uncategorized');
-      const catName: string = (typeof catRaw === 'object' && catRaw?.name)
-        ? catRaw.name
-        : getCategoryName(catId);
+      const catId: string =
+        typeof catRaw === "string"
+          ? catRaw
+          : catRaw?.id
+            ? String(catRaw.id)
+            : "uncategorized";
+      const catName: string =
+        typeof catRaw === "object" && catRaw?.name
+          ? catRaw.name
+          : getCategoryName(catId);
       if (!map.has(catId)) {
         map.set(catId, { categoryId: catId, categoryName: catName, jobs: [] });
       }
       map.get(catId)!.jobs.push(j as Job);
     });
-    return Array.from(map.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+    return Array.from(map.values()).sort((a, b) =>
+      a.categoryName.localeCompare(b.categoryName),
+    );
   }, [displayedJobs, categories]);
 
   // Create job form functions
@@ -306,7 +321,11 @@ const JobsManagementPage = () => {
       errors.budget_max = "Maximum budget is required";
     }
 
-    if (createFormData.budget_min && createFormData.budget_max && createFormData.budget_min >= createFormData.budget_max) {
+    if (
+      createFormData.budget_min &&
+      createFormData.budget_max &&
+      createFormData.budget_min >= createFormData.budget_max
+    ) {
       errors.budget_max = "Maximum budget must be greater than minimum";
     }
 
@@ -318,11 +337,18 @@ const JobsManagementPage = () => {
       errors.end_date = "End date is required";
     }
 
-    if (createFormData.start_date && createFormData.end_date && new Date(createFormData.start_date) >= new Date(createFormData.end_date)) {
+    if (
+      createFormData.start_date &&
+      createFormData.end_date &&
+      new Date(createFormData.start_date) >= new Date(createFormData.end_date)
+    ) {
       errors.end_date = "End date must be after start date";
     }
 
-    if (!createFormData.estimated_hours || createFormData.estimated_hours <= 0) {
+    if (
+      !createFormData.estimated_hours ||
+      createFormData.estimated_hours <= 0
+    ) {
       errors.estimated_hours = "Estimated hours is required";
     }
 
@@ -336,9 +362,9 @@ const JobsManagementPage = () => {
 
   const handleCreateFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     console.log("Form submission started with data:", createFormData);
-    
+
     if (!validateCreateForm()) {
       console.log("Form validation failed");
       return;
@@ -362,9 +388,9 @@ const JobsManagementPage = () => {
     console.log("User info:", { user, userId, isAuthenticated });
 
     const result = await handleCreateJob(jobData);
-    
+
     console.log("Job creation result:", result);
-    
+
     if (result && !error) {
       console.log("Job created successfully");
       setShowCreateModal(false);
@@ -372,28 +398,31 @@ const JobsManagementPage = () => {
       handleFetchJobs(); // Refresh the jobs list
     } else {
       console.log("Job creation failed", error);
-      
     }
   };
 
-  const handleCreateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleCreateFormChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    
+
     let processedValue: any = value;
-    if (type === 'number') {
+    if (type === "number") {
       processedValue = parseFloat(value) || 0;
     }
 
-    setCreateFormData(prev => ({
+    setCreateFormData((prev) => ({
       ...prev,
-      [name]: processedValue
+      [name]: processedValue,
     }));
 
     // Clear error for this field when user starts typing
     if (createFormErrors[name as keyof JobFormErrors]) {
-      setCreateFormErrors(prev => ({
+      setCreateFormErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: undefined,
       }));
     }
   };
@@ -431,7 +460,9 @@ const JobsManagementPage = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Jobs Management</h1>
-          <p className="text-gray-600 mt-2">Manage all job postings and their details</p>
+          <p className="text-gray-600 mt-2">
+            Manage all job postings and their details
+          </p>
         </div>
         <button
           onClick={openCreateModal}
@@ -464,9 +495,9 @@ const JobsManagementPage = () => {
           >
             <Filter className="w-4 h-4" />
             Filters
-            {Object.values(localFilters).some(v => v) && (
+            {Object.values(localFilters).some((v) => v) && (
               <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-                {Object.values(localFilters).filter(v => v).length}
+                {Object.values(localFilters).filter((v) => v).length}
               </span>
             )}
           </button>
@@ -483,56 +514,88 @@ const JobsManagementPage = () => {
             >
               <select
                 value={localFilters.status}
-                onChange={(e) => setLocalFilters({...localFilters, status: e.target.value as JobStatus})}
+                onChange={(e) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    status: e.target.value as JobStatus,
+                  })
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="">All Statuses</option>
-                {JOB_STATUS_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {JOB_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
 
               <select
                 value={localFilters.category}
-                onChange={(e) => setLocalFilters({...localFilters, category: e.target.value})}
+                onChange={(e) =>
+                  setLocalFilters({ ...localFilters, category: e.target.value })
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
                 ))}
               </select>
 
               <select
                 value={localFilters.job_type}
-                onChange={(e) => setLocalFilters({...localFilters, job_type: e.target.value as JobType})}
+                onChange={(e) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    job_type: e.target.value as JobType,
+                  })
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="">All Types</option>
-                {JOB_TYPE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {JOB_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
 
               <select
                 value={localFilters.payment_type}
-                onChange={(e) => setLocalFilters({...localFilters, payment_type: e.target.value as PaymentType})}
+                onChange={(e) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    payment_type: e.target.value as PaymentType,
+                  })
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="">All Payment Types</option>
-                {PAYMENT_TYPE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {PAYMENT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
 
               <select
                 value={localFilters.urgency_level}
-                onChange={(e) => setLocalFilters({...localFilters, urgency_level: e.target.value as UrgencyLevel})}
+                onChange={(e) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    urgency_level: e.target.value as UrgencyLevel,
+                  })
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="">All Urgency</option>
-                {URGENCY_LEVEL_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {URGENCY_LEVEL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
 
@@ -585,12 +648,13 @@ const JobsManagementPage = () => {
               <div className="text-gray-400 mb-4">
                 <Briefcase className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No jobs found
+              </h3>
               <p className="text-gray-600 mb-4">
-                {Object.values(localFilters).some(v => v) || searchQuery
+                {Object.values(localFilters).some((v) => v) || searchQuery
                   ? "Try adjusting your filters or search query"
-                  : "Get started by creating your first job posting"
-                }
+                  : "Get started by creating your first job posting"}
               </p>
               <button
                 onClick={openCreateModal}
@@ -603,15 +667,26 @@ const JobsManagementPage = () => {
           ) : (
             <>
               {groupedByCategory.map((section) => (
-                <div key={section.categoryId} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div
+                  key={section.categoryId}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200"
+                >
                   <div className="px-6 py-3 border-b bg-gray-50 flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-gray-800">{section.categoryName}</h2>
-                    <span className="text-xs text-gray-500">{section.jobs.length} job{section.jobs.length !== 1 ? 's' : ''}</span>
+                    <h2 className="text-base font-semibold text-gray-800">
+                      {section.categoryName}
+                    </h2>
+                    <span className="text-xs text-gray-500">
+                      {section.jobs.length} job
+                      {section.jobs.length !== 1 ? "s" : ""}
+                    </span>
                   </div>
 
                   <div className="p-6 space-y-4">
                     {section.jobs.map((job) => (
-                      <div key={job.id} className="rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <div
+                        key={job.id}
+                        className="rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start gap-4">
@@ -620,19 +695,38 @@ const JobsManagementPage = () => {
                                   <h3 className="text-lg font-semibold text-gray-900 truncate">
                                     {job.title}
                                   </h3>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                                    {JOB_STATUS_OPTIONS.find(opt => opt.value === job.status)?.label}
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}
+                                  >
+                                    {
+                                      JOB_STATUS_OPTIONS.find(
+                                        (opt) => opt.value === job.status,
+                                      )?.label
+                                    }
                                   </span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(job.urgency_level)}`}>
-                                    {URGENCY_LEVEL_OPTIONS.find(opt => opt.value === job.urgency_level)?.label}
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(job.urgency_level)}`}
+                                  >
+                                    {
+                                      URGENCY_LEVEL_OPTIONS.find(
+                                        (opt) =>
+                                          opt.value === job.urgency_level,
+                                      )?.label
+                                    }
                                   </span>
                                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                                    {typeof (job as any).category === 'object' && (job as any).category?.name
+                                    {typeof (job as any).category ===
+                                      "object" && (job as any).category?.name
                                       ? (job as any).category.name
-                                      : getCategoryName(typeof (job as any).category === 'object' ? (job as any).category?.id : (job as any).category)}
+                                      : getCategoryName(
+                                          typeof (job as any).category ===
+                                            "object"
+                                            ? (job as any).category?.id
+                                            : (job as any).category,
+                                        )}
                                   </span>
                                 </div>
-                                
+
                                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                                   {job.description}
                                 </p>
@@ -640,7 +734,8 @@ const JobsManagementPage = () => {
                                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                   <div className="flex items-center gap-1">
                                     <DollarSign className="w-4 h-4" />
-                                    {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
+                                    {formatCurrency(job.budget_min)} -{" "}
+                                    {formatCurrency(job.budget_max)}
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
@@ -679,19 +774,29 @@ const JobsManagementPage = () => {
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
-                                
+
                                 {/* Status Toggle */}
-                                {job.status === 'active' ? (
+                                {job.status === "active" ? (
                                   <button
-                                    onClick={() => handleStatusChange(job.id, JobStatus.PAUSED)}
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        job.id,
+                                        JobStatus.PAUSED,
+                                      )
+                                    }
                                     className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors"
                                     title="Pause Job"
                                   >
                                     <Pause className="w-4 h-4" />
                                   </button>
-                                ) : job.status === 'paused' ? (
+                                ) : job.status === "paused" ? (
                                   <button
-                                    onClick={() => handleStatusChange(job.id, JobStatus.ACTIVE)}
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        job.id,
+                                        JobStatus.ACTIVE,
+                                      )
+                                    }
                                     className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors"
                                     title="Activate Job"
                                   >
@@ -712,7 +817,12 @@ const JobsManagementPage = () => {
               {pagination.total_pages > 1 && (
                 <div className="flex items-center justify-between mt-6">
                   <p className="text-sm text-gray-700">
-                    Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} jobs
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total,
+                    )}{" "}
+                    of {pagination.total} jobs
                   </p>
                   <div className="flex items-center space-x-2">
                     {/* Add pagination controls here */}
@@ -743,9 +853,12 @@ const JobsManagementPage = () => {
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                   <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Job</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Delete Job
+                </h3>
                 <p className="text-gray-600 mb-6 text-sm">
-                  Are you sure you want to delete this job? This action cannot be undone and will remove all applications and related data.
+                  Are you sure you want to delete this job? This action cannot
+                  be undone and will remove all applications and related data.
                 </p>
               </div>
               <div className="flex gap-3 justify-center">
@@ -767,7 +880,6 @@ const JobsManagementPage = () => {
         )}
       </AnimatePresence>
 
-      
       {/* View Job Modal */}
       <AnimatePresence>
         {showViewModal && jobToView && (
@@ -785,13 +897,27 @@ const JobsManagementPage = () => {
             >
               <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-200">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{jobToView.title}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    {jobToView.title}
+                  </h3>
                   <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobToView.status)}`}>
-                      {JOB_STATUS_OPTIONS.find(opt => opt.value === jobToView.status)?.label}
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobToView.status)}`}
+                    >
+                      {
+                        JOB_STATUS_OPTIONS.find(
+                          (opt) => opt.value === jobToView.status,
+                        )?.label
+                      }
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getUrgencyColor(jobToView.urgency_level)}`}>
-                      {URGENCY_LEVEL_OPTIONS.find(opt => opt.value === jobToView.urgency_level)?.label}
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getUrgencyColor(jobToView.urgency_level)}`}
+                    >
+                      {
+                        URGENCY_LEVEL_OPTIONS.find(
+                          (opt) => opt.value === jobToView.urgency_level,
+                        )?.label
+                      }
                     </span>
                   </div>
                 </div>
@@ -806,7 +932,9 @@ const JobsManagementPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Job Description</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Job Description
+                    </h4>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                         {jobToView.description}
@@ -816,15 +944,27 @@ const JobsManagementPage = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Job Type</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Job Type
+                      </h5>
                       <p className="text-gray-600">
-                        {JOB_TYPE_OPTIONS.find(opt => opt.value === jobToView.job_type)?.label}
+                        {
+                          JOB_TYPE_OPTIONS.find(
+                            (opt) => opt.value === jobToView.job_type,
+                          )?.label
+                        }
                       </p>
                     </div>
                     <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Payment Type</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Payment Type
+                      </h5>
                       <p className="text-gray-600">
-                        {PAYMENT_TYPE_OPTIONS.find(opt => opt.value === jobToView.payment_type)?.label}
+                        {
+                          PAYMENT_TYPE_OPTIONS.find(
+                            (opt) => opt.value === jobToView.payment_type,
+                          )?.label
+                        }
                       </p>
                     </div>
                   </div>
@@ -834,7 +974,8 @@ const JobsManagementPage = () => {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-lg">
                     <h5 className="font-semibold text-gray-900 mb-3">Budget</h5>
                     <p className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(jobToView.budget_min)} - {formatCurrency(jobToView.budget_max)}
+                      {formatCurrency(jobToView.budget_min)} -{" "}
+                      {formatCurrency(jobToView.budget_max)}
                     </p>
                     <p className="text-sm text-blue-700 mt-1">
                       Estimated {jobToView.estimated_hours} hours
@@ -842,27 +983,39 @@ const JobsManagementPage = () => {
                   </div>
 
                   <div>
-                    <h5 className="font-semibold text-gray-900 mb-3">Details</h5>
+                    <h5 className="font-semibold text-gray-900 mb-3">
+                      Details
+                    </h5>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Category:</span>
-                        <span className="text-gray-900">{getCategoryName(jobToView.category)}</span>
+                        <span className="text-gray-900">
+                          {getCategoryName(jobToView.category)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Location:</span>
-                        <span className="text-gray-900">{jobToView.location}</span>
+                        <span className="text-gray-900">
+                          {jobToView.location}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Start Date:</span>
-                        <span className="text-gray-900">{formatDate(jobToView.start_date)}</span>
+                        <span className="text-gray-900">
+                          {formatDate(jobToView.start_date)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">End Date:</span>
-                        <span className="text-gray-900">{formatDate(jobToView.end_date)}</span>
+                        <span className="text-gray-900">
+                          {formatDate(jobToView.end_date)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Max Applicants:</span>
-                        <span className="text-gray-900">{jobToView.max_applicants}</span>
+                        <span className="text-gray-900">
+                          {jobToView.max_applicants}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -906,8 +1059,12 @@ const JobsManagementPage = () => {
             >
               <div className="flex justify-between items-start mb-6 pb-4 border-b border-gray-200">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">Create New Job</h3>
-                  <p className="text-sm text-gray-500">Fill in the details to post a new job</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    Create New Job
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Fill in the details to post a new job
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
@@ -927,10 +1084,12 @@ const JobsManagementPage = () => {
                     <input
                       type="text"
                       name="title"
-                      value={createFormData.title || ''}
+                      value={createFormData.title || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.title ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.title
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="Enter job title (e.g., Senior React Developer)"
                     />
@@ -949,15 +1108,19 @@ const JobsManagementPage = () => {
                     </label>
                     <select
                       name="category"
-                      value={createFormData.category || ''}
+                      value={createFormData.category || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.category ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.category
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
                       <option value="">Select a category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
                       ))}
                     </select>
                     {createFormErrors.category && (
@@ -979,8 +1142,10 @@ const JobsManagementPage = () => {
                       onChange={handleCreateFormChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 hover:border-gray-300 transition-all"
                     >
-                      {JOB_TYPE_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                      {JOB_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -993,10 +1158,12 @@ const JobsManagementPage = () => {
                     <input
                       type="text"
                       name="location"
-                      value={createFormData.location || ''}
+                      value={createFormData.location || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.location ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.location
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="Enter job location"
                     />
@@ -1016,7 +1183,7 @@ const JobsManagementPage = () => {
                     <input
                       type="text"
                       name="location_text"
-                      value={createFormData.location_text || ''}
+                      value={createFormData.location_text || ""}
                       onChange={handleCreateFormChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 hover:border-gray-300 transition-all"
                       placeholder="Additional location details (optional)"
@@ -1031,10 +1198,12 @@ const JobsManagementPage = () => {
                     <input
                       type="number"
                       name="budget_min"
-                      value={createFormData.budget_min || ''}
+                      value={createFormData.budget_min || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.budget_min ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.budget_min
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="0"
                       min="0"
@@ -1055,10 +1224,12 @@ const JobsManagementPage = () => {
                     <input
                       type="number"
                       name="budget_max"
-                      value={createFormData.budget_max || ''}
+                      value={createFormData.budget_max || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.budget_max ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.budget_max
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="0"
                       min="0"
@@ -1082,8 +1253,10 @@ const JobsManagementPage = () => {
                       onChange={handleCreateFormChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 hover:border-gray-300 transition-all"
                     >
-                      {PAYMENT_TYPE_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                      {PAYMENT_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -1095,12 +1268,16 @@ const JobsManagementPage = () => {
                     </label>
                     <select
                       name="urgency_level"
-                      value={createFormData.urgency_level || UrgencyLevel.MEDIUM}
+                      value={
+                        createFormData.urgency_level || UrgencyLevel.MEDIUM
+                      }
                       onChange={handleCreateFormChange}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 hover:border-gray-300 transition-all"
                     >
-                      {URGENCY_LEVEL_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                      {URGENCY_LEVEL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -1113,10 +1290,12 @@ const JobsManagementPage = () => {
                     <input
                       type="date"
                       name="start_date"
-                      value={createFormData.start_date || ''}
+                      value={createFormData.start_date || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.start_date ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.start_date
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     />
                     {createFormErrors.start_date && (
@@ -1135,10 +1314,12 @@ const JobsManagementPage = () => {
                     <input
                       type="date"
                       name="end_date"
-                      value={createFormData.end_date || ''}
+                      value={createFormData.end_date || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.end_date ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.end_date
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     />
                     {createFormErrors.end_date && (
@@ -1157,10 +1338,12 @@ const JobsManagementPage = () => {
                     <input
                       type="number"
                       name="estimated_hours"
-                      value={createFormData.estimated_hours || ''}
+                      value={createFormData.estimated_hours || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.estimated_hours ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.estimated_hours
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="0"
                       min="0"
@@ -1181,10 +1364,12 @@ const JobsManagementPage = () => {
                     <input
                       type="number"
                       name="max_applicants"
-                      value={createFormData.max_applicants || ''}
+                      value={createFormData.max_applicants || ""}
                       onChange={handleCreateFormChange}
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all ${
-                        createFormErrors.max_applicants ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                        createFormErrors.max_applicants
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                       placeholder="5"
                       min="1"
@@ -1206,10 +1391,12 @@ const JobsManagementPage = () => {
                   <textarea
                     name="description"
                     rows={6}
-                    value={createFormData.description || ''}
+                    value={createFormData.description || ""}
                     onChange={handleCreateFormChange}
                     className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none ${
-                      createFormErrors.description ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                      createFormErrors.description
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                     placeholder="Provide a detailed description of the job, requirements, and what you're looking for..."
                   />
@@ -1219,7 +1406,9 @@ const JobsManagementPage = () => {
                       {createFormErrors.description}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">Minimum 50 characters required</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Minimum 50 characters required
+                  </p>
                 </div>
 
                 {/* Action Buttons */}

@@ -1,23 +1,22 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { JobApplicationForm } from '../components/JobApplication';
-import { JobDetails } from '../types/jobApplication.types';
-
+import React from "react";
+import { useRouter } from "next/navigation";
+import { JobApplicationForm } from "../components/JobApplication";
+import { JobDetails } from "../types/jobApplication.types";
 
 interface StandaloneApplicationPageProps {
   job: JobDetails;
 }
 
-export const StandaloneApplicationPage: React.FC<StandaloneApplicationPageProps> = ({
-  job
-}) => {
+export const StandaloneApplicationPage: React.FC<
+  StandaloneApplicationPageProps
+> = ({ job }) => {
   const router = useRouter();
 
   const handleSuccess = () => {
     // Redirect to applications page after successful submission
-    router.push('/applications?status=success');
+    router.push("/applications?status=success");
   };
 
   const handleCancel = () => {
@@ -34,13 +33,25 @@ export const StandaloneApplicationPage: React.FC<StandaloneApplicationPageProps>
             onClick={() => router.back()}
             className="flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back to Job Details
           </button>
-          
-          <h1 className="text-3xl font-bold text-gray-900">Apply for Position</h1>
+
+          <h1 className="text-3xl font-bold text-gray-900">
+            Apply for Position
+          </h1>
           <p className="text-gray-600 mt-2">
             Submit your application for this opportunity
           </p>

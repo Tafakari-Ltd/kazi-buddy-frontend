@@ -9,11 +9,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 const ApplyJob = () => {
-
   const dispatch = useDispatch<AppDispatch>();
-  
-  const { isModalOpen, isSubmitting, apiError } = useSelector((state: RootState) => state.applyJob);
-  const selectedJob = useSelector((state: RootState) => state.moreDescription.selectedJob);
+
+  const { isModalOpen, isSubmitting, apiError } = useSelector(
+    (state: RootState) => state.applyJob,
+  );
+  const selectedJob = useSelector(
+    (state: RootState) => state.moreDescription.selectedJob,
+  );
 
   const [coverLetter, setCoverLetter] = useState("");
   const [proposedRate, setProposedRate] = useState("");
@@ -22,25 +25,25 @@ const ApplyJob = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Get today's date in YYYY-MM-DD format for min attribute
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    
+
     if (!coverLetter.trim()) {
       errs.cover_letter = "Cover letter is required";
     } else if (coverLetter.length < 50) {
       errs.cover_letter = "Cover letter must be at least 50 characters";
     }
-    
+
     if (!proposedRate || parseFloat(proposedRate) <= 0) {
       errs.proposed_rate = "Please enter a valid rate";
     }
-    
+
     if (!availabilityStart) {
       errs.availability_start = "Please select when you can start";
     }
-    
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -55,24 +58,27 @@ const ApplyJob = () => {
     }
 
     try {
-      await dispatch(applyForJob({
-        jobId: selectedJob.id,
-        applicationData: {
-          cover_letter: coverLetter,
-          proposed_rate: parseFloat(proposedRate),
-          availability_start: availabilityStart,
-          worker_notes: workerNotes,
-          employer_notes: ""
-        }
-      })).unwrap();
+      await dispatch(
+        applyForJob({
+          jobId: selectedJob.id,
+          applicationData: {
+            cover_letter: coverLetter,
+            proposed_rate: parseFloat(proposedRate),
+            availability_start: availabilityStart,
+            worker_notes: workerNotes,
+            employer_notes: "",
+          },
+        }),
+      ).unwrap();
 
       toast.success("Application submitted successfully!");
       handleClose();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to submit application. Please try again.");
+      toast.error(
+        error?.message || "Failed to submit application. Please try again.",
+      );
     }
   };
-
 
   const handleClose = () => {
     dispatch(closeJobModal());
@@ -137,7 +143,9 @@ const ApplyJob = () => {
                   {coverLetter.length} / 50 characters minimum
                 </span>
                 {errors.cover_letter && (
-                  <span className="text-red-500 text-xs mt-1">{errors.cover_letter}</span>
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors.cover_letter}
+                  </span>
                 )}
               </label>
 
@@ -158,7 +166,9 @@ const ApplyJob = () => {
                   placeholder="Enter your proposed rate"
                 />
                 {errors.proposed_rate && (
-                  <span className="text-red-500 text-xs mt-1">{errors.proposed_rate}</span>
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors.proposed_rate}
+                  </span>
                 )}
               </label>
 
@@ -173,11 +183,15 @@ const ApplyJob = () => {
                   value={availabilityStart}
                   onChange={(e) => setAvailabilityStart(e.target.value)}
                   className={`mt-1 p-2 border rounded ${
-                    errors.availability_start ? "border-red-500" : "border-gray-300"
+                    errors.availability_start
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                 />
                 {errors.availability_start && (
-                  <span className="text-red-500 text-xs mt-1">{errors.availability_start}</span>
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors.availability_start}
+                  </span>
                 )}
               </label>
 

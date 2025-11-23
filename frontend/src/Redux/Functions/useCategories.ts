@@ -11,17 +11,12 @@ import {
   fetchJobsByCategory,
   clearState,
   clearCurrentCategory,
-} from '../Features/jobs/jobsCategories/jobCategories'
+} from "../Features/jobs/jobsCategories/jobCategories";
 
 export const useCategories = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    categories,
-    currentCategory,
-    loading,
-    error,
-    successMessage,
-  } = useSelector((state: RootState) => state.categories);
+  const { categories, currentCategory, loading, error, successMessage } =
+    useSelector((state: RootState) => state.categories);
 
   const handleFetchCategories = async () => {
     const result = await dispatch(fetchCategories());
@@ -33,26 +28,21 @@ export const useCategories = () => {
     return result.payload;
   };
 
-  const handleCreateCategory = async (
-    name: string,
-    description: string
-  ) => {
-    const result = await dispatch(
-      createCategory({ name, description })
-    );
+  const handleCreateCategory = async (name: string, description: string) => {
+    const result = await dispatch(createCategory({ name, description }));
     return result.payload;
   };
 
   const handleUpdateCategory = async (
     categoryId: string,
     name: string,
-    description: string
+    description: string,
   ) => {
     const result = await dispatch(
       updateCategory({
         categoryId,
         data: { name, description },
-      })
+      }),
     );
     return result.payload;
   };

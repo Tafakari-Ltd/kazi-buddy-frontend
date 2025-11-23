@@ -1,45 +1,44 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { AvailableJobs } from '../components/WorkerProfile/AvailableJobs';
-import { MyApplicationsSection } from '../components/WorkerProfile/MyApplicationsSection';
-import { JobDetails } from '../types/jobApplication.types';
-import { useJobs } from '../Redux/Functions/useJobs';
+import React, { useState, useEffect } from "react";
+import { AvailableJobs } from "../components/WorkerProfile/AvailableJobs";
+import { MyApplicationsSection } from "../components/WorkerProfile/MyApplicationsSection";
+import { JobDetails } from "../types/jobApplication.types";
+import { useJobs } from "../Redux/Functions/useJobs";
 
 export default function WorkerProfilePage() {
   const [availableJobs, setAvailableJobs] = useState<JobDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'available' | 'applications'>('available');
-  
+  const [activeTab, setActiveTab] = useState<"available" | "applications">(
+    "available",
+  );
+
   const { handleFetchJobs } = useJobs();
 
- 
   const fetchAvailableJobs = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      
-      const result = await handleFetchJobs({ 
-        status: 'active' as any,
+
+      const result = await handleFetchJobs({
+        status: "active" as any,
         page: 1,
-        limit: 50
+        limit: 50,
       });
-      
-      if (result && typeof result !== 'string') {
+
+      if (result && typeof result !== "string") {
         let jobsArray = [];
-        
-        if ('data' in result && result.data && Array.isArray(result.data)) {
+
+        if ("data" in result && result.data && Array.isArray(result.data)) {
           jobsArray = result.data;
         } else if (Array.isArray(result)) {
           jobsArray = result;
-        } else if ('jobs' in result && Array.isArray(result.jobs)) {
+        } else if ("jobs" in result && Array.isArray(result.jobs)) {
           jobsArray = result.jobs;
         }
-        
+
         if (jobsArray.length > 0) {
-          
           const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
             id: job.id,
             title: job.title,
@@ -58,9 +57,9 @@ export default function WorkerProfilePage() {
             status: job.status,
             visibility: job.visibility,
             employer: job.employer,
-            category: job.category
+            category: job.category,
           }));
-          
+
           setAvailableJobs(transformedJobs);
         } else {
           setAvailableJobs([]);
@@ -69,7 +68,7 @@ export default function WorkerProfilePage() {
         setAvailableJobs([]);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch jobs');
+      setError(err.message || "Failed to fetch jobs");
     } finally {
       setLoading(false);
     }
@@ -92,19 +91,38 @@ export default function WorkerProfilePage() {
           <div className="flex items-center space-x-6">
             {/* Profile Picture */}
             <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-8 h-8 text-gray-600"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            
+
             {/* Profile Info */}
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">John Worker</h1>
               <p className="text-gray-600">Full-Stack Developer</p>
               <div className="flex items-center mt-2 text-sm text-gray-500">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
                 San Francisco, CA
               </div>
@@ -126,11 +144,11 @@ export default function WorkerProfilePage() {
         <div className="border-b border-gray-200 mb-8">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setActiveTab('available')}
+              onClick={() => setActiveTab("available")}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'available'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "available"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Available Jobs
@@ -141,11 +159,11 @@ export default function WorkerProfilePage() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('applications')}
+              onClick={() => setActiveTab("applications")}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'applications'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "applications"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               My Applications
@@ -161,7 +179,7 @@ export default function WorkerProfilePage() {
 
         {/* Tab Content */}
         <div className="space-y-8">
-          {activeTab === 'available' && (
+          {activeTab === "available" && (
             <AvailableJobs
               jobs={availableJobs}
               loading={loading}
@@ -170,12 +188,10 @@ export default function WorkerProfilePage() {
             />
           )}
 
-          {activeTab === 'applications' && (
+          {activeTab === "applications" && (
             <MyApplicationsSection showAll={true} />
           )}
         </div>
-
-       
       </div>
     </div>
   );

@@ -93,11 +93,11 @@
 
 //   const validateForm = () => {
 //     const errors: Record<string, string> = {};
-    
+
 //     if (!formData.skill.trim()) {
 //       errors.skill = "Skill name is required";
 //     }
-    
+
 //     if (!formData.experience_level) {
 //       errors.experience_level = "Experience level is required";
 //     }
@@ -169,12 +169,12 @@
 //     const matchesSearch = (skill.skill || skill.skill_name || "")
 //       .toLowerCase()
 //       .includes(searchTerm.toLowerCase());
-    
+
 //     const matchesRequired =
 //       filterRequired === "all" ||
 //       (filterRequired === "required" && skill.is_required) ||
 //       (filterRequired === "optional" && !skill.is_required);
-    
+
 //     const matchesLevel =
 //       filterLevel === "all" ||
 //       (skill.experience_level || skill.required_level) === filterLevel;
@@ -205,7 +205,7 @@
 //           <h2 className="text-2xl font-bold text-gray-900">Job Skills</h2>
 //           <p className="text-gray-600">Manage required skills for this position</p>
 //         </div>
-        
+
 //         {!readonly && jobId && (
 //           <button
 //             onClick={() => setShowCreateModal(true)}
@@ -229,7 +229,7 @@
 //             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800"
 //           />
 //         </div>
-        
+
 //         <select
 //           value={filterRequired}
 //           onChange={(e) => setFilterRequired(e.target.value as any)}
@@ -239,7 +239,7 @@
 //           <option value="required">Required Only</option>
 //           <option value="optional">Optional Only</option>
 //         </select>
-        
+
 //         <select
 //           value={filterLevel}
 //           onChange={(e) => setFilterLevel(e.target.value)}
@@ -311,7 +311,7 @@
 //                       )}
 //                     </div>
 //                   </div>
-                  
+
 //                   {!readonly && (
 //                     <div className="flex items-center gap-2">
 //                       <button
@@ -481,7 +481,7 @@
 //                     Delete Skill
 //                   </h3>
 //                   <p className="text-gray-600 mb-6">
-//                     Are you sure you want to delete "{selectedSkill.skill || selectedSkill.skill_name}"? 
+//                     Are you sure you want to delete "{selectedSkill.skill || selectedSkill.skill_name}"?
 //                     This action cannot be undone.
 //                   </p>
 //                 </div>

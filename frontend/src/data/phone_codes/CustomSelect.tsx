@@ -23,7 +23,10 @@ const CustomDialCodeSelect: React.FC<Props> = ({ value, onChange }) => {
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
         setSearch(""); // reset search on close
       }
@@ -39,7 +42,7 @@ const CustomDialCodeSelect: React.FC<Props> = ({ value, onChange }) => {
   const filteredCountries = phones_codes.filter(
     (country) =>
       country.name.toLowerCase().includes(search.toLowerCase()) ||
-      country.dial_code.includes(search)
+      country.dial_code.includes(search),
   );
 
   return (
@@ -50,17 +53,24 @@ const CustomDialCodeSelect: React.FC<Props> = ({ value, onChange }) => {
         onClick={() => setOpen((prev) => !prev)}
         className="w-full border border-gray-300  px-3 py-2 text-left flex justify-between items-center bg-white"
       >
-        <span>{selectedCountry ? selectedCountry.dial_code : "Select Code"}</span>
+        <span>
+          {selectedCountry ? selectedCountry.dial_code : "Select Code"}
+        </span>
         <svg
-          className={`w-4 h-4 ml-2 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"
-            }`}
+          className={`w-4 h-4 ml-2 transition-transform duration-200 ${
+            open ? "rotate-180" : "rotate-0"
+          }`}
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -82,8 +92,9 @@ const CustomDialCodeSelect: React.FC<Props> = ({ value, onChange }) => {
               filteredCountries.map((country) => (
                 <li
                   key={country.code}
-                  className={`cursor-pointer px-3 py-2 hover:bg-maroon hover:text-white ${country.dial_code === value ? "bg-maroon text-white" : ""
-                    }`}
+                  className={`cursor-pointer px-3 py-2 hover:bg-maroon hover:text-white ${
+                    country.dial_code === value ? "bg-maroon text-white" : ""
+                  }`}
                   onClick={() => {
                     onChange(country.dial_code);
                     setOpen(false);

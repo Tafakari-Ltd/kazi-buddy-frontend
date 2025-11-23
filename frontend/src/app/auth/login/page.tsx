@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -30,77 +29,84 @@ const LoginPage: React.FC = () => {
 
     try {
       const result = await dispatch(login({ email, password })).unwrap();
-      
+
       // Check if user was trying to apply for a job
-      const pendingJobApplication = sessionStorage.getItem('pendingJobApplication');
-      const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
-      
+      const pendingJobApplication = sessionStorage.getItem(
+        "pendingJobApplication",
+      );
+      const redirectAfterLogin = sessionStorage.getItem("redirectAfterLogin");
+
       // Clear the pending application flag
       if (pendingJobApplication) {
-        sessionStorage.removeItem('pendingJobApplication');
+        sessionStorage.removeItem("pendingJobApplication");
       }
-      
+
       if (redirectAfterLogin) {
-        sessionStorage.removeItem('redirectAfterLogin');
+        sessionStorage.removeItem("redirectAfterLogin");
       }
-      
+
       // Determine redirect based on user role and intent
       const returnTo = searchParams.get("returnTo");
       const user = result.user;
       const isAdmin =
         user?.is_staff ||
         user?.is_superuser ||
-        user?.role === 'admin' ||
-        user?.user_type === 'admin';
-      
+        user?.role === "admin" ||
+        user?.user_type === "admin";
+
       // If user was applying for a job, they need to become a worker
       if (pendingJobApplication) {
         // Redirect to worker dashboard/profile setup
-        router.push('/worker');
-        toast.success('Please complete your worker profile to apply for jobs', { duration: 4000 });
+        router.push("/worker");
+        toast.success("Please complete your worker profile to apply for jobs", {
+          duration: 4000,
+        });
       } else if (returnTo) {
         router.push(returnTo);
       } else if (redirectAfterLogin) {
         router.push(redirectAfterLogin);
       } else if (isAdmin) {
         // Admins go straight to the admin dashboard
-        router.push('/admin');
+        router.push("/admin");
       } else {
         // Default redirect based on user type
-        if (user?.user_type === 'worker') {
-          router.push('/worker');
-        } else if (user?.user_type === 'employer') {
-          router.push('/employer');
+        if (user?.user_type === "worker") {
+          router.push("/worker");
+        } else if (user?.user_type === "employer") {
+          router.push("/employer");
         } else {
-          router.push('/employer'); // Default fallback
+          router.push("/employer"); // Default fallback
         }
       }
     } catch (err: any) {
       // Extract error message from various error formats
       let errorMessage = "Login failed";
-     
-      if (typeof err === 'string') {
+
+      if (typeof err === "string") {
         errorMessage = err;
       } else if (err?.message) {
         errorMessage = err.message;
       } else if (err?.error) {
         errorMessage = err.error;
       }
-     
-      console.log('Login error:', err);
-     
+
+      console.log("Login error:", err);
+
       // Check if user needs admin approval
       if (isApprovalNeededError(errorMessage)) {
         toast.info(
           "Your account is pending admin approval. Please wait for approval notification via email.",
-          { duration: 5000 }
+          { duration: 5000 },
         );
         setFormError(
-          "Your account is pending admin approval. You will be able to login once approved."
+          "Your account is pending admin approval. You will be able to login once approved.",
         );
-      } else if (errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('invalid')) {
+      } else if (
+        errorMessage.toLowerCase().includes("not found") ||
+        errorMessage.toLowerCase().includes("invalid")
+      ) {
         setFormError("Invalid email or password");
-      } else if (errorMessage.toLowerCase().includes('verified')) {
+      } else if (errorMessage.toLowerCase().includes("verified")) {
         setFormError("Please verify your email before logging in");
       } else {
         setFormError(errorMessage);
@@ -119,7 +125,7 @@ const LoginPage: React.FC = () => {
         {/* Google Sign In */}
         <button
           className="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-200 transition mb-6"
-          onClick={() => { }}
+          onClick={() => {}}
           disabled={loading}
         >
           <FcGoogle size={24} />

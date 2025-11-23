@@ -68,7 +68,7 @@ export const workersDummy = [
     location: "Nairobi",
     status: "Active",
   },
-  
+
   {
     id: 8,
     name: "John Doe",
@@ -88,5 +88,4 @@ export const workersDummy = [
     location: "Nairobi",
     status: "Active",
   },
-
 ];

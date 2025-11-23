@@ -41,27 +41,27 @@ export const fetchWorkerProfiles = createAsyncThunk<
   async (filters, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
-      
+
       // Build query parameters - handle void filters
-      if (filters && typeof filters === 'object') {
+      if (filters && typeof filters === "object") {
         Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
+          if (value !== undefined && value !== null && value !== "") {
             queryParams.append(key, value.toString());
           }
         });
       }
 
       const queryString = queryParams.toString();
-      const url = `/workers/profiles/list/${queryString ? `?${queryString}` : ''}`;
-      
+      const url = `/workers/profiles/list/${queryString ? `?${queryString}` : ""}`;
+
       const response = await api.get(url);
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
-        error?.message || "Failed to fetch worker profiles"
+        error?.message || "Failed to fetch worker profiles",
       );
     }
-  }
+  },
 );
 
 // 2. Fetch single worker profile by ID
@@ -77,10 +77,10 @@ export const fetchWorkerProfileById = createAsyncThunk<
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
-        error?.message || "Failed to fetch worker profile"
+        error?.message || "Failed to fetch worker profile",
       );
     }
-  }
+  },
 );
 
 // 3. Fetch current user's worker profile by filtering
@@ -94,75 +94,81 @@ export const fetchUserWorkerProfile = createAsyncThunk<
     try {
       const response = await api.get("/workers/profiles/list/");
       const profiles = Array.isArray(response) ? response : response.data || [];
-      
-      console.log('Fetching user worker profile for userId:', userId);
-      console.log('Profiles fetched:', profiles.length);
-      
+
+      console.log("Fetching user worker profile for userId:", userId);
+      console.log("Profiles fetched:", profiles.length);
+
       // Find the profile that belongs to the current user
-   
+
       const userProfile = profiles.find((profile: any) => {
-        if (typeof profile.user === 'string') {
+        if (typeof profile.user === "string") {
           return profile.user === userId;
-        } else if (profile.user && typeof profile.user === 'object') {
+        } else if (profile.user && typeof profile.user === "object") {
           return profile.user.id === userId;
         }
         return false;
       });
-      
+
       if (!userProfile) {
-        console.log('No worker profile found for user:', userId);
+        console.log("No worker profile found for user:", userId);
         return null;
       }
-      
-      console.log('Found user worker profile:', userProfile);
+
+      console.log("Found user worker profile:", userProfile);
       return userProfile;
     } catch (error: any) {
-      console.error('Fetch user worker profile error:', error);
+      console.error("Fetch user worker profile error:", error);
       return rejectWithValue(
-        error?.message || "Failed to fetch user worker profile"
+        error?.message || "Failed to fetch user worker profile",
       );
     }
-  }
+  },
 );
 
 // 4. Create worker profile
 export const createWorkerProfile = createAsyncThunk<
   WorkerProfile,
   CreateWorkerProfileData,
-  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
+  {
+    rejectValue:
+      | string
+      | { message: string; fieldErrors: Record<string, string[]> };
+  }
 >(
   "workerProfiles/createWorkerProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      console.log('Sending worker profile data:', profileData);
+      console.log("Sending worker profile data:", profileData);
       const response = await api.post("/workers/profiles/", profileData);
-      console.log('Worker profile created successfully:', response);
+      console.log("Worker profile created successfully:", response);
       return response.data || response;
     } catch (error: any) {
-      console.error('Create worker profile error:', error);
-      
+      console.error("Create worker profile error:", error);
+
       // Handle specific error cases
       if (error.status === 400) {
         // Check for duplicate profile error
-        if (error.message && error.message.includes('already exists')) {
-          return rejectWithValue('You already have a worker profile. Please refresh the page.');
+        if (error.message && error.message.includes("already exists")) {
+          return rejectWithValue(
+            "You already have a worker profile. Please refresh the page.",
+          );
         }
-        
+
         // Handle validation errors
-        if (error?.data && typeof error.data === 'object') {
+        if (error?.data && typeof error.data === "object") {
           const fieldErrors: Record<string, string[]> = {};
           let hasFieldErrors = false;
-          
+
           Object.entries(error.data).forEach(([key, value]) => {
             if (Array.isArray(value)) {
               fieldErrors[key] = value;
               hasFieldErrors = true;
-            } else if (typeof value === 'string') {
+            } else if (typeof value === "string") {
               fieldErrors[key] = [value];
               hasFieldErrors = true;
             }
           });
-          
+
           if (hasFieldErrors) {
             return rejectWithValue({
               message: "Please fix the validation errors",
@@ -171,29 +177,38 @@ export const createWorkerProfile = createAsyncThunk<
           }
         }
       }
-      
+
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
           message: "Validation errors occurred",
           fieldErrors: error.fieldErrors,
         } as any);
       }
-      
-      return rejectWithValue(error?.message || "Failed to create worker profile");
+
+      return rejectWithValue(
+        error?.message || "Failed to create worker profile",
+      );
     }
-  }
+  },
 );
 
 // 5. Update worker profile
 export const updateWorkerProfile = createAsyncThunk<
   WorkerProfile,
   { profileId: string; data: UpdateWorkerProfileData },
-  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
+  {
+    rejectValue:
+      | string
+      | { message: string; fieldErrors: Record<string, string[]> };
+  }
 >(
   "workerProfiles/updateWorkerProfile",
   async ({ profileId, data }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/workers/profiles/${profileId}/update/`, data);
+      const response = await api.put(
+        `/workers/profiles/${profileId}/update/`,
+        data,
+      );
       return response.data || response;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
@@ -202,9 +217,11 @@ export const updateWorkerProfile = createAsyncThunk<
           fieldErrors: error.fieldErrors,
         } as any);
       }
-      return rejectWithValue(error?.message || "Failed to update worker profile");
+      return rejectWithValue(
+        error?.message || "Failed to update worker profile",
+      );
     }
-  }
+  },
 );
 
 // Worker profiles slice
@@ -241,7 +258,10 @@ const workerProfilesSlice = createSlice({
         limit: 10,
       };
     },
-    setPagination: (state, action: PayloadAction<{ page: number; limit?: number }>) => {
+    setPagination: (
+      state,
+      action: PayloadAction<{ page: number; limit?: number }>,
+    ) => {
       state.pagination.page = action.payload.page;
       if (action.payload.limit) {
         state.pagination.limit = action.payload.limit;
@@ -257,11 +277,15 @@ const workerProfilesSlice = createSlice({
       })
       .addCase(fetchWorkerProfiles.fulfilled, (state, action) => {
         state.loading = false;
-        
+
         // Handle both direct array response and object with data property
         if (Array.isArray(action.payload)) {
           state.profiles = action.payload;
-        } else if (action.payload && typeof action.payload === 'object' && 'data' in action.payload) {
+        } else if (
+          action.payload &&
+          typeof action.payload === "object" &&
+          "data" in action.payload
+        ) {
           state.profiles = action.payload.data || [];
           if (action.payload.pagination) {
             state.pagination = action.payload.pagination;
@@ -271,7 +295,10 @@ const workerProfilesSlice = createSlice({
         }
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("workerProfiles", JSON.stringify(state.profiles));
+          sessionStorage.setItem(
+            "workerProfiles",
+            JSON.stringify(state.profiles),
+          );
         }
       })
       .addCase(fetchWorkerProfiles.rejected, (state, action) => {
@@ -303,10 +330,13 @@ const workerProfilesSlice = createSlice({
       .addCase(fetchUserWorkerProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.userProfile = action.payload;
-        
+
         if (typeof window !== "undefined") {
           if (action.payload) {
-            sessionStorage.setItem("userWorkerProfile", JSON.stringify(action.payload));
+            sessionStorage.setItem(
+              "userWorkerProfile",
+              JSON.stringify(action.payload),
+            );
           } else {
             sessionStorage.removeItem("userWorkerProfile");
           }
@@ -331,15 +361,22 @@ const workerProfilesSlice = createSlice({
         state.successMessage = "Worker profile created successfully";
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("workerProfiles", JSON.stringify(state.profiles));
-          sessionStorage.setItem("userWorkerProfile", JSON.stringify(action.payload));
+          sessionStorage.setItem(
+            "workerProfiles",
+            JSON.stringify(state.profiles),
+          );
+          sessionStorage.setItem(
+            "userWorkerProfile",
+            JSON.stringify(action.payload),
+          );
         }
       })
       .addCase(createWorkerProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = typeof action.payload === "string"
-          ? action.payload
-          : "Failed to create worker profile";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Failed to create worker profile";
       });
 
     // Update worker profile
@@ -352,32 +389,39 @@ const workerProfilesSlice = createSlice({
       .addCase(updateWorkerProfile.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.profiles.findIndex(
-          (profile) => profile.id === action.payload.id
+          (profile) => profile.id === action.payload.id,
         );
         if (index !== -1) {
           state.profiles[index] = action.payload;
         }
         state.currentProfile = action.payload;
-        
+
         // Update user profile if it matches
         if (state.userProfile?.id === action.payload.id) {
           state.userProfile = action.payload;
         }
-        
+
         state.successMessage = "Worker profile updated successfully";
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("workerProfiles", JSON.stringify(state.profiles));
+          sessionStorage.setItem(
+            "workerProfiles",
+            JSON.stringify(state.profiles),
+          );
           if (state.userProfile?.id === action.payload.id) {
-            sessionStorage.setItem("userWorkerProfile", JSON.stringify(action.payload));
+            sessionStorage.setItem(
+              "userWorkerProfile",
+              JSON.stringify(action.payload),
+            );
           }
         }
       })
       .addCase(updateWorkerProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = typeof action.payload === "string"
-          ? action.payload
-          : "Failed to update worker profile";
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Failed to update worker profile";
       });
   },
 });

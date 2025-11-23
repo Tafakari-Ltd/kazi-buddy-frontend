@@ -22,11 +22,12 @@ export interface JobApplication {
   worker: string; // Worker ID
 }
 
-export interface JobApplicationWithDetails extends Omit<JobApplication, 'job' | 'worker'> {
+export interface JobApplicationWithDetails
+  extends Omit<JobApplication, "job" | "worker"> {
   job_details?: JobDetails;
-  job: string | FullJobDetails; 
+  job: string | FullJobDetails;
   worker_details?: WorkerDetails;
-  worker: string | FullWorkerDetails; 
+  worker: string | FullWorkerDetails;
   employer_details?: EmployerDetails;
 }
 
@@ -37,7 +38,7 @@ export interface UserInfo {
   email: string;
 }
 
-// Full worker object 
+// Full worker object
 export interface FullWorkerDetails {
   id: string;
   user: UserInfo;
@@ -159,54 +160,33 @@ export interface EmployerDetails {
 }
 
 // Enums
-export type ApplicationStatus = 
-  | 'pending'
-  | 'reviewed'
-  | 'accepted'
-  | 'rejected'
-  | 'withdrawn';
+export type ApplicationStatus =
+  | "pending"
+  | "reviewed"
+  | "accepted"
+  | "rejected"
+  | "withdrawn";
 
-export type JobType = 
-  | 'full_time'
-  | 'part_time'
-  | 'contract'
-  | 'freelance'
-  | 'internship';
+export type JobType =
+  | "full_time"
+  | "part_time"
+  | "contract"
+  | "freelance"
+  | "internship";
 
-export type UrgencyLevel = 
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'urgent';
+export type UrgencyLevel = "low" | "medium" | "high" | "urgent";
 
-export type PaymentType = 
-  | 'hourly'
-  | 'fixed'
-  | 'monthly'
-  | 'weekly';
+export type PaymentType = "hourly" | "fixed" | "monthly" | "weekly";
 
-export type JobStatus = 
-  | 'active'
-  | 'inactive'
-  | 'closed'
-  | 'draft'
-  | 'archived';
+export type JobStatus = "active" | "inactive" | "closed" | "draft" | "archived";
 
-export type JobVisibility = 
-  | 'public'
-  | 'private'
-  | 'featured';
+export type JobVisibility = "public" | "private" | "featured";
 
-export type ExperienceLevel = 
-  | 'entry'
-  | 'junior'
-  | 'mid'
-  | 'senior'
-  | 'expert';
+export type ExperienceLevel = "entry" | "junior" | "mid" | "senior" | "expert";
 
 // API Response Types
 export interface ApiResponse<T = any> {
-  status: 'success' | 'error';
+  status: "success" | "error";
   message?: string;
   data?: T;
 }
@@ -264,7 +244,9 @@ export interface PaginationParams {
   ordering?: string; // e.g., '-applied_at', 'proposed_rate'
 }
 
-export interface ApplicationQueryParams extends ApplicationFilters, PaginationParams {
+export interface ApplicationQueryParams
+  extends ApplicationFilters,
+    PaginationParams {
   search?: string;
   expand?: string; // For requesting expanded/nested data
 }

@@ -67,7 +67,9 @@ const WorkerProfilePage = () => {
   // Handle errors
   useEffect(() => {
     if (error) {
-      toast.error(typeof error === 'string' ? error : 'Failed to load worker profile');
+      toast.error(
+        typeof error === "string" ? error : "Failed to load worker profile",
+      );
       handleClearState();
     }
   }, [error, handleClearState]);
@@ -102,7 +104,7 @@ const WorkerProfilePage = () => {
     if (!profile.is_available) {
       return { text: "Not Available", color: "bg-gray-100 text-gray-800" };
     }
-    
+
     const isCurrentlyAvailable = isWorkerCurrentlyAvailable(profile);
     return isCurrentlyAvailable
       ? { text: "Available Now", color: "bg-green-100 text-green-800" }
@@ -115,7 +117,7 @@ const WorkerProfilePage = () => {
       router.push("/auth/login");
       return;
     }
-    
+
     setShowContactModal(true);
   };
 
@@ -154,9 +156,12 @@ const WorkerProfilePage = () => {
       <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
         <div className="text-center py-12">
           <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Worker Not Found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Worker Not Found
+          </h2>
           <p className="text-gray-600 mb-6">
-            The worker profile you're looking for doesn't exist or has been removed.
+            The worker profile you're looking for doesn't exist or has been
+            removed.
           </p>
           <button
             onClick={() => router.push("/workers")}
@@ -170,11 +175,12 @@ const WorkerProfilePage = () => {
   }
 
   const availabilityStatus = getAvailabilityStatus(currentProfile);
-  const completionColor = currentProfile.profile_completion_percentage >= 80 
-    ? "text-green-600" 
-    : currentProfile.profile_completion_percentage >= 60 
-    ? "text-yellow-600" 
-    : "text-red-600";
+  const completionColor =
+    currentProfile.profile_completion_percentage >= 80
+      ? "text-green-600"
+      : currentProfile.profile_completion_percentage >= 60
+        ? "text-yellow-600"
+        : "text-red-600";
 
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
@@ -209,17 +215,28 @@ const WorkerProfilePage = () => {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
                       Worker #{currentProfile.id.substring(0, 8)}
                     </h1>
-                    
+
                     {/* Status Badges */}
                     <div className="flex flex-wrap items-center gap-3 mb-4">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getVerificationColor(currentProfile.verification_status)}`}>
-                        {getVerificationIcon(currentProfile.verification_status)}
-                        {currentProfile.verification_status.charAt(0).toUpperCase() + currentProfile.verification_status.slice(1)}
+                      <span
+                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getVerificationColor(currentProfile.verification_status)}`}
+                      >
+                        {getVerificationIcon(
+                          currentProfile.verification_status,
+                        )}
+                        {currentProfile.verification_status
+                          .charAt(0)
+                          .toUpperCase() +
+                          currentProfile.verification_status.slice(1)}
                       </span>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${availabilityStatus.color}`}>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${availabilityStatus.color}`}
+                      >
                         {availabilityStatus.text}
                       </span>
-                      <span className={`text-sm font-medium ${completionColor}`}>
+                      <span
+                        className={`text-sm font-medium ${completionColor}`}
+                      >
                         {currentProfile.profile_completion_percentage}% Complete
                       </span>
                     </div>
@@ -229,9 +246,13 @@ const WorkerProfilePage = () => {
                       <div className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4" />
                         <div>
-                          <div className="font-medium text-gray-900">{currentProfile.location}</div>
+                          <div className="font-medium text-gray-900">
+                            {currentProfile.location}
+                          </div>
                           {currentProfile.location_text && (
-                            <div className="text-xs">{currentProfile.location_text}</div>
+                            <div className="text-xs">
+                              {currentProfile.location_text}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -239,7 +260,9 @@ const WorkerProfilePage = () => {
                       <div className="flex items-center gap-2 text-gray-600">
                         <DollarSign className="w-4 h-4" />
                         <div>
-                          <div className="font-medium text-gray-900">${currentProfile.hourly_rate}/hr</div>
+                          <div className="font-medium text-gray-900">
+                            ${currentProfile.hourly_rate}/hr
+                          </div>
                           <div className="text-xs">Hourly rate</div>
                         </div>
                       </div>
@@ -247,7 +270,9 @@ const WorkerProfilePage = () => {
                       <div className="flex items-center gap-2 text-gray-600">
                         <Badge className="w-4 h-4" />
                         <div>
-                          <div className="font-medium text-gray-900">{currentProfile.years_experience} years</div>
+                          <div className="font-medium text-gray-900">
+                            {currentProfile.years_experience} years
+                          </div>
                           <div className="text-xs">Experience</div>
                         </div>
                       </div>
@@ -339,7 +364,9 @@ const WorkerProfilePage = () => {
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-yellow-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-yellow-800 mb-2">Admin Note</h3>
+                <h3 className="font-semibold text-yellow-800 mb-2">
+                  Admin Note
+                </h3>
                 <p className="text-yellow-700">{currentProfile.admin_notes}</p>
               </div>
             </div>
@@ -367,26 +394,34 @@ const WorkerProfilePage = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Contact Worker
             </h3>
-            
+
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                   <User className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold">Worker #{currentProfile.id.substring(0, 8)}</h4>
-                  <p className="text-sm text-gray-600">{currentProfile.location}</p>
+                  <h4 className="font-semibold">
+                    Worker #{currentProfile.id.substring(0, 8)}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {currentProfile.location}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Experience:</span>
-                  <span className="font-medium">{currentProfile.years_experience} years</span>
+                  <span className="font-medium">
+                    {currentProfile.years_experience} years
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Hourly Rate:</span>
-                  <span className="font-medium">${currentProfile.hourly_rate}/hr</span>
+                  <span className="font-medium">
+                    ${currentProfile.hourly_rate}/hr
+                  </span>
                 </div>
               </div>
             </div>
@@ -400,7 +435,7 @@ const WorkerProfilePage = () => {
                 <Mail className="w-5 h-5" />
                 Send Email
               </button>
-              
+
               <button
                 onClick={() => {
                   toast.info("Phone contact feature coming soon!");

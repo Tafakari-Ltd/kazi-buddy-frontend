@@ -157,18 +157,18 @@ const Sidebar = () => {
                           }
                         `}
                       >
-                      <div className="flex items-center gap-3">
-                        <Icon
-                          className={`w-5 h-5 ${
-                            item.id === "dashboard"
-                              ? "text-red-600"
-                              : "text-gray-500 group-hover:text-red-600"
-                          }`}
-                        />
-                        <span className="font-medium text-sm">
-                          {item.label}
-                        </span>
-                      </div>
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            className={`w-5 h-5 ${
+                              item.id === "dashboard"
+                                ? "text-red-600"
+                                : "text-gray-500 group-hover:text-red-600"
+                            }`}
+                          />
+                          <span className="font-medium text-sm">
+                            {item.label}
+                          </span>
+                        </div>
 
                         <div className="flex items-center gap-2">
                           {item.badge && (

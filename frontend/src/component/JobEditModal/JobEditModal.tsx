@@ -14,9 +14,15 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
   const { handleUpdateJob, loading, successMessage } = useJobs();
 
   const [title, setTitle] = useState(job.title);
-  const [budgetMin, setBudgetMin] = useState<number | string>(job.budget_min ?? "");
-  const [budgetMax, setBudgetMax] = useState<number | string>(job.budget_max ?? "");
-  const [estimatedHours, setEstimatedHours] = useState<number | string>(job.estimated_hours ?? "");
+  const [budgetMin, setBudgetMin] = useState<number | string>(
+    job.budget_min ?? "",
+  );
+  const [budgetMax, setBudgetMax] = useState<number | string>(
+    job.budget_max ?? "",
+  );
+  const [estimatedHours, setEstimatedHours] = useState<number | string>(
+    job.estimated_hours ?? "",
+  );
   const [locationText, setLocationText] = useState(job.location_text ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +46,8 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
       title: title?.trim() || undefined,
       budget_min: budgetMin === "" ? undefined : Number(budgetMin),
       budget_max: budgetMax === "" ? undefined : Number(budgetMax),
-      estimated_hours: estimatedHours === "" ? undefined : Number(estimatedHours),
+      estimated_hours:
+        estimatedHours === "" ? undefined : Number(estimatedHours),
       location_text: locationText?.trim() || undefined,
     });
   };
@@ -54,7 +61,9 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
 
         <form onSubmit={onSubmit} className="p-4 space-y-3">
           {error && (
-            <div className="p-2 bg-red-50 text-red-700 border border-red-200 rounded">{error}</div>
+            <div className="p-2 bg-red-50 text-red-700 border border-red-200 rounded">
+              {error}
+            </div>
           )}
 
           <div>
@@ -69,7 +78,9 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Min Budget</label>
+              <label className="block text-sm font-medium mb-1">
+                Min Budget
+              </label>
               <input
                 type="number"
                 className="w-full p-2 border rounded border-gray-300"
@@ -78,7 +89,9 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Max Budget</label>
+              <label className="block text-sm font-medium mb-1">
+                Max Budget
+              </label>
               <input
                 type="number"
                 className="w-full p-2 border rounded border-gray-300"
@@ -90,7 +103,9 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Estimated Hours</label>
+              <label className="block text-sm font-medium mb-1">
+                Estimated Hours
+              </label>
               <input
                 type="number"
                 className="w-full p-2 border rounded border-gray-300"
@@ -99,7 +114,9 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Location Details</label>
+              <label className="block text-sm font-medium mb-1">
+                Location Details
+              </label>
               <input
                 type="text"
                 className="w-full p-2 border rounded border-gray-300"
@@ -110,7 +127,11 @@ const JobEditModal: React.FC<Props> = ({ job, onClose, onSuccess }) => {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-gray-700">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border rounded text-gray-700"
+            >
               Cancel
             </button>
             <button

@@ -1,8 +1,8 @@
-export * from "./AdminSIdebarSlice"
-export * from "./ApplyJobSlice"
-export * from "./SearchSlice"
-export * from "./WorkersSlice"
-export * from "./JobDescriptionSlice"
+export * from "./AdminSIdebarSlice";
+export * from "./ApplyJobSlice";
+export * from "./SearchSlice";
+export * from "./WorkersSlice";
+export * from "./JobDescriptionSlice";
 
 export {
   fetchCategories,
@@ -14,5 +14,5 @@ export {
   clearCategories,
   hydrateCategories,
   clearState as clearCategoriesState,
-  clearCurrentCategory
+  clearCurrentCategory,
 } from "./jobs/jobsCategories/jobCategories";

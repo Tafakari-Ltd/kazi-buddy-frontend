@@ -39,7 +39,7 @@ export const useEmployerProfiles = () => {
     (filters?: EmployerProfileFilters) => {
       return dispatch(fetchEmployerProfiles(filters));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Fetch single employer profile by ID
@@ -47,7 +47,7 @@ export const useEmployerProfiles = () => {
     (profileId: string) => {
       return dispatch(fetchEmployerProfileById(profileId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Fetch current user's employer profile
@@ -55,7 +55,7 @@ export const useEmployerProfiles = () => {
     (userId: string) => {
       return dispatch(fetchUserEmployerProfile(userId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Create new employer profile
@@ -63,7 +63,7 @@ export const useEmployerProfiles = () => {
     (profileData: CreateEmployerProfileData) => {
       return dispatch(createEmployerProfile(profileData));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Update employer profile
@@ -71,7 +71,7 @@ export const useEmployerProfiles = () => {
     (profileId: string, data: UpdateEmployerProfileData) => {
       return dispatch(updateEmployerProfile({ profileId, data }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Clear all profiles from state
@@ -99,7 +99,7 @@ export const useEmployerProfiles = () => {
     (newFilters: EmployerProfileFilters) => {
       dispatch(setFilters(newFilters));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Clear filters
@@ -112,7 +112,7 @@ export const useEmployerProfiles = () => {
     (page: number, limit?: number) => {
       dispatch(setPagination({ page, limit }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Helper function to get profile by ID from current profiles
@@ -120,7 +120,7 @@ export const useEmployerProfiles = () => {
     (profileId: string) => {
       return profiles.find((profile) => profile.id === profileId) || null;
     },
-    [profiles]
+    [profiles],
   );
 
   // Helper function to check if user has a profile
@@ -132,18 +132,18 @@ export const useEmployerProfiles = () => {
   const isProfileVerified = useCallback(
     (profileId?: string) => {
       const profile = profileId ? getProfileById(profileId) : userProfile;
-      return profile?.verification_status === 'verified';
+      return profile?.verification_status === "verified";
     },
-    [getProfileById, userProfile]
+    [getProfileById, userProfile],
   );
 
   // Helper function to check if profile is pending
   const isProfilePending = useCallback(
     (profileId?: string) => {
       const profile = profileId ? getProfileById(profileId) : userProfile;
-      return profile?.verification_status === 'pending';
+      return profile?.verification_status === "pending";
     },
-    [getProfileById, userProfile]
+    [getProfileById, userProfile],
   );
 
   return {

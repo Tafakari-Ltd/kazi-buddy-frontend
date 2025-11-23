@@ -7,40 +7,54 @@ import { toast } from "sonner";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { createJob, clearState } from "@/Redux/Features/jobsSlice";
 import { fetchCategories } from "@/Redux/Features/jobs/jobsCategories/jobCategories";
-import { JobType, UrgencyLevel, PaymentType, JobStatus, JobVisibility } from "@/types/job.types";
+import {
+  JobType,
+  UrgencyLevel,
+  PaymentType,
+  JobStatus,
+  JobVisibility,
+} from "@/types/job.types";
 
 const JOB_TYPES = [
   { value: JobType.FULL_TIME, label: "Full-Time" },
   { value: JobType.PART_TIME, label: "Part-Time" },
   { value: JobType.CONTRACT, label: "Contract" },
-  { value: JobType.INTERNSHIP, label: "Internship" }
+  { value: JobType.INTERNSHIP, label: "Internship" },
 ];
 
 const URGENCY_LEVELS = [
   { value: UrgencyLevel.LOW, label: "Low" },
   { value: UrgencyLevel.MEDIUM, label: "Medium" },
-  { value: UrgencyLevel.HIGH, label: "High" }
+  { value: UrgencyLevel.HIGH, label: "High" },
 ];
 
 const PAYMENT_TYPES = [
   { value: PaymentType.FIXED, label: "Fixed Price" },
-  { value: PaymentType.HOURLY, label: "Hourly Rate" }
+  { value: PaymentType.HOURLY, label: "Hourly Rate" },
 ];
 
-const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) => {
+const JobPostingModal = ({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess?: () => void;
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, successMessage } = useSelector(
-    (state: RootState) => state.jobs
+    (state: RootState) => state.jobs,
   );
   const { categories, loading: categoriesLoading } = useSelector(
-    (state: RootState) => state.categories
+    (state: RootState) => state.categories,
   );
   const { user, userId } = useSelector((state: RootState) => state.auth);
-  const { userProfile } = useSelector((state: RootState) => state.employerProfiles);
-  
-  // Get the actual user ID 
+  const { userProfile } = useSelector(
+    (state: RootState) => state.employerProfiles,
+  );
+
+  // Get the actual user ID
   const currentUserId = userId || user?.user_id || user?.id;
-  
+
   // Get employer profile ID for job creation
   const employerProfileId = userProfile?.id;
 
@@ -103,11 +117,20 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
     }
   }, [successMessage, dispatch, onClose, onSuccess]);
 
-  const handleChange = (field: keyof FormDataType, value: string | JobType | UrgencyLevel | PaymentType | JobStatus | JobVisibility) => {
+  const handleChange = (
+    field: keyof FormDataType,
+    value:
+      | string
+      | JobType
+      | UrgencyLevel
+      | PaymentType
+      | JobStatus
+      | JobVisibility,
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    
+
     if (fieldErrors[field]) {
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -117,11 +140,12 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     // Required fields
     if (!formData.title.trim()) newErrors.title = "Job title is required";
     if (!formData.category) newErrors.category = "Category is required";
-    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
     if (!formData.location.trim()) newErrors.location = "Location is required";
     if (!formData.job_type) newErrors.job_type = "Job type is required";
 
@@ -146,9 +170,8 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
   };
 
   const handleSubmit = async () => {
-   
     setFieldErrors({});
-    
+
     if (!validate()) {
       toast.error("Please fix the errors in the form");
       return;
@@ -160,32 +183,35 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
       toast.error("You must have a complete employer profile to create a job");
       return;
     }
-    
-    console.log('Creating job with data:', {
+
+    console.log("Creating job with data:", {
       employerId,
       currentUserId,
       userProfile,
-      formData
+      formData,
     });
 
     try {
-      
       const jobData = {
         employer: employerId,
         category: formData.category,
         title: formData.title,
         description: formData.description,
         location: formData.location,
-        location_text: formData.location_text || '',
+        location_text: formData.location_text || "",
         job_type: formData.job_type,
         urgency_level: formData.urgency_level,
         budget_min: formData.budget_min ? parseFloat(formData.budget_min) : 0,
         budget_max: formData.budget_max ? parseFloat(formData.budget_max) : 0,
         payment_type: formData.payment_type,
-        start_date: formData.start_date || '',
-        end_date: formData.end_date || '',
-        estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : 0,
-        max_applicants: formData.max_applicants ? parseInt(formData.max_applicants) : 50,
+        start_date: formData.start_date || "",
+        end_date: formData.end_date || "",
+        estimated_hours: formData.estimated_hours
+          ? parseInt(formData.estimated_hours)
+          : 0,
+        max_applicants: formData.max_applicants
+          ? parseInt(formData.max_applicants)
+          : 50,
         status: formData.status,
         visibility: formData.visibility,
       };
@@ -193,27 +219,41 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
       const resultAction = await dispatch(createJob(jobData));
 
       if (createJob.fulfilled.match(resultAction)) {
-        console.log('Job created successfully:', resultAction.payload);
+        console.log("Job created successfully:", resultAction.payload);
         // The success message and modal closing is handled in useEffect
       } else if (createJob.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
-        
+
         dispatch(clearState());
 
         // Handle field errors
-        if (errorPayload && typeof errorPayload === 'object' && 'fieldErrors' in errorPayload) {
+        if (
+          errorPayload &&
+          typeof errorPayload === "object" &&
+          "fieldErrors" in errorPayload
+        ) {
           const errors: Record<string, string> = {};
-          const payloadWithErrors = errorPayload as { fieldErrors: Record<string, string[]> };
-          
-          Object.entries(payloadWithErrors.fieldErrors).forEach(([field, messages]) => {
-            if (Array.isArray(messages) && messages.length > 0) {
-              errors[field] = messages[0];
-            }
-          });
+          const payloadWithErrors = errorPayload as {
+            fieldErrors: Record<string, string[]>;
+          };
+
+          Object.entries(payloadWithErrors.fieldErrors).forEach(
+            ([field, messages]) => {
+              if (Array.isArray(messages) && messages.length > 0) {
+                errors[field] = messages[0];
+              }
+            },
+          );
           setFieldErrors(errors);
-          toast.error(`Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? 's' : ''} in the form`);
+          toast.error(
+            `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`,
+          );
         } else {
-          toast.error(typeof errorPayload === 'string' ? errorPayload : "Failed to create job");
+          toast.error(
+            typeof errorPayload === "string"
+              ? errorPayload
+              : "Failed to create job",
+          );
         }
       }
     } catch (err: any) {
@@ -235,14 +275,22 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
             <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md shadow-sm">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="text-sm font-semibold text-red-800">
-                    {Object.keys(fieldErrors).length === 1 
-                      ? 'Please fix the following error:' 
+                    {Object.keys(fieldErrors).length === 1
+                      ? "Please fix the following error:"
                       : `Please fix the following ${Object.keys(fieldErrors).length} errors:`}
                   </h3>
                   <div className="mt-2 text-sm text-red-700 max-h-32 overflow-y-auto">
@@ -251,7 +299,10 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                         <li key={field} className="flex items-start">
                           <span className="mr-2 text-red-500">•</span>
                           <span>
-                            <strong className="capitalize">{field.replace(/_/g, ' ')}:</strong> {error}
+                            <strong className="capitalize">
+                              {field.replace(/_/g, " ")}:
+                            </strong>{" "}
+                            {error}
                           </span>
                         </li>
                       ))}
@@ -264,7 +315,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
 
           {/* Job Title */}
           <div>
-            <label className="block text-sm font-medium mb-1">Job Title *</label>
+            <label className="block text-sm font-medium mb-1">
+              Job Title *
+            </label>
             <input
               type="text"
               className={`w-full p-2 border rounded ${
@@ -282,7 +335,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
           {/* Category & Job Type */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Category *</label>
+              <label className="block text-sm font-medium mb-1">
+                Category *
+              </label>
               <select
                 className={`w-full p-2 border rounded ${
                   fieldErrors.category ? "border-red-500" : "border-gray-300"
@@ -292,7 +347,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 disabled={categoriesLoading}
               >
                 <option value="">
-                  {categoriesLoading ? "Loading categories..." : "Select category"}
+                  {categoriesLoading
+                    ? "Loading categories..."
+                    : "Select category"}
                 </option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -301,12 +358,16 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 ))}
               </select>
               {fieldErrors.category && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.category}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.category}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Job Type *</label>
+              <label className="block text-sm font-medium mb-1">
+                Job Type *
+              </label>
               <select
                 className={`w-full p-2 border rounded ${
                   fieldErrors.job_type ? "border-red-500" : "border-gray-300"
@@ -322,7 +383,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 ))}
               </select>
               {fieldErrors.job_type && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.job_type}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.job_type}
+                </p>
               )}
             </div>
           </div>
@@ -330,7 +393,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
           {/* Location */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Location *</label>
+              <label className="block text-sm font-medium mb-1">
+                Location *
+              </label>
               <input
                 type="text"
                 className={`w-full p-2 border rounded ${
@@ -341,12 +406,16 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={(e) => handleChange("location", e.target.value)}
               />
               {fieldErrors.location && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.location}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.location}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Location Details</label>
+              <label className="block text-sm font-medium mb-1">
+                Location Details
+              </label>
               <input
                 type="text"
                 className="w-full p-2 border rounded border-gray-300"
@@ -360,7 +429,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
           {/* Budget & Payment Type */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Min Budget</label>
+              <label className="block text-sm font-medium mb-1">
+                Min Budget
+              </label>
               <input
                 type="number"
                 className={`w-full p-2 border rounded ${
@@ -371,12 +442,16 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={(e) => handleChange("budget_min", e.target.value)}
               />
               {fieldErrors.budget_min && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.budget_min}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.budget_min}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Max Budget</label>
+              <label className="block text-sm font-medium mb-1">
+                Max Budget
+              </label>
               <input
                 type="number"
                 className={`w-full p-2 border rounded ${
@@ -387,12 +462,16 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={(e) => handleChange("budget_max", e.target.value)}
               />
               {fieldErrors.budget_max && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.budget_max}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.budget_max}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Payment Type</label>
+              <label className="block text-sm font-medium mb-1">
+                Payment Type
+              </label>
               <select
                 className="w-full p-2 border rounded border-gray-300"
                 value={formData.payment_type}
@@ -410,7 +489,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
           {/* Dates & Hours */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
+              <label className="block text-sm font-medium mb-1">
+                Start Date
+              </label>
               <input
                 type="date"
                 className={`w-full p-2 border rounded ${
@@ -420,7 +501,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={(e) => handleChange("start_date", e.target.value)}
               />
               {fieldErrors.start_date && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.start_date}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.start_date}
+                </p>
               )}
             </div>
 
@@ -435,25 +518,33 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={(e) => handleChange("end_date", e.target.value)}
               />
               {fieldErrors.end_date && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.end_date}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {fieldErrors.end_date}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Estimated Hours</label>
+              <label className="block text-sm font-medium mb-1">
+                Estimated Hours
+              </label>
               <input
                 type="number"
                 className="w-full p-2 border rounded border-gray-300"
                 placeholder="160"
                 value={formData.estimated_hours}
-                onChange={(e) => handleChange("estimated_hours", e.target.value)}
+                onChange={(e) =>
+                  handleChange("estimated_hours", e.target.value)
+                }
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-1">Description *</label>
+            <label className="block text-sm font-medium mb-1">
+              Description *
+            </label>
             <textarea
               rows={4}
               className={`w-full p-2 border rounded ${
@@ -464,14 +555,18 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
               onChange={(e) => handleChange("description", e.target.value)}
             />
             {fieldErrors.description && (
-              <p className="text-xs text-red-600 mt-1">{fieldErrors.description}</p>
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.description}
+              </p>
             )}
           </div>
 
           {/* Additional Settings */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Urgency Level</label>
+              <label className="block text-sm font-medium mb-1">
+                Urgency Level
+              </label>
               <select
                 className="w-full p-2 border rounded border-gray-300"
                 value={formData.urgency_level}
@@ -486,7 +581,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Max Applicants</label>
+              <label className="block text-sm font-medium mb-1">
+                Max Applicants
+              </label>
               <input
                 type="number"
                 className="w-full p-2 border rounded border-gray-300"
@@ -497,7 +594,9 @@ const JobPostingModal = ({ onClose, onSuccess }: { onClose: () => void; onSucces
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Visibility</label>
+              <label className="block text-sm font-medium mb-1">
+                Visibility
+              </label>
               <select
                 className="w-full p-2 border rounded border-gray-300"
                 value={formData.visibility}

@@ -19,19 +19,14 @@ export const fetchJobEmployer = createAsyncThunk<
   JobEmployer,
   string,
   { rejectValue: string }
->(
-  "jobEmployer/fetchJobEmployer",
-  async (jobId, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/jobs/employer/${jobId}/`);
-      return response.data || response;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.message || "Failed to fetch job employer"
-      );
-    }
+>("jobEmployer/fetchJobEmployer", async (jobId, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/jobs/employer/${jobId}/`);
+    return response.data || response;
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to fetch job employer");
   }
-);
+});
 
 const jobEmployerSlice = createSlice({
   name: "jobEmployer",
@@ -62,5 +57,6 @@ const jobEmployerSlice = createSlice({
   },
 });
 
-export const { clearJobEmployer, clearEmployerState } = jobEmployerSlice.actions;
+export const { clearJobEmployer, clearEmployerState } =
+  jobEmployerSlice.actions;
 export default jobEmployerSlice;

@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Info, Users, Briefcase, Plus } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Info, Users, Briefcase, Plus } from "lucide-react";
+import Link from "next/link";
 
 const AdminCreateJobPage = () => {
   const router = useRouter();
@@ -12,7 +12,7 @@ const AdminCreateJobPage = () => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <button 
+          <button
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
@@ -20,7 +20,9 @@ const AdminCreateJobPage = () => {
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Job Creation</h1>
         </div>
-        <p className="text-gray-600 ml-14">Manage job creation across the platform</p>
+        <p className="text-gray-600 ml-14">
+          Manage job creation across the platform
+        </p>
       </div>
 
       {/* Information Card */}
@@ -28,10 +30,14 @@ const AdminCreateJobPage = () => {
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-blue-600 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-blue-900 mb-2">About Job Creation</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">
+              About Job Creation
+            </h3>
             <p className="text-blue-800 text-sm leading-relaxed">
-              In the Kazi Buddy platform, jobs are typically created by employers through their dedicated employer dashboard. 
-              As an admin, you can monitor all job creation activities, manage existing jobs, and ensure quality control.
+              In the Kazi Buddy platform, jobs are typically created by
+              employers through their dedicated employer dashboard. As an admin,
+              you can monitor all job creation activities, manage existing jobs,
+              and ensure quality control.
             </p>
           </div>
         </div>
@@ -45,12 +51,15 @@ const AdminCreateJobPage = () => {
             <div className="p-2 bg-green-100 rounded-full">
               <Briefcase className="w-5 h-5 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Manage Existing Jobs</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Manage Existing Jobs
+            </h3>
           </div>
           <p className="text-gray-600 text-sm mb-4">
-            View, edit, and manage all jobs posted on the platform. Filter by status, category, and more.
+            View, edit, and manage all jobs posted on the platform. Filter by
+            status, category, and more.
           </p>
-          <Link 
+          <Link
             href="/admin/jobs"
             className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium text-sm"
           >
@@ -65,15 +74,18 @@ const AdminCreateJobPage = () => {
             <div className="p-2 bg-red-100 rounded-full">
               <Plus className="w-5 h-5 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Admin Job Creation</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Admin Job Creation
+            </h3>
           </div>
           <p className="text-gray-600 text-sm mb-4">
-            Create a job on behalf of an employer or for administrative purposes.
+            Create a job on behalf of an employer or for administrative
+            purposes.
           </p>
-          <button 
+          <button
             onClick={() => {
               // redirect to the main jobs page with create modal
-              router.push('/admin/jobs?create=true');
+              router.push("/admin/jobs?create=true");
             }}
             className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-medium text-sm"
           >
@@ -124,24 +136,53 @@ const AdminCreateJobPage = () => {
 
       {/* Recent Activity */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Job Creation Activity</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Recent Job Creation Activity
+        </h3>
         <div className="space-y-3">
           {[
-            { title: "House Cleaner Needed", employer: "Jane Smith", time: "2 hours ago", status: "active" },
-            { title: "Web Developer Position", employer: "Tech Corp Ltd", time: "5 hours ago", status: "active" },
-            { title: "Delivery Driver", employer: "QuickDelivery", time: "1 day ago", status: "paused" },
-            { title: "Graphic Designer", employer: "Creative Agency", time: "2 days ago", status: "active" },
+            {
+              title: "House Cleaner Needed",
+              employer: "Jane Smith",
+              time: "2 hours ago",
+              status: "active",
+            },
+            {
+              title: "Web Developer Position",
+              employer: "Tech Corp Ltd",
+              time: "5 hours ago",
+              status: "active",
+            },
+            {
+              title: "Delivery Driver",
+              employer: "QuickDelivery",
+              time: "1 day ago",
+              status: "paused",
+            },
+            {
+              title: "Graphic Designer",
+              employer: "Creative Agency",
+              time: "2 days ago",
+              status: "active",
+            },
           ].map((job, index) => (
-            <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+            <div
+              key={index}
+              className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0"
+            >
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{job.title}</p>
-                <p className="text-sm text-gray-600">by {job.employer} • {job.time}</p>
+                <p className="text-sm text-gray-600">
+                  by {job.employer} • {job.time}
+                </p>
               </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                job.status === 'active' 
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  job.status === "active"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
                 {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </span>
             </div>
@@ -156,17 +197,18 @@ const AdminCreateJobPage = () => {
           <div>
             <h4 className="font-medium text-gray-900 mb-2">For Employers:</h4>
             <p className="text-gray-600">
-              Direct employers to their dashboard at{' '}
+              Direct employers to their dashboard at{" "}
               <Link href="/employer" className="text-blue-600 hover:underline">
                 /employer
-              </Link>{' '}
+              </Link>{" "}
               where they can create and manage their job postings.
             </p>
           </div>
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Admin Controls:</h4>
             <p className="text-gray-600">
-              Use the main jobs management page to monitor, edit, and moderate all job postings on the platform.
+              Use the main jobs management page to monitor, edit, and moderate
+              all job postings on the platform.
             </p>
           </div>
         </div>

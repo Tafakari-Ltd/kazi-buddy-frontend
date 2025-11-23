@@ -3,13 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
-import { getProfile, updateProfile, deleteProfile } from "@/Redux/Features/profileSlice";
+import {
+  getProfile,
+  updateProfile,
+  deleteProfile,
+} from "@/Redux/Features/profileSlice";
 import Navbar from "@/component/common/Navbar/Navbar";
 
 const Profile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile, loading, updating, deleting, error } = useSelector(
-    (state: RootState) => state.profile
+    (state: RootState) => state.profile,
   );
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -52,24 +56,21 @@ const Profile = () => {
     dispatch(getProfile());
   }, [dispatch]);
 
-  
   useEffect(() => {
     if (profile) {
       setName(profile.full_name || "");
       setEmail(profile.email || "");
       setPhoneNumber(profile.phone_number || "");
-      
-      
+
       if (profile.profile_photo_url) {
-        
-        const imageUrl = profile.profile_photo_url.startsWith('http') 
-          ? profile.profile_photo_url 
+        const imageUrl = profile.profile_photo_url.startsWith("http")
+          ? profile.profile_photo_url
           : `${process.env.NEXT_PUBLIC_BASE_URL}${profile.profile_photo_url}`;
-        
+
         console.log("Profile Photo URL:", imageUrl);
         setProfileImage(imageUrl);
       }
-      
+
       setProfileImageFile(null);
     }
   }, [profile]);
@@ -88,9 +89,11 @@ const Profile = () => {
     if (file) setResume(file);
   };
 
- 
   const handleAddEducation = () => {
-    setEducation([...education, { school: "", degree: "", specialization: "" }]);
+    setEducation([
+      ...education,
+      { school: "", degree: "", specialization: "" },
+    ]);
   };
 
   const handleAddExperience = () => {
@@ -106,10 +109,9 @@ const Profile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const updatePayload: any = {};
-    
-    
+
     if (name !== profile?.full_name) {
       updatePayload.full_name = name;
     }
@@ -121,7 +123,6 @@ const Profile = () => {
       console.log("Including profile photo in update:", profileImageFile);
     }
 
-   
     if (Object.keys(updatePayload).length === 0) {
       alert("No changes to save");
       return;
@@ -133,11 +134,11 @@ const Profile = () => {
       const result = await dispatch(updateProfile(updatePayload)).unwrap();
       console.log("Update result:", result);
       console.log("Profile photo URL after update:", result.profile_photo_url);
-      
+
       alert("Profile updated successfully!");
-      
+
       setProfileImageFile(null);
-      
+
       await dispatch(getProfile());
     } catch (err: any) {
       console.error("Update failed:", err);
@@ -153,7 +154,6 @@ const Profile = () => {
 
     try {
       await dispatch(deleteProfile()).unwrap();
-      
     } catch (err: any) {
       alert(`Failed to delete account: ${err}`);
       setShowDeleteConfirm(false);
@@ -198,9 +198,11 @@ const Profile = () => {
                       className="w-28 h-28 object-cover rounded-full border-4 border-purple-dark"
                       onError={(e) => {
                         console.error("Image failed to load:", profileImage);
-                       
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.nextElementSibling?.classList.remove(
+                          "hidden",
+                        );
                       }}
                     />
                   ) : (
@@ -222,7 +224,9 @@ const Profile = () => {
                   className="hidden"
                 />
                 {profileImageFile && (
-                  <p className="text-xs text-green-600 mt-2">New image selected</p>
+                  <p className="text-xs text-green-600 mt-2">
+                    New image selected
+                  </p>
                 )}
               </div>
 
@@ -241,14 +245,18 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-maroon">Email</label>
+                    <label className="text-sm font-medium text-maroon">
+                      Email
+                    </label>
                     <input
                       type="email"
                       value={email}
                       disabled
                       className="w-full border border-gray-300 px-4 py-2 rounded-md mt-1 outline-none bg-gray-100 cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Email cannot be changed
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-maroon">
@@ -264,7 +272,9 @@ const Profile = () => {
                   <div>
                     <label className="text-sm font-medium text-maroon">
                       Resume
-                      <span className="text-xs text-gray-500 ml-2">(Local only - not saved to server)</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        (Local only - not saved to server)
+                      </span>
                     </label>
                     <input
                       type="file"
@@ -273,7 +283,9 @@ const Profile = () => {
                       className="w-full border border-gray-300 px-4 py-2 rounded-md mt-1 bg-white cursor-pointer"
                     />
                     {resume && (
-                      <p className="text-sm mt-1 text-green-600">{resume.name}</p>
+                      <p className="text-sm mt-1 text-green-600">
+                        {resume.name}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -282,7 +294,9 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-maroon mb-2">
                     Education
-                    <span className="text-xs text-gray-500 ml-2">(Local only - not saved to server)</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      (Local only - not saved to server)
+                    </span>
                   </h3>
                   {education.map((edu, index) => (
                     <div key={index} className="grid grid-cols-3 gap-4 mb-2">
@@ -334,7 +348,9 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-maroon mb-2">
                     Experience
-                    <span className="text-xs text-gray-500 ml-2">(Local only - not saved to server)</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      (Local only - not saved to server)
+                    </span>
                   </h3>
                   {experience.map((exp, index) => (
                     <div key={index} className="grid grid-cols-2 gap-4 mb-2">
@@ -394,8 +410,8 @@ const Profile = () => {
                     {deleting
                       ? "Deleting..."
                       : showDeleteConfirm
-                      ? "Click Again to Confirm Delete"
-                      : "Delete Account"}
+                        ? "Click Again to Confirm Delete"
+                        : "Delete Account"}
                   </button>
 
                   {showDeleteConfirm && (
@@ -415,7 +431,9 @@ const Profile = () => {
             <div className="overflow-y-auto max-h-screen">
               <h3 className="text-xl font-semibold text-maroon mb-4">
                 Job Applications
-                <span className="text-xs text-gray-500 ml-2">(Local only - not saved to server)</span>
+                <span className="text-xs text-gray-500 ml-2">
+                  (Local only - not saved to server)
+                </span>
               </h3>
 
               {jobApplications.map((app, index) => (
@@ -457,7 +475,9 @@ const Profile = () => {
                   />
                   <span className="text-sm text-gray-600">
                     Status:{" "}
-                    <span className="font-semibold text-purple-dark">{app.status}</span>
+                    <span className="font-semibold text-purple-dark">
+                      {app.status}
+                    </span>
                   </span>
                 </div>
               ))}

@@ -1,8 +1,8 @@
 // Job Application Components
-export { default as JobApplicationForm } from './JobApplicationForm';
-export { default as JobApplicationCard } from './JobApplicationCard';
-export { default as JobApplicationList } from './JobApplicationList';
-export { default as JobApplicationModal } from './JobApplicationModal';
+export { default as JobApplicationForm } from "./JobApplicationForm";
+export { default as JobApplicationCard } from "./JobApplicationCard";
+export { default as JobApplicationList } from "./JobApplicationList";
+export { default as JobApplicationModal } from "./JobApplicationModal";
 
 // Export types for convenience
 export type {
@@ -19,5 +19,5 @@ export type {
   ApplicationApiResponse,
   ApplicationListResponse,
   ApplicationDetailResponse,
-  UpdateApplicationRequest
-} from '../../types/jobApplication.types';
+  UpdateApplicationRequest,
+} from "../../types/jobApplication.types";

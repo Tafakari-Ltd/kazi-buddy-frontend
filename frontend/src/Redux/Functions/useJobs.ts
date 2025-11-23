@@ -27,7 +27,7 @@ import {
 
 export const useJobs = () => {
   const dispatch = useDispatch<AppDispatch>();
-  
+
   const {
     jobs,
     currentJob,
@@ -38,10 +38,8 @@ export const useJobs = () => {
     successMessage,
   } = useSelector((state: RootState) => state.jobs);
 
- 
-
   const { employer: jobEmployer, loading: employerLoading } = useSelector(
-    (state: RootState) => state.jobEmployer
+    (state: RootState) => state.jobEmployer,
   );
 
   // Jobs CRUD operations
@@ -98,8 +96,6 @@ export const useJobs = () => {
     dispatch(setPagination({ page, limit }));
   };
 
-  
-
   const handleFetchJobEmployer = async (jobId: string) => {
     const result = await dispatch(fetchJobEmployer(jobId));
     return result.payload;
@@ -116,15 +112,15 @@ export const useJobs = () => {
 
   // Utility functions
   const getJobById = (jobId: string) => {
-    return jobs.find(job => job.id === jobId);
+    return jobs.find((job) => job.id === jobId);
   };
 
   const getJobsByStatus = (status: JobStatus) => {
-    return jobs.filter(job => job.status === status);
+    return jobs.filter((job) => job.status === status);
   };
 
   const getJobsByCategory = (categoryId: string) => {
-    return jobs.filter(job => job.category === categoryId);
+    return jobs.filter((job) => job.category === categoryId);
   };
 
   const getTotalJobs = () => {
@@ -151,12 +147,12 @@ export const useJobs = () => {
     // State
     jobs,
     currentJob,
-    
+
     jobEmployer,
     filters,
     pagination,
     loading,
-    
+
     employerLoading,
     error,
     successMessage,
@@ -177,7 +173,7 @@ export const useJobs = () => {
     handleSetPagination,
 
     // Additional data
-   
+
     handleFetchJobEmployer,
 
     // State management

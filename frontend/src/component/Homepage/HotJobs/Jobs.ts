@@ -16,7 +16,7 @@ export const categories = [
   "Yardwork",
   "TV Mounting",
   "IKEA Furnture Assembly",
-  "Help moving"
+  "Help moving",
 ];
 
 const jobs = [

@@ -20,8 +20,12 @@ const JobMoreDescription = () => {
   const router = useRouter();
   const isOpen = useSelector(selectJobDescriptionOpen);
   const jobData = useSelector(selectSelectedJob);
-  const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
-  const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
+  const { isAuthenticated, userId } = useSelector(
+    (state: RootState) => state.auth,
+  );
+  const { userProfile } = useSelector(
+    (state: RootState) => state.workerProfiles,
+  );
 
   // If no job data, return null
   if (!jobData) return null;
@@ -31,15 +35,31 @@ const JobMoreDescription = () => {
     id: jobData.id,
     title: jobData.title || "Job Title",
     jobType: jobData.jobType || jobData.job_type || "Full-Time",
-    category: typeof jobData.category === 'string' ? jobData.category : jobData.category?.name || "General",
-    location: (jobData as any).location_address || jobData.location_text || jobData.location || "Location not specified",
-    rate: jobData.budget_min && jobData.budget_max 
-      ? `KSh ${jobData.budget_min} - ${jobData.budget_max}`
-      : "Negotiable",
+    category:
+      typeof jobData.category === "string"
+        ? jobData.category
+        : jobData.category?.name || "General",
+    location:
+      (jobData as any).location_address ||
+      jobData.location_text ||
+      jobData.location ||
+      "Location not specified",
+    rate:
+      jobData.budget_min && jobData.budget_max
+        ? `KSh ${jobData.budget_min} - ${jobData.budget_max}`
+        : "Negotiable",
     description: jobData.description || "No description available",
-    image: (jobData as any).job_image || (jobData as any).image || "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    postedDate: jobData.created_at ? new Date(jobData.created_at).toLocaleDateString() : (jobData as any).postedDate || "Recently",
-    urgency: (jobData as any).is_urgent || jobData.urgency_level === 'urgent' ? "Hiring Immediately" : "Open Position",
+    image:
+      (jobData as any).job_image ||
+      (jobData as any).image ||
+      "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    postedDate: jobData.created_at
+      ? new Date(jobData.created_at).toLocaleDateString()
+      : (jobData as any).postedDate || "Recently",
+    urgency:
+      (jobData as any).is_urgent || jobData.urgency_level === "urgent"
+        ? "Hiring Immediately"
+        : "Open Position",
     requirements: (jobData as any).requirements || [
       "Please contact employer for details",
     ],
@@ -53,34 +73,34 @@ const JobMoreDescription = () => {
     // Check if user is authenticated
     if (!isAuthenticated) {
       // Redirect to login page with return URL
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-        sessionStorage.setItem('pendingJobApplication', jobId);
-        window.location.href = '/auth/login';
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+        sessionStorage.setItem("pendingJobApplication", jobId);
+        window.location.href = "/auth/login";
       }
       return;
     }
-    
+
     // Check if user has a worker profile
     if (!userProfile && userId) {
       // Try to fetch user's worker profile
       try {
         const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
-        
+
         if (!result) {
           // No worker profile exists, redirect to create one
           toast.info("Please create a worker profile to apply for jobs");
-          router.push('/worker');
+          router.push("/worker");
           return;
         }
       } catch (error) {
         // Error fetching profile, redirect to create one
         toast.info("Please create a worker profile to apply for jobs");
-        router.push('/worker');
+        router.push("/worker");
         return;
       }
     }
-    
+
     // User has a worker profile, open the application modal
     dispatch(openJobModal());
   };

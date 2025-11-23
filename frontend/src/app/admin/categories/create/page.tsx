@@ -67,7 +67,7 @@ const CreateCategoryPage = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -95,8 +95,12 @@ const CreateCategoryPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create New Category</h1>
-          <p className="text-gray-600 mt-2">Add a new job category to the system</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Create New Category
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Add a new job category to the system
+          </p>
         </div>
       </div>
 
@@ -140,9 +144,7 @@ const CreateCategoryPage = () => {
               value={formData.name}
               onChange={handleInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                formErrors.name
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300"
+                formErrors.name ? "border-red-300 bg-red-50" : "border-gray-300"
               }`}
               placeholder="Enter category name (e.g., Software Development)"
             />
@@ -173,7 +175,9 @@ const CreateCategoryPage = () => {
               placeholder="Enter a detailed description of this category..."
             />
             {formErrors.description && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {formErrors.description}
+              </p>
             )}
           </div>
 

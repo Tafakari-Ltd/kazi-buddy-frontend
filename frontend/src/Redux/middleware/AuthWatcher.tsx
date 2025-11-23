@@ -8,14 +8,16 @@ import { useSelector } from "react-redux";
 import { RootState } from "../Store/Store";
 
 export default function AuthWatcher() {
-    const router = useRouter();
-    const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const router = useRouter();
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            router.replace("/auth/login");
-        }
-    }, [isAuthenticated, router]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/auth/login");
+    }
+  }, [isAuthenticated, router]);
 
-    return null; 
+  return null;
 }
