@@ -8,8 +8,8 @@ const page = () => {
   return (
     <div>
       <Hero />
+       <Featured />
       <Hotjobs />
-      <Featured />
       <Getstarted />
       <Testimonials />
       <Footer />
