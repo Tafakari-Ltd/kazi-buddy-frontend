@@ -6,6 +6,7 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/Redux/Features/authSlice";
+import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice"; 
 import { isApprovalNeededError } from "@/lib/approvalUtils";
 import { toast } from "sonner";
 
@@ -28,85 +29,96 @@ const LoginPage: React.FC = () => {
     const password = formData.get("password") as string;
 
     try {
+      // 1. Perform Login
       const result = await dispatch(login({ email, password })).unwrap();
-
-      // Check if user was trying to apply for a job
-      const pendingJobApplication = sessionStorage.getItem(
-        "pendingJobApplication",
-      );
-      const redirectAfterLogin = sessionStorage.getItem("redirectAfterLogin");
-
-      // Clear the pending application flag
-      if (pendingJobApplication) {
-        sessionStorage.removeItem("pendingJobApplication");
-      }
-
-      if (redirectAfterLogin) {
-        sessionStorage.removeItem("redirectAfterLogin");
-      }
-
-      // Determine redirect based on user role and intent
+      
+      // 2. Check Intent
+      const pendingJobApplication = sessionStorage.getItem('pendingJobApplication');
+      const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
       const returnTo = searchParams.get("returnTo");
       const user = result.user;
+      
       const isAdmin =
         user?.is_staff ||
         user?.is_superuser ||
-        user?.role === "admin" ||
-        user?.user_type === "admin";
+        user?.role === 'admin' ||
+        user?.user_type === 'admin';
 
-      // If user was applying for a job, they need to become a worker
+      // 3. Handle Routing Logic
+      if (isAdmin) {
+        // Admin always goes to admin dashboard
+        if (pendingJobApplication) sessionStorage.removeItem('pendingJobApplication');
+        if (redirectAfterLogin) sessionStorage.removeItem('redirectAfterLogin');
+        router.push('/admin');
+        return;
+      }
+
+      // User was trying to Apply for a Job
       if (pendingJobApplication) {
-        // Redirect to worker dashboard/profile setup
-        router.push("/worker");
-        toast.success("Please complete your worker profile to apply for jobs", {
-          duration: 4000,
-        });
-      } else if (returnTo) {
+        try {
+          // Check if they have a worker profile
+          const userId = user.user_id || user.id;
+        
+          const profileResult = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+
+          if (profileResult) {
+            // Profile Exists -> Go back to Homepage/Job Page
+            const targetUrl = redirectAfterLogin || '/';
+            router.push(targetUrl);
+            toast.success('Welcome back! You can now complete your application.');
+           
+          } else {
+            // Profile Missing -> Go to Worker Dashboard to create one
+            router.push('/worker?setup=1');
+            toast.info('Please create a worker profile before applying for jobs');
+          }
+        } catch (err) {
+          // If fetch fails (likely 404 no profile), send to setup
+          router.push('/worker?setup=1');
+          toast.info('Please create a worker profile before applying for jobs');
+        }
+      } 
+      //Normal Redirects
+      else if (returnTo) {
         router.push(returnTo);
       } else if (redirectAfterLogin) {
         router.push(redirectAfterLogin);
-      } else if (isAdmin) {
-        // Admins go straight to the admin dashboard
-        router.push("/admin");
+        sessionStorage.removeItem('redirectAfterLogin');
       } else {
-        // Default redirect based on user type
-        if (user?.user_type === "worker") {
-          router.push("/worker");
-        } else if (user?.user_type === "employer") {
-          router.push("/employer");
+        // Default Dashboard Redirection
+        if (user?.user_type === 'employer') {
+          router.push('/employer');
         } else {
-          router.push("/employer"); // Default fallback
+          // Default to worker if not specified or explicit worker
+          router.push('/worker');
         }
       }
-    } catch (err: any) {
-      // Extract error message from various error formats
-      let errorMessage = "Login failed";
 
-      if (typeof err === "string") {
+    } catch (err: any) {
+      // Error Handling
+      let errorMessage = "Login failed";
+     
+      if (typeof err === 'string') {
         errorMessage = err;
       } else if (err?.message) {
         errorMessage = err.message;
       } else if (err?.error) {
         errorMessage = err.error;
       }
-
-      console.log("Login error:", err);
-
-      // Check if user needs admin approval
+     
+      console.log('Login error:', err);
+     
       if (isApprovalNeededError(errorMessage)) {
         toast.info(
           "Your account is pending admin approval. Please wait for approval notification via email.",
-          { duration: 5000 },
+          { duration: 5000 }
         );
         setFormError(
-          "Your account is pending admin approval. You will be able to login once approved.",
+          "Your account is pending admin approval. You will be able to login once approved."
         );
-      } else if (
-        errorMessage.toLowerCase().includes("not found") ||
-        errorMessage.toLowerCase().includes("invalid")
-      ) {
+      } else if (errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('invalid')) {
         setFormError("Invalid email or password");
-      } else if (errorMessage.toLowerCase().includes("verified")) {
+      } else if (errorMessage.toLowerCase().includes('verified')) {
         setFormError("Please verify your email before logging in");
       } else {
         setFormError(errorMessage);
@@ -125,7 +137,7 @@ const LoginPage: React.FC = () => {
         {/* Google Sign In */}
         <button
           className="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-200 transition mb-6"
-          onClick={() => {}}
+          onClick={() => { }}
           disabled={loading}
         >
           <FcGoogle size={24} />

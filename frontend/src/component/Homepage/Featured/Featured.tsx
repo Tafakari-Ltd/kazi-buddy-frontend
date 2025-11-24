@@ -44,6 +44,52 @@ const Featured = () => {
     return !!(filters.category || filters.search_query || filters.location || filters.job_type);
   }, [filters]);
 
+  // --- NEW: AUTO-OPEN MODAL LOGIC ---
+  useEffect(() => {
+    const checkPendingApplication = async () => {
+      // Check if we have a pending application ID in session storage
+      if (typeof window !== 'undefined') {
+        const pendingJobId = sessionStorage.getItem('pendingJobApplication');
+        
+        // Only proceed if we have an ID and the user is fully authenticated with a profile
+        if (pendingJobId && isAuthenticated && userProfile) {
+          try {
+            // We need to fetch the specific job details because it might not be in the current 'jobs' list
+            const response = await api.get(`/jobs/${pendingJobId}/`);
+            const jobData = response.data;
+            
+            if (jobData) {
+              // Format data for the modal
+              dispatch(openJobDescription({
+                id: String(jobData.id),
+                title: jobData.title,
+                jobType: jobData.job_type,
+                category: typeof jobData.category === 'string' ? jobData.category : (jobData.category as any)?.name || 'General',
+                location: (jobData as any).location_address || jobData.location_text || jobData.location || 'Not specified',
+                rate: jobData.budget_min && jobData.budget_max ? `KSh ${jobData.budget_min} - ${jobData.budget_max}` : 'Negotiable',
+                description: jobData.description,
+                image: (jobData as any).job_image || '',
+              } as any));
+              
+              // Open the modal
+              dispatch(openJobModal());
+              toast.success("Resuming your application...");
+              
+              // Clear the session storage so it doesn't pop up again on refresh
+              sessionStorage.removeItem('pendingJobApplication');
+            }
+          } catch (error) {
+            console.error("Failed to load pending job application", error);
+            // If the job doesn't exist or error occurs, clear the pending flag to stop trying
+            sessionStorage.removeItem('pendingJobApplication');
+          }
+        }
+      }
+    };
+
+    checkPendingApplication();
+  }, [isAuthenticated, userProfile, dispatch]);
+
   // 1. One-time check to identify the Top 10 Paying Jobs in the system
   useEffect(() => {
     const identifyTopPayingJobs = async () => {
