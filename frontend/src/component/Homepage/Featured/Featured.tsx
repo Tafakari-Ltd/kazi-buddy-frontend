@@ -35,76 +35,31 @@ const Featured = () => {
     total_pages: 0,
   });
 
-  // Store the IDs of the actual top paying jobs
   const [topPayingJobIds, setTopPayingJobIds] = useState<Set<string>>(new Set());
 
   const jobsPerPage = 10;
+  const HIGH_PAY_THRESHOLD = 50000;
 
   const isFiltering = useMemo(() => {
     return !!(filters.category || filters.search_query || filters.location || filters.job_type);
   }, [filters]);
 
-  // --- NEW: AUTO-OPEN MODAL LOGIC ---
-  useEffect(() => {
-    const checkPendingApplication = async () => {
-      // Check if we have a pending application ID in session storage
-      if (typeof window !== 'undefined') {
-        const pendingJobId = sessionStorage.getItem('pendingJobApplication');
-        
-        // Only proceed if we have an ID and the user is fully authenticated with a profile
-        if (pendingJobId && isAuthenticated && userProfile) {
-          try {
-            // We need to fetch the specific job details because it might not be in the current 'jobs' list
-            const response = await api.get(`/jobs/${pendingJobId}/`);
-            const jobData = response.data;
-            
-            if (jobData) {
-              // Format data for the modal
-              dispatch(openJobDescription({
-                id: String(jobData.id),
-                title: jobData.title,
-                jobType: jobData.job_type,
-                category: typeof jobData.category === 'string' ? jobData.category : (jobData.category as any)?.name || 'General',
-                location: (jobData as any).location_address || jobData.location_text || jobData.location || 'Not specified',
-                rate: jobData.budget_min && jobData.budget_max ? `KSh ${jobData.budget_min} - ${jobData.budget_max}` : 'Negotiable',
-                description: jobData.description,
-                image: (jobData as any).job_image || '',
-              } as any));
-              
-              // Open the modal
-              dispatch(openJobModal());
-              toast.success("Resuming your application...");
-              
-              // Clear the session storage so it doesn't pop up again on refresh
-              sessionStorage.removeItem('pendingJobApplication');
-            }
-          } catch (error) {
-            console.error("Failed to load pending job application", error);
-            // If the job doesn't exist or error occurs, clear the pending flag to stop trying
-            sessionStorage.removeItem('pendingJobApplication');
-          }
-        }
-      }
-    };
-
-    checkPendingApplication();
-  }, [isAuthenticated, userProfile, dispatch]);
-
-  // 1. One-time check to identify the Top 10 Paying Jobs in the system
+  // 1. Identify Top Paying Jobs (active AND approved only)
   useEffect(() => {
     const identifyTopPayingJobs = async () => {
       try {
-        // Fetch a pool of approved jobs to calculate rankings
-        const response = await api.get('/jobs/?status=approved&limit=50');
+        const response = await api.get('/jobs/?status=active&limit=50');
         let allJobs: Job[] = [];
         if (response.data) allJobs = response.data;
         else if (Array.isArray(response)) allJobs = response;
 
-        // Sort High -> Low
-        const sorted = allJobs.sort((a, b) => (b.budget_max || 0) - (a.budget_max || 0));
-        // Take top 10
+      
+        const validJobs = allJobs.filter(job => 
+          job.status === 'active' && (job as any).admin_approved === true
+        );
+
+        const sorted = validJobs.sort((a, b) => (b.budget_max || 0) - (a.budget_max || 0));
         const top10 = sorted.slice(0, 10);
-        // Store IDs
         setTopPayingJobIds(new Set(top10.map(j => j.id)));
       } catch (e) {
         console.error("Error identifying top paying jobs", e);
@@ -128,7 +83,7 @@ const Featured = () => {
         const queryParams = new URLSearchParams();
         let endpoint = '/jobs/';
         
-        queryParams.append('status', 'approved');
+        queryParams.append('status', 'active');
         queryParams.append('page', currentPage.toString());
 
         if (isFiltering) {
@@ -155,13 +110,22 @@ const Featured = () => {
           fetchedJobs = response;
         }
 
+        const activeJobsOnly = fetchedJobs.filter(job => 
+          job.status === 'active' && 
+          (job as any).admin_approved === true
+        );
+
         if (isFiltering) {
-          setJobs(fetchedJobs);
+          setJobs(activeJobsOnly);
+         
           if (response.pagination) {
-            setPagination(response.pagination);
+            setPagination({
+              ...response.pagination,
+              total: activeJobsOnly.length
+            });
           }
         } else {
-          const topPayingJobs = fetchedJobs.sort((a, b) => {
+          const topPayingJobs = activeJobsOnly.sort((a, b) => {
             const budgetA = a.budget_max || 0;
             const budgetB = b.budget_max || 0;
             return budgetB - budgetA;
@@ -198,15 +162,13 @@ const Featured = () => {
   };
 
   const totalJobs = pagination.total;
-  const totalPages = isFiltering ? pagination.total_pages : Math.ceil(totalJobs / jobsPerPage);
+  const totalPages = isFiltering ? Math.ceil(totalJobs / (pagination.limit || 12)) : Math.ceil(totalJobs / jobsPerPage);
   const paginatedJobs = jobs;
 
   const paginationInfo = useMemo(() => {
     if (isFiltering) {
       if (jobs.length === 0) return { start: 0, end: 0, total: 0 };
-      const start = (currentPage - 1) * (pagination.limit || 12) + 1;
-      const end = Math.min(start + jobs.length - 1, pagination.total);
-      return { start, end, total: pagination.total };
+      return { start: 1, end: jobs.length, total: jobs.length };
     }
     
     if (jobs.length === 0) return { start: 0, end: 0, total: 0 };
@@ -220,7 +182,7 @@ const Featured = () => {
   }, [currentPage, jobsPerPage, totalJobs, isFiltering, pagination, jobs.length]);
 
   const handlePageChange = useCallback((page: number) => {
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || (totalPages > 0 && page > totalPages)) return;
     setCurrentPage(page);
     const jobsSection = document.getElementById('jobs-section');
     if (jobsSection) {
@@ -411,8 +373,7 @@ const Featured = () => {
             onMouseLeave={() => setHoveredJob(null)}
           >
             {/* FEATURED BADGE LOGIC */}
-            {/* Show badge if the job ID is in our identified top 10 list */}
-            {topPayingJobIds.has(job.id) && (
+            {(!isFiltering || topPayingJobIds.has(job.id) || job.budget_max >= HIGH_PAY_THRESHOLD) && (
               <div className="absolute top-3 left-3 z-10">
                 <div className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-sm text-xs font-bold shadow-lg">
                   <Star className="w-3 h-3" />
@@ -460,7 +421,7 @@ const Featured = () => {
               </div>
 
               {/* Priority indicator */}
-              {/* Only show numbering if we are in the default/featured mode */}
+              
               {!isFiltering && (
                 <div className="absolute bottom-3 right-3">
                   <div className="flex items-center gap-1 bg-white/90 text-[#800000] px-2 py-1 rounded-sm text-xs font-bold shadow-sm">
@@ -504,7 +465,7 @@ const Featured = () => {
                     {typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General'}
                   </span>
                   {/* Show Top Paying text in details if applicable */}
-                  {topPayingJobIds.has(job.id) && (
+                  {(topPayingJobIds.has(job.id) || job.budget_max >= HIGH_PAY_THRESHOLD) && (
                     <span className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 px-3 py-1 rounded-sm text-xs font-semibold border border-amber-300">
                       Top Paying
                     </span>
