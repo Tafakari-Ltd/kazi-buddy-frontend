@@ -17,6 +17,13 @@ import {
   User,
   Badge,
   ArrowRight,
+  Briefcase,
+  Star,
+  TrendingUp,
+  Eye,
+  CheckCircle,
+  Activity,
+  Bell
 } from "lucide-react";
 
 // Import job application components
@@ -32,7 +39,6 @@ import {
   CreateWorkerProfileData,
   VerificationStatus,
   formatAvailabilitySchedule,
-  calculateProfileCompletion,
 } from "@/types/worker.types";
 
 const STATUS_OPTIONS = [
@@ -48,43 +54,29 @@ const WorkerDashboardPage = () => {
   const searchParams = useSearchParams();
   const [setupProfile, setSetupProfile] = useState<string | null>(null);
 
-  // Handle search params on client side only
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       setSetupProfile(searchParams?.get("setup") || null);
     }
   }, [searchParams]);
 
-  // Auth state with defensive checks
   const authState = useSelector((state: RootState) => state.auth || {});
   const { user, userId, isAuthenticated } = authState;
-
-  // Get the actual user ID
   const currentUserId = userId || user?.user_id || user?.id;
 
-  // Worker profiles hook with error handling
   let workerProfiles;
   let jobsHook;
   try {
     workerProfiles = useWorkerProfiles();
     jobsHook = useJobs();
   } catch (error) {
-    console.error("Error loading hooks:", error);
+    console.error('Error loading hooks:', error);
     return (
-      <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
+      <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-4">
-            Error Loading Profile
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Failed to load worker profile system.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            Refresh Page
-          </button>
+          <h2 className="text-2xl font-bold text-red-800 mb-4">System Error</h2>
+          <p className="text-gray-600 mb-6">Failed to load worker profile system.</p>
+          <button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md">Refresh</button>
         </div>
       </div>
     );
@@ -100,204 +92,97 @@ const WorkerDashboardPage = () => {
     handleUpdateWorkerProfile,
     handleClearState,
     hasUserProfile,
-    isProfileVerified,
-    isProfilePending,
   } = workerProfiles;
 
   const { handleFetchJobs } = jobsHook;
 
-  // Local state
   const [filter, setFilter] = useState<string>("Dashboard");
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>(
-    {},
-  );
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [isClient, setIsClient] = useState(false);
 
-  // Job application state
   const [availableJobs, setAvailableJobs] = useState<JobDetails[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [jobsError, setJobsError] = useState<string | null>(null);
 
-  // Ensure client-side rendering
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Fetch user profile on mount
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
-      try {
-        console.log("Fetching worker profile for user:", currentUserId);
-        handleFetchUserWorkerProfile(currentUserId);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
+      handleFetchUserWorkerProfile(currentUserId);
     }
   }, [currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
 
-  // Handle setup profile redirect
   useEffect(() => {
-    try {
-      console.log("Setup profile redirect check:", {
-        setupProfile,
-        userProfile,
-        hasProfile: hasUserProfile(),
-        currentUserId,
-      });
-
-      if (setupProfile === "1") {
-        if (!hasUserProfile()) {
-          console.log("No user profile found, showing profile setup modal");
-          toast.info("Let's set up your worker profile");
-          setShowProfileModal(true);
-          setFilter("Profile Setup");
-        } else {
-          console.log("User profile exists, showing dashboard");
-          setFilter("Dashboard");
-        }
+    if (setupProfile === "1") {
+      if (!hasUserProfile()) {
+        setShowProfileModal(true);
+        setFilter("Profile Setup");
+      } else {
+        setFilter("Dashboard");
       }
-    } catch (error) {
-      console.error("Error in setup profile redirect handler:", error);
     }
-  }, [setupProfile, hasUserProfile, userProfile, currentUserId]);
+  }, [setupProfile, hasUserProfile]);
 
-  // Handle success messages
   useEffect(() => {
     if (successMessage) {
-      const message =
-        typeof successMessage === "string"
-          ? successMessage
-          : "Operation completed successfully";
-      toast.success(message);
+      toast.success(typeof successMessage === 'string' ? successMessage : 'Success');
       handleClearState();
       setShowProfileModal(false);
       setShowEditModal(false);
-
-      // Refresh the user profile after successful creation/update
       if (currentUserId && isAuthenticated) {
-        setTimeout(() => {
-          handleFetchUserWorkerProfile(currentUserId);
-        }, 500); // Small delay to ensure API state is updated
+        setTimeout(() => handleFetchUserWorkerProfile(currentUserId), 500);
       }
     }
-  }, [
-    successMessage,
-    handleClearState,
-    currentUserId,
-    isAuthenticated,
-    handleFetchUserWorkerProfile,
-  ]);
+  }, [successMessage, handleClearState, currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
 
-  // Handle profile errors
   useEffect(() => {
     if (profileError) {
-      console.error("Profile error:", profileError);
-      // Don't show error for "No worker profile found" as it's expected for new users
-      if (
-        typeof profileError === "string" &&
-        !profileError.includes("No worker profile found")
-      ) {
+      if (typeof profileError === 'string' && !profileError.includes('No worker profile found')) {
         toast.error(profileError);
-      } else if (typeof profileError !== "string") {
-        toast.error("An error occurred with your profile");
       }
       handleClearState();
     }
   }, [profileError, handleClearState]);
 
-  // Fetch jobs when Available Jobs tab is accessed
+  // Fetch jobs when needed (Dashboard preview or Available Jobs tab)
   useEffect(() => {
-    if (
-      filter === "Available Jobs" &&
-      availableJobs.length === 0 &&
-      !jobsLoading
-    ) {
+    if ((filter === "Available Jobs" || filter === "Dashboard") && availableJobs.length === 0 && !jobsLoading) {
       fetchAvailableJobs();
     }
   }, [filter, availableJobs.length, jobsLoading]);
 
-  // Profile management functions
   const validateProfileForm = (data: CreateWorkerProfileData) => {
     const errors: Record<string, string> = {};
-
     if (!data.location.trim()) errors.location = "Location is required";
     if (!data.bio.trim()) errors.bio = "Bio is required";
-    if (!data.hourly_rate || parseFloat(data.hourly_rate) <= 0)
-      errors.hourly_rate = "Valid hourly rate is required";
-    if (data.years_experience < 0)
-      errors.years_experience = "Experience cannot be negative";
-
-    // Check if at least one availability day is set
-    const hasAvailability = Object.keys(data.availability_schedule).some(
-      (day) =>
-        data.availability_schedule[day] &&
-        data.availability_schedule[day].length >= 2,
+    if (!data.hourly_rate || parseFloat(data.hourly_rate) <= 0) errors.hourly_rate = "Valid rate required";
+    if (data.years_experience < 0) errors.years_experience = "Invalid experience";
+    const hasAvailability = Object.keys(data.availability_schedule).some(day =>
+      data.availability_schedule[day] && data.availability_schedule[day].length >= 2
     );
-    if (!hasAvailability) {
-      errors.availability_schedule = "Please set at least one availability day";
-    }
-
+    if (!hasAvailability) errors.availability_schedule = "Set at least one availability day";
     setProfileErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleCreateProfile = async (data: CreateWorkerProfileData) => {
     if (!validateProfileForm(data)) {
-      toast.error("Please fix the errors in the form");
+      toast.error("Please fix form errors");
       return;
     }
-
-    console.log("Profile form data before submission:", data);
-
     try {
-      const result = await handleCreateWorkerProfile(data);
-
-      if (result.type.endsWith("/rejected")) {
-        const errorPayload = result.payload;
-
-        if (
-          errorPayload &&
-          typeof errorPayload === "object" &&
-          "fieldErrors" in errorPayload
-        ) {
-          const backendErrors: Record<string, string> = {};
-          const payloadWithErrors = errorPayload as {
-            fieldErrors: Record<string, string[]>;
-          };
-
-          Object.entries(payloadWithErrors.fieldErrors).forEach(
-            ([field, messages]) => {
-              if (Array.isArray(messages) && messages.length > 0) {
-                backendErrors[field] = messages[0];
-              }
-            },
-          );
-
-          setProfileErrors(backendErrors);
-          toast.error(
-            `Please fix ${Object.keys(backendErrors).length} validation error${Object.keys(backendErrors).length > 1 ? "s" : ""}`,
-          );
-        } else {
-          toast.error(
-            typeof errorPayload === "string"
-              ? errorPayload
-              : "Failed to create profile",
-          );
-        }
-      } else if (result.type.endsWith("/fulfilled")) {
-        console.log("Profile created successfully:", result.payload);
-      }
+      await handleCreateWorkerProfile(data);
     } catch (error: any) {
-      console.error("Profile creation error:", error);
       toast.error(error?.message || "Failed to create profile");
     }
   };
 
   const handleUpdateProfile = async (data: CreateWorkerProfileData) => {
     if (!validateProfileForm(data) || !userProfile?.id) return;
-
     try {
       await handleUpdateWorkerProfile(userProfile.id, data);
     } catch (error) {
@@ -305,37 +190,24 @@ const WorkerDashboardPage = () => {
     }
   };
 
-  // Job fetching function
+  // Use the ORIGINAL fetching logic that works
   const fetchAvailableJobs = async () => {
     try {
       setJobsLoading(true);
-      setJobsError(null);
-
-      // Use the actual jobs API to fetch available jobs
-      const result = await handleFetchJobs({
-        status: "active" as any,
-        page: 1,
-        limit: 50,
-      });
-
-      console.log("Raw jobs result:", result);
-
-      if (result && typeof result !== "string") {
+      const result = await handleFetchJobs({ status: 'active' as any, page: 1, limit: 50 });
+      
+      if (result && typeof result !== 'string') {
         let jobsArray = [];
-
         // Handle different response formats
-        if ("data" in result && result.data && Array.isArray(result.data)) {
+        if ('data' in result && result.data && Array.isArray(result.data)) {
           jobsArray = result.data;
         } else if (Array.isArray(result)) {
           jobsArray = result;
-        } else if ("jobs" in result && Array.isArray(result.jobs)) {
+        } else if ('jobs' in result && Array.isArray(result.jobs)) {
           jobsArray = result.jobs;
         }
 
-        console.log("Jobs array to transform:", jobsArray);
-
         if (jobsArray.length > 0) {
-          // Transform Job[] to JobDetails[] format
           const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
             id: job.id,
             title: job.title,
@@ -354,25 +226,17 @@ const WorkerDashboardPage = () => {
             status: job.status,
             visibility: job.visibility,
             employer: job.employer,
-            category: job.category,
+            category: job.category
           }));
-
-          console.log("Transformed jobs:", transformedJobs);
           setAvailableJobs(transformedJobs);
         } else {
-          console.log("No jobs found in result");
           setAvailableJobs([]);
         }
       } else {
-        console.log("No result returned from API");
         setAvailableJobs([]);
       }
     } catch (err: any) {
-      console.error("Error fetching jobs:", err);
-      const errorMessage =
-        err?.message || err?.toString() || "Failed to fetch available jobs";
-      setJobsError(errorMessage);
-      toast.error(`Failed to load available jobs: ${errorMessage}`);
+      setJobsError(err?.message || 'Failed to fetch jobs');
     } finally {
       setJobsLoading(false);
     }
@@ -380,30 +244,20 @@ const WorkerDashboardPage = () => {
 
   const getVerificationStatusColor = (status: VerificationStatus) => {
     switch (status) {
-      case VerificationStatus.VERIFIED:
-        return "bg-green-100 text-green-800";
-      case VerificationStatus.PENDING:
-        return "bg-yellow-100 text-yellow-800";
-      case VerificationStatus.REJECTED:
-        return "bg-red-100 text-red-800";
-      case VerificationStatus.SUSPENDED:
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case VerificationStatus.VERIFIED: return "bg-green-100 text-green-800";
+      case VerificationStatus.PENDING: return "bg-yellow-100 text-yellow-800";
+      case VerificationStatus.REJECTED: return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Show loading state during SSR or initial client load
   if (!isClient || (profileLoading && !userProfile)) {
     return (
       <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-32 bg-gray-200 rounded-xl w-full"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
+            {[1, 2, 3].map((i) => <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>)}
           </div>
         </div>
       </div>
@@ -412,361 +266,342 @@ const WorkerDashboardPage = () => {
 
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
-      {/* Header with Profile Info */}
-      <div className="container mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-red-800">
-              {userProfile ? "Worker Dashboard" : "Welcome to KaziBuddy"}
-            </h1>
-            {userProfile && (
-              <div className="flex items-center gap-4 mt-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getVerificationStatusColor(userProfile.verification_status)}`}
-                >
-                  {userProfile.verification_status.charAt(0).toUpperCase() +
-                    userProfile.verification_status.slice(1)}
-                </span>
-                <span className="text-gray-600 flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {userProfile.location}
-                </span>
-                <span className="text-gray-600 flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  {userProfile.hourly_rate}/hr
-                </span>
-                <span className="text-gray-600 flex items-center gap-1">
-                  <Badge className="w-4 h-4" />
-                  {userProfile.years_experience} years
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
-            >
-              <ArrowRight className="w-4 h-4" />
-              Go to Homepage
+      {/* Welcome Banner (RED THEME) */}
+      <div className="mb-8 bg-gradient-to-r from-red-900 to-red-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden container">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome back, {userProfile?.user?.full_name || user?.full_name || "Worker"}! 👋
+          </h1>
+          <p className="text-red-100 max-w-2xl">
+            You have <span className="font-semibold text-white">{availableJobs.length} active jobs</span> waiting for you today.
+            Your profile is <span className="font-semibold text-white">{userProfile?.profile_completion_percentage || 0}% complete</span>.
+          </p>
+          <div className="mt-6 flex gap-3">
+            <button onClick={() => setFilter("Available Jobs")} className="bg-white text-red-900 px-5 py-2 rounded-lg font-semibold hover:bg-red-50 transition shadow-sm">
+              Browse Jobs
             </button>
-            {!hasUserProfile() ? (
-              <button
-                onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-2 bg-red-800 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-              >
-                <Plus className="w-4 h-4" />
-                Create Profile
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Profile
+            {userProfile && (
+              <button onClick={() => setShowEditModal(true)} className="bg-red-800 text-white border border-red-400 px-5 py-2 rounded-lg font-medium hover:bg-red-900 transition">
+                Complete Profile
               </button>
             )}
           </div>
         </div>
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-white/10 transform skew-x-12 translate-x-12"></div>
+      </div>
 
-        {/* Profile Warning */}
-        {!hasUserProfile() && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 container">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600" />
-              <div>
-                <h3 className="font-semibold text-yellow-800">
-                  Profile Required
-                </h3>
-                <p className="text-yellow-700 text-sm">
-                  Please create your worker profile to start finding jobs and
-                  connecting with employers.
-                </p>
-                <p className="text-yellow-600 text-xs mt-1">
-                  Already have a profile?{" "}
-                  <button
-                    onClick={() =>
-                      currentUserId &&
-                      handleFetchUserWorkerProfile(currentUserId)
-                    }
-                    className="underline hover:text-yellow-800"
-                  >
-                    Refresh to check
-                  </button>
-                </p>
-              </div>
-              <button
-                onClick={() => setShowProfileModal(true)}
-                className="ml-auto bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition"
-              >
-                Create Now
-              </button>
+      {/* Profile Warning */}
+      {!hasUserProfile() && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8 flex items-start gap-4 shadow-sm container">
+          <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+          <div>
+            <h3 className="font-bold text-yellow-900 text-lg">Finish Setting Up Your Account</h3>
+            <p className="text-yellow-800 text-sm mt-1 mb-3">
+              You need to create a worker profile before you can apply for jobs. It only takes 2 minutes!
+            </p>
+            <button onClick={() => setShowProfileModal(true)} className="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-700 transition">
+              Create Profile Now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Stats Row */}
+      {hasUserProfile() && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 container">
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <Briefcase className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Total Jobs Applied</p>
+              <h4 className="text-2xl font-bold text-gray-800">--</h4>
             </div>
           </div>
-        )}
 
-        {/* Filter Tabs */}
-        <div className="flex gap-4 mb-6 flex-wrap container">
-          {STATUS_OPTIONS.map((statusOption) => (
-            <button
-              key={statusOption}
-              onClick={() => {
-                if (setupProfile === "1" && statusOption !== "Profile Setup") {
-                  router.replace("/worker");
-                }
-                setFilter(statusOption);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
-                filter === statusOption
-                  ? "bg-red-800 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-              }`}
-            >
-              {statusOption === "Profile Setup" && (
-                <Settings className="w-4 h-4" />
-              )}
-              {statusOption === "Settings" && <Shield className="w-4 h-4" />}
-              {statusOption}
-            </button>
-          ))}
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Applications Accepted</p>
+              <h4 className="text-2xl font-bold text-gray-800">--</h4>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+              <Eye className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm font-medium">Profile Views</p>
+              <h4 className="text-2xl font-bold text-gray-800">--</h4>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+              <Star className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm font-medium">My Rating</p>
+              <h4 className="text-2xl font-bold text-gray-800">--</h4>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* Dashboard Content */}
-        {filter === "Dashboard" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 container">
-            {userProfile ? (
-              <>
-                {/* Profile Summary Card */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <User className="w-8 h-8 text-red-600" />
-                    <div>
-                      <h3 className="text-lg font-semibold">My Profile</h3>
-                      <p className="text-sm text-gray-600">
-                        {userProfile.profile_completion_percentage}% Complete
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                    <div
-                      className="bg-red-600 h-2 rounded-full"
-                      style={{
-                        width: `${userProfile.profile_completion_percentage}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-700 line-clamp-3">
-                    {userProfile.bio}
-                  </p>
-                </div>
+      {/* Tabs Navigation */}
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 container">
+        {STATUS_OPTIONS.map((statusOption) => (
+          <button
+            key={statusOption}
+            onClick={() => setFilter(statusOption)}
+            className={`whitespace-nowrap px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              filter === statusOption
+                ? "bg-red-800 text-white shadow-md"
+                : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200"
+            }`}
+          >
+            {statusOption}
+          </button>
+        ))}
+      </div>
 
-                {/* Availability Card */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Clock className="w-8 h-8 text-blue-600" />
-                    <div>
-                      <h3 className="text-lg font-semibold">Availability</h3>
-                      <p className="text-sm text-gray-600">
-                        {userProfile.is_available
-                          ? "Available"
-                          : "Not Available"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    {formatAvailabilitySchedule(
-                      userProfile.availability_schedule,
-                    )}
-                  </div>
-                </div>
+      {/* Dashboard Main Content Grid */}
+      {filter === "Dashboard" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 container">
+          {/* Left Column - Main Content (2/3 width) */}
+          <div className="lg:col-span-2 space-y-8">
 
-                {/* Stats Card */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Calendar className="w-8 h-8 text-green-600" />
-                    <div>
-                      <h3 className="text-lg font-semibold">Member Since</h3>
-                      <p className="text-sm text-gray-600">
-                        {new Date(userProfile.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Profile Views:</span>
-                      <span className="font-medium">--</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Applications:</span>
-                      <span className="font-medium">--</span>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Create Your Worker Profile
+            {/* Profile Snapshot */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <User className="w-5 h-5 text-gray-500" />
+                  My Profile
                 </h3>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  Get started by creating your profile to showcase your skills
-                  and connect with employers.
-                </p>
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="bg-red-800 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition font-medium"
-                >
-                  Create Profile
+                {userProfile && (
+                  <button onClick={() => setShowEditModal(true)} className="text-red-600 text-sm font-medium hover:underline">
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+
+              {userProfile ? (
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-4 h-4" />
+                      <span>{userProfile?.location || "Location not set"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Badge className="w-4 h-4" />
+                      <span>{userProfile?.years_experience || 0} Years Experience</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <DollarSign className="w-4 h-4" />
+                      <span>{userProfile?.hourly_rate ? `${userProfile.hourly_rate}/hr` : "Rate not set"}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm mt-4 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      {userProfile?.bio || "No bio added yet."}
+                    </p>
+                  </div>
+
+                  <div className="md:w-1/3 flex flex-col gap-4">
+                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-center">
+                      <div className="text-sm text-blue-600 font-semibold mb-1">Completion</div>
+                      <div className="text-3xl font-bold text-blue-900">{userProfile?.profile_completion_percentage || 0}%</div>
+                      <div className="w-full bg-blue-200 rounded-full h-1.5 mt-2">
+                        <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${userProfile?.profile_completion_percentage || 0}%` }}></div>
+                      </div>
+                    </div>
+
+                    <div className={`p-4 rounded-xl border text-center ${
+                      userProfile?.is_available
+                        ? "bg-green-50 border-green-100 text-green-800"
+                        : "bg-red-50 border-red-100 text-red-800"
+                    }`}>
+                      <div className="text-sm font-semibold mb-1">Current Status</div>
+                      <div className="font-bold flex items-center justify-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${userProfile?.is_available ? "bg-green-500" : "bg-red-500"}`}></div>
+                        {userProfile?.is_available ? "Available for Work" : "Busy / Offline"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">You haven't created a profile yet.</p>
+                  <button onClick={() => setShowProfileModal(true)} className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">Create Profile</button>
+                </div>
+              )}
+            </div>
+
+            {/* Recommended Jobs Preview */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" /> Recommended For You
+                </h3>
+                <button onClick={() => setFilter("Available Jobs")} className="text-red-600 text-sm font-medium hover:underline flex items-center gap-1">
+                  View All <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Profile Setup View */}
-        {filter === "Profile Setup" && (
-          <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
-            <div className="text-center py-8">
-              <Shield className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Set Up Your Worker Profile
-              </h3>
-              <p className="text-gray-500 mb-4">
-                Create your profile to start finding work opportunities
-              </p>
-              <button
-                onClick={() => setShowProfileModal(true)}
-                className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
-              >
-                Get Started
-              </button>
+              {availableJobs.length > 0 ? (
+                <div className="grid gap-4">
+                  {availableJobs.slice(0, 3).map(job => (
+                    <div key={job.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:bg-red-50 transition cursor-pointer group">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 group-hover:text-red-700">{job.title}</h4>
+                          <p className="text-sm text-gray-500 mt-1 line-clamp-1">{job.description}</p>
+                          <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500">
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {job.job_type}</span>
+                            <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> {job.budget_min}-{job.budget_max}</span>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => { setFilter("Available Jobs"); }}
+                          className="bg-white text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-semibold hover:bg-red-600 hover:text-white transition"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No jobs found matching your profile yet.
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Available Jobs View */}
-        {filter === "Available Jobs" && (
-          <div className="container">
-            {hasUserProfile() ? (
-              <AvailableJobs
-                jobs={availableJobs}
-                loading={jobsLoading}
-                error={jobsError}
-                onRefresh={fetchAvailableJobs}
+          
+          <div className="space-y-8">
+            {/* Availability Card */}
+            {userProfile && (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="w-8 h-8 text-red-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Availability</h3>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${userProfile.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {userProfile.is_available ? "Available Now" : "Busy"}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  {formatAvailabilitySchedule(userProfile.availability_schedule)}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Activity Widget */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-gray-500" /> Recent Activity
+              </h3>
+              <div className="space-y-4 relative before:absolute before:left-2 before:top-2 before:h-full before:w-0.5 before:bg-gray-100">
+                <div className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-red-500 border-4 border-white"></div>
+                  <p className="text-sm text-gray-800 font-medium">Logged in to Dashboard</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Just now</p>
+                </div>
+                <div className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-gray-300 border-4 border-white"></div>
+                  <p className="text-sm text-gray-800 font-medium">Profile updated</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Today</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tips Widget */}
+            <div className="bg-red-50 rounded-xl p-6 border border-red-100">
+              <h3 className="font-bold text-red-900 mb-2">Pro Tip 💡</h3>
+              <p className="text-red-800 text-sm leading-relaxed mb-4">
+                Complete your profile to 100% to appear higher in employer searches. Adding a verified phone number doubles your chances!
+              </p>
+              {userProfile && (
+                <button onClick={() => setShowEditModal(true)} className="text-xs font-bold text-red-700 hover:text-red-900 underline">
+                  Improve Profile
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Other Views (Available Jobs, My Applications, etc.) */}
+      {filter === "Available Jobs" && (
+        <div className="container">
+          {hasUserProfile() ? (
+            <AvailableJobs jobs={availableJobs} loading={jobsLoading} error={jobsError} onRefresh={fetchAvailableJobs} />
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <h3 className="font-bold text-yellow-800">Profile Required</h3>
+              <p className="text-sm text-yellow-700 mt-1 mb-4">Please create a profile to view jobs.</p>
+              <button onClick={() => setShowProfileModal(true)} className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Create Profile</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {filter === "My Applications" && (
+        <div className="container">
+          {hasUserProfile() ? (
+            <MyApplicationsSection showAll={true} />
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <h3 className="font-bold text-yellow-800">Profile Required</h3>
+              <button onClick={() => setShowProfileModal(true)} className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Create Profile</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {filter === "Settings" && (
+        <div className="bg-white border border-gray-200 shadow-sm p-12 rounded-lg container text-center">
+          <Settings className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700">Account Settings</h3>
+          <p className="text-gray-500 mt-2">Manage your account preferences, notifications, and security settings here.</p>
+          <span className="inline-block mt-4 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Coming Soon</span>
+        </div>
+      )}
+
+      {/* Modal Logic */}
+      {(showProfileModal || showEditModal) && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {showProfileModal ? "Create Worker Profile" : "Edit Worker Profile"}
+              </h3>
+              <button onClick={() => { setShowProfileModal(false); setShowEditModal(false); }} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div className="p-6">
+              <WorkerProfileForm
+                initialData={showEditModal && userProfile ? {
+                  location: userProfile.location,
+                  location_text: userProfile.location_text,
+                  is_available: userProfile.is_available,
+                  years_experience: userProfile.years_experience,
+                  hourly_rate: userProfile.hourly_rate,
+                  availability_schedule: userProfile.availability_schedule,
+                  bio: userProfile.bio,
+                } : undefined}
+                onSubmit={showProfileModal ? handleCreateProfile : handleUpdateProfile}
+                onCancel={() => { setShowProfileModal(false); setShowEditModal(false); setProfileErrors({}); }}
+                loading={profileLoading}
+                errors={profileErrors}
+                isEdit={showEditModal}
               />
-            ) : (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                <div className="text-center py-8">
-                  <AlertCircle className="w-12 h-12 mx-auto text-yellow-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                    Profile Required
-                  </h3>
-                  <p className="text-yellow-700 mb-4">
-                    Please create your worker profile first to view and apply
-                    for available jobs.
-                  </p>
-                  <button
-                    onClick={() => setShowProfileModal(true)}
-                    className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
-                  >
-                    Create Profile
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* My Applications View */}
-        {filter === "My Applications" && (
-          <div className="container">
-            {hasUserProfile() ? (
-              <MyApplicationsSection showAll={true} />
-            ) : (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                <div className="text-center py-8">
-                  <AlertCircle className="w-12 h-12 mx-auto text-yellow-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                    Profile Required
-                  </h3>
-                  <p className="text-yellow-700 mb-4">
-                    Please create your worker profile first to view your job
-                    applications.
-                  </p>
-                  <button
-                    onClick={() => setShowProfileModal(true)}
-                    className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
-                  >
-                    Create Profile
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Settings View */}
-        {filter === "Settings" && (
-          <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-lg container">
-            <div className="text-center py-8">
-              <Settings className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Account Settings
-              </h3>
-              <p className="text-gray-500 mb-4">
-                Account settings and preferences coming soon!
-              </p>
             </div>
           </div>
-        )}
-
-        {/* Profile Creation/Edit Modal */}
-        {(showProfileModal || showEditModal) && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {showProfileModal
-                    ? "Create Worker Profile"
-                    : "Edit Worker Profile"}
-                </h3>
-              </div>
-
-              <div className="p-6">
-                <WorkerProfileForm
-                  initialData={
-                    showEditModal && userProfile
-                      ? {
-                          location: userProfile.location,
-                          location_text: userProfile.location_text,
-                          is_available: userProfile.is_available,
-                          years_experience: userProfile.years_experience,
-                          hourly_rate: userProfile.hourly_rate,
-                          availability_schedule:
-                            userProfile.availability_schedule,
-                          bio: userProfile.bio,
-                        }
-                      : undefined
-                  }
-                  onSubmit={
-                    showProfileModal ? handleCreateProfile : handleUpdateProfile
-                  }
-                  onCancel={() => {
-                    setShowProfileModal(false);
-                    setShowEditModal(false);
-                    setProfileErrors({});
-                  }}
-                  loading={profileLoading}
-                  errors={profileErrors}
-                  isEdit={showEditModal}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
