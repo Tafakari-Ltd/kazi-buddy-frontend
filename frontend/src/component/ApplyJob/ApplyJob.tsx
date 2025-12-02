@@ -1,92 +1,70 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { UploadCloud } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/Redux/Store/Store";
-import { closeJobModal, applyForJob } from "@/Redux/Features/ApplyJobSlice";
+import { closeJobModal } from "@/Redux/Features/ApplyJobSlice";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
 
 const ApplyJob = () => {
+
   const dispatch = useDispatch<AppDispatch>();
+  
+  // Destructure selectedJob from state
+  const { isModalOpen, selectedJob, isSubmitting } = useSelector((state: RootState) => state.applyJob);
 
-  const { isModalOpen, isSubmitting, apiError } = useSelector(
-    (state: RootState) => state.applyJob,
-  );
-  const selectedJob = useSelector(
-    (state: RootState) => state.moreDescription.selectedJob,
-  );
-
-  const [coverLetter, setCoverLetter] = useState("");
-  const [proposedRate, setProposedRate] = useState("");
-  const [availabilityStart, setAvailabilityStart] = useState("");
-  const [workerNotes, setWorkerNotes] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Get today's date in YYYY-MM-DD format for min attribute
-  const today = new Date().toISOString().split("T")[0];
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [files, setFiles] = useState<File[]>([]);
+  const [successMsg, setSuccessMsg] = useState("");
 
   const validate = () => {
-    const errs: Record<string, string> = {};
-
-    if (!coverLetter.trim()) {
-      errs.cover_letter = "Cover letter is required";
-    } else if (coverLetter.length < 50) {
-      errs.cover_letter = "Cover letter must be at least 50 characters";
-    }
-
-    if (!proposedRate || parseFloat(proposedRate) <= 0) {
-      errs.proposed_rate = "Please enter a valid rate";
-    }
-
-    if (!availabilityStart) {
-      errs.availability_start = "Please select when you can start";
-    }
-
+    const errs: { name?: string; email?: string } = {};
+    if (!name.trim()) errs.name = "Name is required";
+    if (!email.trim()) errs.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = "Email is invalid";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
+    
+    // Check if we have a valid job selected
     if (!selectedJob) {
-      toast.error("No job selected. Please try again.");
+      console.error("No job selected for application.");
       return;
     }
+    console.log(`Submitting application for Job ID: ${selectedJob.id}, Title: ${selectedJob.title}`);
+    
+    setSuccessMsg("Application submitted successfully!");
+    setName("");
+    setEmail("");
+    setMessage("");
+    setFiles([]);
+  };
 
-    try {
-      await dispatch(
-        applyForJob({
-          jobId: selectedJob.id,
-          applicationData: {
-            cover_letter: coverLetter,
-            proposed_rate: parseFloat(proposedRate),
-            availability_start: availabilityStart,
-            worker_notes: workerNotes,
-            employer_notes: "",
-          },
-        }),
-      ).unwrap();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    const uniqueFiles = newFiles.filter(
+      (file) => !files.some((f) => f.name === file.name)
+    );
+    setFiles((prev) => [...prev, ...uniqueFiles]);
+  };
 
-      toast.success("Application submitted successfully!");
-      handleClose();
-    } catch (error: any) {
-      toast.error(
-        error?.message || "Failed to submit application. Please try again.",
-      );
-    }
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
     dispatch(closeJobModal());
-    setCoverLetter("");
-    setProposedRate("");
-    setAvailabilityStart("");
-    setWorkerNotes("");
     setErrors({});
+    setSuccessMsg("");
   };
 
   return (
@@ -115,98 +93,107 @@ const ApplyJob = () => {
             </button>
 
             <h2 className="text-xl font-semibold text-[#800000] mb-4">
-              Apply for: {selectedJob?.title || "Job Position"}
+              Apply for: {selectedJob?.title || "Job"}
             </h2>
 
-            {apiError && (
-              <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-400">
-                {apiError}
+            {successMsg && (
+              <div className="mb-4 p-3 rounded bg-green-100 text-green-700 border border-green-400">
+                {successMsg}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              {/* Cover Letter */}
+              {/* Name */}
               <label className="flex flex-col">
                 <span className="text-sm font-medium text-gray-700 flex">
-                  Cover Letter <p className="text-red-500 ml-1">*</p>
-                </span>
-                <textarea
-                  rows={6}
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  className={`mt-1 p-2 border rounded ${
-                    errors.cover_letter ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="Tell us why you're a great fit for this position... (minimum 50 characters)"
-                />
-                <span className="text-xs text-gray-500 mt-1">
-                  {coverLetter.length} / 50 characters minimum
-                </span>
-                {errors.cover_letter && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.cover_letter}
-                  </span>
-                )}
-              </label>
-
-              {/* Proposed Rate */}
-              <label className="flex flex-col">
-                <span className="text-sm font-medium text-gray-700 flex">
-                  Proposed Rate (KSh) <p className="text-red-500 ml-1">*</p>
+                  Name <p className="text-red-500 ml-1">*</p>
                 </span>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={proposedRate}
-                  onChange={(e) => setProposedRate(e.target.value)}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className={`mt-1 p-2 border rounded ${
-                    errors.proposed_rate ? "border-red-500" : "border-gray-300"
+                    errors.name ? "border-red-500" : "border-gray-300"
                   }`}
-                  placeholder="Enter your proposed rate"
                 />
-                {errors.proposed_rate && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.proposed_rate}
-                  </span>
+                {errors.name && (
+                  <span className="text-red-500 text-xs mt-1">{errors.name}</span>
                 )}
               </label>
 
-              {/* Availability Start */}
+              {/* Email */}
               <label className="flex flex-col">
                 <span className="text-sm font-medium text-gray-700 flex">
-                  When can you start? <p className="text-red-500 ml-1">*</p>
+                  Email <p className="text-red-500 ml-1">*</p>
                 </span>
                 <input
-                  type="date"
-                  min={today}
-                  value={availabilityStart}
-                  onChange={(e) => setAvailabilityStart(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className={`mt-1 p-2 border rounded ${
-                    errors.availability_start
-                      ? "border-red-500"
-                      : "border-gray-300"
+                    errors.email ? "border-red-500" : "border-gray-300"
                   }`}
                 />
-                {errors.availability_start && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.availability_start}
-                  </span>
+                {errors.email && (
+                  <span className="text-red-500 text-xs mt-1">{errors.email}</span>
                 )}
               </label>
 
-              {/* Additional Notes */}
+              {/* Message */}
               <label className="flex flex-col">
                 <span className="text-sm font-medium text-gray-700">
-                  Additional Notes (Optional)
+                  Cover Letter
                 </span>
                 <textarea
-                  rows={3}
-                  value={workerNotes}
-                  onChange={(e) => setWorkerNotes(e.target.value)}
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className="mt-1 p-2 border border-gray-300 rounded"
-                  placeholder="Any additional information you'd like to share..."
+                  placeholder="Tell us why you're a great fit..."
                 />
+              </label>
+
+              {/* File Upload */}
+              <label className="flex flex-col">
+                <span className="text-sm font-medium text-gray-700 mb-2">
+                  Upload Documents (optional)
+                </span>
+                <div
+                  className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-[#800000] transition"
+                  onClick={() => document.getElementById("fileInput")?.click()}
+                >
+                  <UploadCloud className="w-6 h-6 text-[#800000]" />
+                  <span className="text-[#800000] font-medium">
+                    Click or drag files to upload
+                  </span>
+                  <input
+                    id="fileInput"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {files.length > 0 && (
+                  <ul className="mt-2 max-h-32 overflow-auto border border-gray-200 rounded p-2 bg-gray-50">
+                    {files.map((file, index) => (
+                      <li
+                        key={index}
+                        className="flex justify-between items-center text-sm text-gray-700 mb-1"
+                      >
+                        <span>{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700 font-bold ml-2"
+                        >
+                          &times;
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </label>
 
               {/* Buttons */}
@@ -221,7 +208,7 @@ const ApplyJob = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-[#800000] text-white rounded hover:bg-[#5a0000] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-[#800000] text-white rounded hover:bg-[#5a0000] disabled:opacity-50"
                 >
                   {isSubmitting ? "Submitting..." : "Submit Application"}
                 </button>

@@ -10,35 +10,35 @@ import {
   X,
 } from "lucide-react";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
-import { openJobModal } from "@/Redux/Features/ApplyJobSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { openJobModal, setSelectedJob } from "@/Redux/Features/ApplyJobSlice";
 import { openJobDescription } from "@/Redux/Features/JobDescriptionSlice";
 import { useJobs } from "@/Redux/Functions/useJobs";
-import { Job } from "@/types/job.types";
 import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice";
 import { clearFilters } from "@/Redux/Features/jobsSlice";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Job } from "@/types/job.types";
 
 const HotJobs = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { jobs, loading, handleFetchJobs, pagination } = useJobs();
-  const { isAuthenticated, userId } = useSelector(
-    (state: RootState) => state.auth,
-  );
-  const { userProfile } = useSelector(
-    (state: RootState) => state.workerProfiles,
-  );
+  const searchParams = useSearchParams();
 
+  // Redux State
+  const { jobs, loading, handleFetchJobs, pagination } = useJobs();
+  const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
+  const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
+  const searchFilters = useSelector((state: RootState) => state.jobs.filters);
+
+  // Local State
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hoveredJob, setHoveredJob] = useState<string | null>(null);
 
   const jobsPerPage = 12;
-  const searchFilters = useSelector((state: RootState) => state.jobs.filters);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -50,13 +50,13 @@ const HotJobs = () => {
     searchFilters.job_type,
   ]);
 
-  // Fetch jobs from backend when component mounts or filters change
+  // Fetch jobswhen component mounts or filters change
   useEffect(() => {
     const filters = {
       ...searchFilters,
       page: currentPage,
       limit: jobsPerPage,
-      status: "approved", // Only fetch approved jobs
+      status: "active",
     };
 
     handleFetchJobs(filters);
@@ -64,7 +64,7 @@ const HotJobs = () => {
 
   const totalJobs = pagination.total;
   const totalPages = pagination.total_pages;
-  const paginatedJobs = jobs;
+  const paginatedJobs = jobs; 
 
   // Check if any filters are active
   const hasActiveFilters =
@@ -105,101 +105,120 @@ const HotJobs = () => {
     [totalPages],
   );
 
+  const dispatchJobDescription = useCallback((job: Job) => {
+    dispatch(
+      openJobDescription({
+        id: String(job.id),
+        title: job.title,
+        jobType: job.job_type,
+        category:
+          typeof job.category === "string"
+            ? job.category
+            : (job.category as any)?.name || "General",
+        location:
+          (job as any).location_address ||
+          job.location_text ||
+          job.location ||
+          "Not specified",
+        rate:
+          job.budget_min && job.budget_max
+            ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}`
+            : "Negotiable",
+        description: job.description,
+        image: (job as any).job_image || "",
+      } as any)
+    );
+  }, [dispatch]);
+
+  // --- Handle Apply Logic ---
   const handleApply = useCallback(
     async (jobTitle: string, jobId: string, jobData: Job) => {
-      // Check if user is authenticated
+      
+      // 1. Check Authentication
       if (!isAuthenticated) {
-        // Redirect to login page with return URL
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "redirectAfterLogin",
-            window.location.pathname,
-          );
-          sessionStorage.setItem("pendingJobApplication", jobId);
-          window.location.href = "/auth/login";
-        }
+        // Redirect to login with return param
+        const returnUrl = `/?applyJobId=${jobId}`;
+        router.push(`/auth/login?returnTo=${encodeURIComponent(returnUrl)}`);
         return;
       }
 
-      // Check if user has a worker profile
-      if (!userProfile && userId) {
-        // Try to fetch user's worker profile
-        try {
-          const result = await dispatch(
-            fetchUserWorkerProfile(userId),
-          ).unwrap();
-
-          if (!result) {
-            // No worker profile exists, redirect to create one
-            toast.info("Please create a worker profile to apply for jobs");
-            router.push("/worker");
-            return;
-          }
-        } catch (error) {
-          // Error fetching profile, redirect to create one
-          toast.info("Please create a worker profile to apply for jobs");
-          router.push("/worker");
-          return;
+      // 2. Check Worker Profile
+      if (userId) {
+        if (!userProfile) {
+            try {
+                const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+                if (!result) {
+                    toast.info("Please create a worker profile to apply for jobs");
+                    router.push("/worker");
+                    return;
+                }
+            } catch (error) {
+                toast.info("Please create a worker profile to apply for jobs");
+                router.push("/worker");
+                return;
+            }
         }
       }
-
-      // User has a worker profile, open the application modal with job data
-      dispatch(
-        openJobDescription({
-          id: String(jobData.id),
-          title: jobData.title,
-          jobType: jobData.job_type,
-          category:
-            typeof jobData.category === "string"
-              ? jobData.category
-              : (jobData.category as any)?.name || "General",
-          location:
-            (jobData as any).location_address ||
-            jobData.location_text ||
-            jobData.location ||
-            "Not specified",
-          rate:
-            jobData.budget_min && jobData.budget_max
-              ? `KSh ${jobData.budget_min} - ${jobData.budget_max}`
-              : "Negotiable",
-          description: jobData.description,
-          image: (jobData as any).job_image || "",
-        } as any),
-      );
-
+      dispatchJobDescription(jobData);
+      dispatch(setSelectedJob({ id: jobId, title: jobTitle }));
       dispatch(openJobModal());
       console.log(`Applied for job: ${jobTitle} (ID: ${jobId})`);
     },
-    [dispatch, isAuthenticated, userProfile, userId, router],
+    [dispatch, isAuthenticated, router, userId, userProfile, dispatchJobDescription]
   );
 
-  const handleJobDescription = useCallback(
+  useEffect(() => {
+    const applyJobIdParam = searchParams.get("applyJobId");
+
+    const handleRedirectApply = async () => {
+        // Ensure jobs are loaded before trying to find the job
+        if (applyJobIdParam && isAuthenticated && jobs.length > 0 && !loading) {
+            const jobId = applyJobIdParam;
+            
+            // Find job details
+            const jobToApply = jobs.find((j) => String(j.id) === jobId);
+
+            if (jobToApply) {
+              
+                if (userId && !userProfile) {
+                     try {
+                        const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+                        if (!result) {
+                            toast.info("Please create a worker profile to continue application");
+                            router.push("/worker");
+                            return;
+                        }
+                     } catch {
+                        toast.info("Please create a worker profile to continue application");
+                        router.push("/worker");
+                        return;
+                     }
+                }
+                toast.success("Welcome back! Continue with your application");
+
+                const cardElement = document.getElementById(`job-card-${jobId}`);
+                if (cardElement) {
+                    cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                dispatchJobDescription(jobToApply);
+                dispatch(setSelectedJob({ id: jobToApply.id, title: jobToApply.title }));
+                dispatch(openJobModal());
+                router.replace("/", { scroll: false });
+            }
+        }
+    };
+
+    handleRedirectApply();
+  }, [searchParams, isAuthenticated, dispatch, router, jobs, loading, userId, userProfile, dispatchJobDescription]);
+
+
+  // Handle View Details Click
+  const handleViewDetails = useCallback(
     (job: Job) => {
-      // Transform the job data to match the expected format
-      dispatch(
-        openJobDescription({
-          id: String(job.id),
-          title: job.title,
-          jobType: job.job_type,
-          category:
-            typeof job.category === "string"
-              ? job.category
-              : (job.category as any)?.name || "General",
-          location:
-            (job as any).location_address ||
-            job.location_text ||
-            job.location ||
-            "Not specified",
-          rate:
-            job.budget_min && job.budget_max
-              ? `KSh ${job.budget_min} - ${job.budget_max}`
-              : "Negotiable",
-          description: job.description,
-          image: (job as any).job_image || "",
-        } as any),
-      );
+      dispatchJobDescription(job);
     },
-    [dispatch],
+    [dispatchJobDescription],
   );
 
   const toggleFavorite = useCallback((jobId: string, e: React.MouseEvent) => {
@@ -389,6 +408,7 @@ const HotJobs = () => {
           {paginatedJobs.map((job) => (
             <div
               key={job.id}
+              id={`job-card-${job.id}`}
               className="relative rounded-sm overflow-hidden shadow-lg group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white"
               onMouseEnter={() => setHoveredJob(job.id)}
               onMouseLeave={() => setHoveredJob(null)}
@@ -396,7 +416,7 @@ const HotJobs = () => {
               <div className="relative h-48 overflow-hidden">
                 <img
                   src={
-                    job.job_image ||
+                    (job as any).job_image ||
                     "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                   }
                   alt={job.title}
@@ -422,7 +442,7 @@ const HotJobs = () => {
                 </button>
                 <div className="absolute top-3 left-3">
                   <span className="bg-[#800000] text-white px-3 py-1 rounded-sm text-xs font-semibold shadow-lg">
-                    {job.job_type}
+                    {formatJobType(job.job_type)}
                   </span>
                 </div>
               </div>
@@ -440,7 +460,7 @@ const HotJobs = () => {
                     <div className="p-1 bg-green-100 rounded">
                       <Locate className="w-3 h-3 text-green-700" />
                     </div>
-                    <span>{job.location_address || "Not specified"}</span>
+                    <span>{job.location_text || job.location || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <div className="p-1 bg-blue-100 rounded">
@@ -448,7 +468,7 @@ const HotJobs = () => {
                     </div>
                     <span className="font-semibold text-[#800000]">
                       {job.budget_min && job.budget_max
-                        ? `KSh ${job.budget_min} - ${job.budget_max}`
+                        ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}`
                         : "Negotiable"}
                     </span>
                   </div>
@@ -456,14 +476,14 @@ const HotJobs = () => {
                     <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                       {typeof job.category === "string"
                         ? job.category
-                        : job.category?.name || "General"}
+                        : (job.category as any)?.name || "General"}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <button
-                    onClick={() => handleJobDescription(job)}
+                    onClick={() => handleViewDetails(job)}
                     className="w-full flex items-center justify-center gap-2 text-[#800000] hover:text-white hover:bg-gradient-to-r hover:from-[#800000] hover:to-[#600000] border-2 border-[#800000] px-4 py-2 rounded-sm text-sm font-bold transition-all duration-200 group/btn"
                   >
                     View Details

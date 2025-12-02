@@ -3,7 +3,7 @@ import { Clock, Heart, Locate, Star, Sparkles, ArrowRight, Award, FilterX } from
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 
 import { openJobDescription } from "@/Redux/Features/JobDescriptionSlice";
-import { openJobModal } from "@/Redux/Features/ApplyJobSlice";
+import { openJobModal, setSelectedJob } from "@/Redux/Features/ApplyJobSlice"; 
 import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice";
 import { setFilters, clearFilters } from "@/Redux/Features/jobsSlice";
 
@@ -12,12 +12,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { Job } from "@/types/job.types";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/axios";
 
 const Featured = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const searchParams = useSearchParams(); // Get params
+
   const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
   const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
   
@@ -44,7 +46,7 @@ const Featured = () => {
     return !!(filters.category || filters.search_query || filters.location || filters.job_type);
   }, [filters]);
 
-  // 1. Identify Top Paying Jobs (active AND approved only)
+  // 1. Identify Top Paying Jobs
   useEffect(() => {
     const identifyTopPayingJobs = async () => {
       try {
@@ -53,7 +55,6 @@ const Featured = () => {
         if (response.data) allJobs = response.data;
         else if (Array.isArray(response)) allJobs = response;
 
-      
         const validJobs = allJobs.filter(job => 
           job.status === 'active' && (job as any).admin_approved === true
         );
@@ -72,6 +73,7 @@ const Featured = () => {
     setCurrentPage(1);
   }, [isFiltering, filters]);
 
+  // Fetch Jobs
   useEffect(() => {
     let isActive = true; 
 
@@ -156,6 +158,108 @@ const Featured = () => {
     };
   }, [currentPage, filters, isFiltering]);
 
+  // Helper to dispatch job description
+  const dispatchJobDescription = useCallback((job: Job) => {
+    dispatch(
+      openJobDescription({
+        id: String(job.id),
+        title: job.title,
+        jobType: job.job_type,
+        category: typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General',
+        location: (job as any).location_address || job.location_text || job.location || 'Not specified',
+        rate: job.budget_min && job.budget_max ? `KSh ${job.budget_min} - ${job.budget_max}` : 'Negotiable',
+        description: job.description,
+        image: (job as any).job_image || '',
+      } as any)
+    );
+  }, [dispatch]);
+
+  // --- Handle Apply Logic ---
+  const handleApply = useCallback(
+    async (jobTitle: string, jobId: string, jobData: Job) => {
+      // 1. Check Authentication
+      if (!isAuthenticated) {
+        // Redirect to login with return param
+        const currentPath = window.location.pathname === '/' ? '/' : window.location.pathname;
+        const returnUrl = `${currentPath}?applyJobId=${jobId}`;
+        
+        router.push(`/auth/login?returnTo=${encodeURIComponent(returnUrl)}`);
+        return;
+      }
+      
+      // 2. Check Worker Profile
+      if (userId) {
+        if (!userProfile) {
+          try {
+            const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+            if (!result) {
+              toast.info("Please create a worker profile to apply for jobs");
+              router.push('/worker');
+              return;
+            }
+          } catch (error) {
+            toast.info("Please create a worker profile to apply for jobs");
+            router.push('/worker');
+            return;
+          }
+        }
+      }
+      
+      // 3. Open Description & Modal
+      dispatchJobDescription(jobData);
+      dispatch(setSelectedJob({ id: jobId, title: jobTitle }));
+      dispatch(openJobModal());
+    },
+    [dispatch, isAuthenticated, userProfile, userId, router, dispatchJobDescription]
+  );
+
+  useEffect(() => {
+    const applyJobIdParam = searchParams.get("applyJobId");
+
+    const handleRedirectApply = async () => {
+      // Wait for jobs to load before trying to find the target job
+      if (applyJobIdParam && isAuthenticated && !loading && jobs.length > 0) {
+        const jobId = applyJobIdParam;
+        
+        // Find job details
+        const jobToApply = jobs.find((j) => String(j.id) === jobId);
+
+        if (jobToApply) {
+           // Re-run profile check logic
+           if (userId && !userProfile) {
+              try {
+                 const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+                 if (!result) {
+                    toast.info("Please create a worker profile to continue application");
+                    router.push("/worker");
+                    return;
+                 }
+              } catch {
+                 toast.info("Please create a worker profile to continue application");
+                 router.push("/worker");
+                 return;
+              }
+           }
+
+           toast.success("Welcome back! Continue with your application");
+           const cardElement = document.getElementById(`featured-job-${jobId}`);
+           if (cardElement) {
+               cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+           }
+           dispatchJobDescription(jobToApply);
+
+           dispatch(setSelectedJob({ id: jobToApply.id, title: jobToApply.title }));
+           dispatch(openJobModal());
+
+           const currentPath = window.location.pathname;
+           router.replace(currentPath, { scroll: false });
+        }
+      }
+    };
+
+    handleRedirectApply();
+  }, [searchParams, isAuthenticated, dispatch, router, jobs, loading, userId, userProfile, dispatchJobDescription]);
+
   const handleClearFilters = () => {
     dispatch(clearFilters());
     toast.success("Filters cleared");
@@ -190,64 +294,11 @@ const Featured = () => {
     }
   }, [totalPages]);
 
-  const handleApply = useCallback(
-    async (jobTitle: string, jobId: string, jobData: Job) => {
-      if (!isAuthenticated) {
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-          sessionStorage.setItem('pendingJobApplication', jobId);
-          window.location.href = '/auth/login';
-        }
-        return;
-      }
-      
-      if (!userProfile && userId) {
-        try {
-          const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
-          if (!result) {
-            toast.info("Please create a worker profile to apply for jobs");
-            router.push('/worker');
-            return;
-          }
-        } catch (error) {
-          toast.info("Please create a worker profile to apply for jobs");
-          router.push('/worker');
-          return;
-        }
-      }
-      
-      dispatch(openJobDescription({
-        id: String(jobData.id),
-        title: jobData.title,
-        jobType: jobData.job_type,
-        category: typeof jobData.category === 'string' ? jobData.category : (jobData.category as any)?.name || 'General',
-        location: (jobData as any).location_address || jobData.location_text || jobData.location || 'Not specified',
-        rate: jobData.budget_min && jobData.budget_max ? `KSh ${jobData.budget_min} - ${jobData.budget_max}` : 'Negotiable',
-        description: jobData.description,
-        image: (jobData as any).job_image || '',
-      } as any));
-      
-      dispatch(openJobModal());
-    },
-    [dispatch, isAuthenticated, userProfile, userId, router]
-  );
-
   const handleJobDescription = useCallback(
     (job: Job) => {
-      dispatch(
-        openJobDescription({
-          id: String(job.id),
-          title: job.title,
-          jobType: job.job_type,
-          category: typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General',
-          location: (job as any).location_address || job.location_text || job.location || 'Not specified',
-          rate: job.budget_min && job.budget_max ? `KSh ${job.budget_min} - ${job.budget_max}` : 'Negotiable',
-          description: job.description,
-          image: (job as any).job_image || '',
-        } as any)
-      );
+      dispatchJobDescription(job);
     },
-    [dispatch]
+    [dispatchJobDescription]
   );
 
   const toggleFavorite = useCallback((jobId: string, e: React.MouseEvent) => {
@@ -368,6 +419,7 @@ const Featured = () => {
         {paginatedJobs.map((job, index) => (
           <div
             key={job.id}
+            id={`featured-job-${job.id}`} 
             className="relative rounded-sm overflow-hidden shadow-lg group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white border-2 border-transparent hover:border-amber-200"
             onMouseEnter={() => setHoveredJob(job.id)}
             onMouseLeave={() => setHoveredJob(null)}
