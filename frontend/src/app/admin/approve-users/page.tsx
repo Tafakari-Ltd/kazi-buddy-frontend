@@ -7,9 +7,10 @@ import { approveUser } from "@/Redux/Features/authSlice";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import ProtectedRoute from "@/component/Authentication/ProtectedRoute";
+import { CheckCircle, AlertCircle } from "lucide-react";
 
 interface PendingUser {
-  // Backend may return different id fields depending on serializer
+ 
   id?: string;
   user_id?: string;
   uuid?: string;
@@ -21,6 +22,8 @@ interface PendingUser {
   user_type: string;
   profile_photo_url?: string;
   created_at: string;
+  email_verified?: boolean;
+  is_verified?: boolean;
 }
 
 const getPendingUserId = (user: PendingUser): string | undefined => {
@@ -45,7 +48,7 @@ const ApproveUsersPage: React.FC = () => {
       setLoadingUsers(true);
       setError(null);
 
-      // NOTE: our axios instance already returns `response.data`
+     
       const data = await api.get("/adminpanel/users/pending/");
 
       // Support both plain array and paginated `{ results: [] }` responses
@@ -172,6 +175,8 @@ const ApproveUsersPage: React.FC = () => {
                     {pendingUsers.map((user, idx) => {
                       const rowId =
                         getPendingUserId(user) ?? `${user.email}-${idx}`;
+                      const isEmailVerified = user.email_verified || user.is_verified;
+                      
                       return (
                         <tr
                           key={rowId}
@@ -192,7 +197,18 @@ const ApproveUsersPage: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
-                            {user.email}
+                            <div className="flex flex-col">
+                              <span>{user.email}</span>
+                              {isEmailVerified ? (
+                                <span className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                                  <CheckCircle className="w-3 h-3" /> Verified
+                                </span>
+                              ) : (
+                                <span className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                                  <AlertCircle className="w-3 h-3" /> Not Verified
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {user.phone_number}
@@ -216,9 +232,15 @@ const ApproveUsersPage: React.FC = () => {
                               onClick={() => handleApproveUser(user)}
                               disabled={
                                 loading ||
-                                approvingId === getPendingUserId(user)
+                                approvingId === getPendingUserId(user) ||
+                                !isEmailVerified
                               }
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm font-medium rounded-md transition"
+                              title={!isEmailVerified ? "User must verify email before approval" : "Approve User"}
+                              className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-md transition ${
+                                !isEmailVerified
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
+                              }`}
                             >
                               {approvingId === getPendingUserId(user) ? (
                                 <>

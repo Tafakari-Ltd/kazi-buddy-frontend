@@ -183,7 +183,7 @@ const authSlice = createSlice({
         sessionStorage.setItem("user", JSON.stringify(action.payload.user));
         sessionStorage.setItem("isAuthenticated", "true");
       })
-      .addCase(login.rejected, (state, action) => {
+      .addCase(login.rejected, (state, action) => { 
         state.loading = false;
         state.error = action.payload ?? "Login failed";
       });
