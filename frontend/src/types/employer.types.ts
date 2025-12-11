@@ -1,4 +1,4 @@
-// Employer Profile Types and Interfaces
+// src/types/employer.types.ts
 
 // Employer Profile Interface
 export interface EmployerProfile {
@@ -72,11 +72,13 @@ export interface EmployerProfilesResponse {
 
 // Enums
 export enum BusinessType {
-  SOLE_PROPRIETORSHIP = "sole_proprietorship",
+ 
+  SOLE_PROPRIETORSHIP = "individual", 
   PARTNERSHIP = "partnership",
   CORPORATION = "corporation",
   LLC = "llc",
-  NON_PROFIT = "non_profit",
+ 
+  NON_PROFIT = "non-profit",
   OTHER = "other",
 }
 
@@ -91,7 +93,7 @@ export enum VerificationStatus {
 export interface EmployerProfileState {
   profiles: EmployerProfile[];
   currentProfile: EmployerProfile | null;
-  userProfile: EmployerProfile | null; // Current user's profile
+  userProfile: EmployerProfile | null; 
   filters: EmployerProfileFilters;
   pagination: {
     total: number;
@@ -118,7 +120,7 @@ export interface EmployerProfileFormErrors {
 
 // Constants for dropdown options
 export const BUSINESS_TYPE_OPTIONS = [
-  { value: BusinessType.SOLE_PROPRIETORSHIP, label: "Sole Proprietorship" },
+  { value: BusinessType.SOLE_PROPRIETORSHIP, label: "Individual / Sole Proprietorship" },
   { value: BusinessType.PARTNERSHIP, label: "Partnership" },
   { value: BusinessType.CORPORATION, label: "Corporation" },
   { value: BusinessType.LLC, label: "Limited Liability Company (LLC)" },

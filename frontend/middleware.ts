@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("accessToken")?.value;
 
-  const publicPaths = ["/auth/login", "/auth/register"];
+  const publicPaths = ["/auth/login", "/auth/register", "/auth/signup", "/auth/verify-email", "/auth/forgot"];
   if (publicPaths.some((path) => req.nextUrl.pathname.startsWith(path))) {
     return NextResponse.next();
   }

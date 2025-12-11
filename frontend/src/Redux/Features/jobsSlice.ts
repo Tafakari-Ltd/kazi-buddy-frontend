@@ -7,7 +7,6 @@ import {
   UpdateJobData,
   JobFilters,
   JobsResponse,
-  JobDetailResponse,
   JobStatus,
 } from "@/types/job.types";
 
@@ -31,9 +30,6 @@ const initialState: JobsState = {
   successMessage: null,
 };
 
-// Async thunks
-
-// 1. Fetch all jobs (list_jobs)
 export const fetchJobs = createAsyncThunk<
   JobsResponse,
   JobFilters | void,
@@ -42,7 +38,6 @@ export const fetchJobs = createAsyncThunk<
   try {
     const queryParams = new URLSearchParams();
 
-    // Build query parameters - handle void filters
     if (filters && typeof filters === "object") {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
@@ -54,16 +49,13 @@ export const fetchJobs = createAsyncThunk<
     const queryString = queryParams.toString();
     const url = `/jobs/${queryString ? `?${queryString}` : ""}`;
 
-    console.log("Fetching jobs from URL:", url);
     const response = await api.get(url);
-    console.log("Jobs response:", response);
-    return response.data;
+    return response;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch jobs");
   }
 });
 
-// 2. Fetch single job details (job_details)
 export const fetchJobById = createAsyncThunk<
   Job,
   string,
@@ -71,13 +63,12 @@ export const fetchJobById = createAsyncThunk<
 >("jobs/fetchJobById", async (jobId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/jobs/${jobId}/`);
-    return response.data;
+    return response;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch job details");
   }
 });
 
-// 3. Create new job (create_job)
 export const createJob = createAsyncThunk<
   Job,
   CreateJobData,
@@ -89,7 +80,7 @@ export const createJob = createAsyncThunk<
 >("jobs/createJob", async (jobData, { rejectWithValue }) => {
   try {
     const response = await api.post("/jobs/create/", jobData);
-    return response.data;
+    return response;
   } catch (error: any) {
     if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
       return rejectWithValue({
@@ -101,7 +92,6 @@ export const createJob = createAsyncThunk<
   }
 });
 
-// 4. Update job (update_job)
 export const updateJob = createAsyncThunk<
   Job,
   { jobId: string; data: UpdateJobData },
@@ -113,7 +103,7 @@ export const updateJob = createAsyncThunk<
 >("jobs/updateJob", async ({ jobId, data }, { rejectWithValue }) => {
   try {
     const response = await api.put(`/jobs/update/${jobId}/`, data);
-    return response.data;
+    return response;
   } catch (error: any) {
     if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
       return rejectWithValue({
@@ -125,7 +115,6 @@ export const updateJob = createAsyncThunk<
   }
 });
 
-// 5. Delete job (delete_job)
 export const deleteJob = createAsyncThunk<
   string,
   string,
@@ -139,7 +128,6 @@ export const deleteJob = createAsyncThunk<
   }
 });
 
-// 6. Update job status (update_JobStatus)
 export const updateJobStatus = createAsyncThunk<
   { jobId: string; status: JobStatus },
   { jobId: string; status: JobStatus },
@@ -153,29 +141,23 @@ export const updateJobStatus = createAsyncThunk<
   }
 });
 
-// 7. Fetch jobs by employer (jobs_byEmployer)
 export const fetchJobsByEmployer = createAsyncThunk<
   JobsResponse,
   string,
   { rejectValue: string }
 >("jobs/fetchJobsByEmployer", async (employerId, { rejectWithValue }) => {
   try {
-    console.log("Fetching jobs for employer ID:", employerId);
-
     const response = await api.get(
       `/jobs/employers/?employer_id=${employerId}`,
     );
-    console.log("Jobs fetch response:", response.data);
-    return response.data;
+    return response;
   } catch (error: any) {
-    console.error("Failed to fetch jobs by employer:", error);
     return rejectWithValue(
       error?.message || "Failed to fetch jobs by employer",
     );
   }
 });
 
-// 8. Fetch jobs by category (jobs_byCategory)
 export const fetchJobsByCategory = createAsyncThunk<
   JobsResponse,
   string,
@@ -183,7 +165,7 @@ export const fetchJobsByCategory = createAsyncThunk<
 >("jobs/fetchJobsByCategory", async (categoryId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/jobs/category/${categoryId}/filter/`);
-    return response.data;
+    return response;
   } catch (error: any) {
     return rejectWithValue(
       error?.message || "Failed to fetch jobs by category",
@@ -191,7 +173,6 @@ export const fetchJobsByCategory = createAsyncThunk<
   }
 });
 
-// Jobs slice
 const jobsSlice = createSlice({
   name: "jobs",
   initialState,
@@ -235,7 +216,6 @@ const jobsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Fetch jobs
     builder
       .addCase(fetchJobs.pending, (state) => {
         state.loading = true;
@@ -243,13 +223,13 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.data) {
+        if (action.payload && action.payload.data) {
           state.jobs = action.payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
 
-        if (action.payload.pagination) {
+        if (action.payload && action.payload.pagination) {
           state.pagination = action.payload.pagination;
         }
 
@@ -262,7 +242,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch job by ID
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;
@@ -277,7 +256,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Create job
     builder
       .addCase(createJob.pending, (state) => {
         state.loading = true;
@@ -301,7 +279,6 @@ const jobsSlice = createSlice({
             : "Failed to create job";
       });
 
-    // Update job
     builder
       .addCase(updateJob.pending, (state) => {
         state.loading = true;
@@ -331,7 +308,6 @@ const jobsSlice = createSlice({
             : "Failed to update job";
       });
 
-    // Delete job
     builder
       .addCase(deleteJob.pending, (state) => {
         state.loading = true;
@@ -354,7 +330,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Update job status
     builder
       .addCase(updateJobStatus.pending, (state) => {
         state.loading = true;
@@ -381,7 +356,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch jobs by employer
     builder
       .addCase(fetchJobsByEmployer.pending, (state) => {
         state.loading = true;
@@ -389,13 +363,13 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobsByEmployer.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.data) {
+        if (action.payload && action.payload.data) {
           state.jobs = action.payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
 
-        if (action.payload.pagination) {
+        if (action.payload && action.payload.pagination) {
           state.pagination = action.payload.pagination;
         }
       })
@@ -404,7 +378,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch jobs by category
     builder
       .addCase(fetchJobsByCategory.pending, (state) => {
         state.loading = true;
@@ -412,13 +385,13 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobsByCategory.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.data) {
+        if (action.payload && action.payload.data) {
           state.jobs = action.payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
 
-        if (action.payload.pagination) {
+        if (action.payload && action.payload.pagination) {
           state.pagination = action.payload.pagination;
         }
       })

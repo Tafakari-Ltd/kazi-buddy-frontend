@@ -9,6 +9,7 @@ import { login } from "@/Redux/Features/authSlice";
 import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice"; 
 import { isApprovalNeededError } from "@/lib/approvalUtils";
 import { toast } from "sonner";
+import { AuthLayout } from "@/component/Authentication/AuthLayout";
 
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
 
@@ -62,18 +63,16 @@ const LoginPage: React.FC = () => {
           const profileResult = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
 
           if (profileResult) {
-            // Profile Exists -> Go back to Homepage/Job Page
             const targetUrl = redirectAfterLogin || '/';
             router.push(targetUrl);
             toast.success('Welcome back! You can now complete your application.');
            
           } else {
-            // Profile Missing -> Go to Worker Dashboard to create one
             router.push('/worker?setup=1');
             toast.info('Please create a worker profile before applying for jobs');
           }
         } catch (err) {
-          // If fetch fails (likely 404 no profile), send to setup
+         
           router.push('/worker?setup=1');
           toast.info('Please create a worker profile before applying for jobs');
         }
@@ -85,11 +84,10 @@ const LoginPage: React.FC = () => {
         router.push(redirectAfterLogin);
         sessionStorage.removeItem('redirectAfterLogin');
       } else {
-        // Default Dashboard Redirection
+        
         if (user?.user_type === 'employer') {
           router.push('/employer');
         } else {
-          // Default to worker if not specified or explicit worker
           router.push('/worker');
         }
       }
@@ -127,16 +125,101 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const heroContent = (
+    <>
+      <h1 className="text-5xl font-bold mb-6 leading-tight">
+        Welcome Back!
+      </h1>
+      <p className="text-lg text-gray-100 mb-8">
+        Log in and get productive. Continue your journey with Tafakari.
+      </p>
+      <div className="space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Access Your Dashboard</h3>
+            <p className="text-gray-200 text-sm">
+              Manage your profile and applications
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Stay Updated</h3>
+            <p className="text-gray-200 text-sm">
+              Get notifications on new opportunities
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Connect & Grow</h3>
+            <p className="text-gray-200 text-sm">
+              Build your professional network
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-maroon via-purple-dark to-redish px-6">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
-        <h2 className="text-3xl font-bold text-center text-maroon mb-6">
-          KaziBuddy
+    <AuthLayout heroContent={heroContent}>
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Log in and get productive
         </h2>
+        <p className="text-gray-600 mb-6">
+          Use your social account to log in
+        </p>
 
         {/* Google Sign In */}
         <button
-          className="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md hover:bg-gray-200 transition mb-6"
+          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-lg hover:bg-gray-50 transition mb-4"
           onClick={() => { }}
           disabled={loading}
         >
@@ -144,68 +227,96 @@ const LoginPage: React.FC = () => {
           Continue with Google
         </button>
 
-        <div className="text-center text-sm text-gray-400 mb-4">— OR —</div>
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">Or continue with</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <label
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email
+              Email Address
             </label>
             <input
               id="email"
               name="email"
               type="email"
               required
-              placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-maroon"
+              placeholder="you@example.com"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-maroon transition"
               disabled={loading}
             />
           </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Password
+              </label>
+              <Link
+                href="/auth/forgot"
+                className="text-sm text-maroon hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
             <input
               id="password"
               name="password"
               type="password"
               required
               placeholder="Enter your password"
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-maroon"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-maroon transition"
               disabled={loading}
             />
           </div>
 
+          <div className="flex items-center">
+            <input
+              id="keep-logged-in"
+              type="checkbox"
+              className="w-4 h-4 text-maroon border-gray-300 rounded focus:ring-maroon"
+            />
+            <label
+              htmlFor="keep-logged-in"
+              className="ml-2 text-sm text-gray-700"
+            >
+              Keep me logged in
+            </label>
+          </div>
+
           {(formError || error) && (
-            <p className="text-red-600 text-sm mb-4 text-center">
-              {formError || error}
-            </p>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">
+                {formError || error}
+              </p>
+            </div>
           )}
 
           <button
             type="submit"
-            className="w-full bg-maroon hover:bg-redish text-white py-2 rounded-md font-medium transition disabled:opacity-50"
+            className="w-full bg-maroon hover:bg-redish text-white py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-6">
           Don't have an account?{" "}
-          <Link href="/auth/signup" className="text-maroon hover:underline">
-            Sign Up
+          <Link href="/auth/signup" className="text-maroon font-semibold hover:underline">
+            Sign up
           </Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

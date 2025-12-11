@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-// Public routes
+// Update this array to include the worker and employer signup paths
 const allowedUnauthenticatedPaths = [
   "/",
   "/jobs",
@@ -15,7 +15,10 @@ const allowedUnauthenticatedPaths = [
   "/jobs/users/alerts",
   "/auth/login",
   "/auth/signup",
+  "/auth/signup/worker",    
+  "/auth/signup/employer",  
   "/auth/verify-email",
+  "/auth/forgot",          
 ];
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -24,8 +27,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [authorized, setAuthorized] = useState<null | boolean>(null);
 
   useEffect(() => {
+    
     const isAuthenticated =
       sessionStorage.getItem("isAuthenticated") === "true";
+    
+    // Check if the exact path is in the allowed list
     const isAllowed = allowedUnauthenticatedPaths.includes(pathname);
 
     if (!isAuthenticated && !isAllowed) {
@@ -37,7 +43,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, [router, pathname]);
 
   if (authorized === null) {
-    return;
+    return null; 
   }
 
   if (authorized === false) {

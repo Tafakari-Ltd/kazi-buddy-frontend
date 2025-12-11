@@ -24,7 +24,6 @@ import { useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
-import { dummyApplications } from "@/component/applications/dummyApplications";
 import UploadNew from "@/component/UploadNew/UploadNew";
 import EmployerApplicationsSection from "@/components/Employer/ApplicationsSection";
 import { JobApplicationApi } from "@/services/jobApplicationApi";
@@ -133,8 +132,6 @@ const EmployerApplicationsPage = () => {
     handleUpdateEmployerProfile,
     handleClearState,
     hasUserProfile,
-    isProfileVerified,
-    isProfilePending,
   } = employerProfiles;
 
   // Local state
@@ -150,7 +147,6 @@ const EmployerApplicationsPage = () => {
     useState<Application | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showJobModal, setShowJobModal] = useState(false);
 
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -195,77 +191,36 @@ const EmployerApplicationsPage = () => {
   // Fetch real applications for this employer
   const fetchEmployerApplications = async () => {
     if (!currentUserId || !userProfile?.id) {
-      console.log(
-        "Debug: Cannot fetch applications - missing user ID or profile ID",
-      );
       return;
     }
 
     try {
       setApplicationsLoading(true);
 
-      // Fetch all applications
       const response: ApplicationListResponse =
         await JobApplicationApi.getAllApplications({
           ordering: "-applied_at",
         });
-
-      console.log("Debug: All applications:", response.applications.length);
-      console.log("Debug: Current employer profile ID:", userProfile.id);
-      console.log("Debug: Sample application data:", response.applications[0]);
-
-      console.log(
-        "Debug: Fetching detailed data for",
-        response.applications.length,
-        "applications",
-      );
 
       const detailedApplications = await Promise.all(
         response.applications.map(async (app) => {
           try {
             const detailResponse =
               await JobApplicationApi.getApplicationDetails(app.id);
-            console.log(
-              "Debug: Detailed app data for",
-              app.id,
-              detailResponse.application,
-            );
             return detailResponse.application;
           } catch (error) {
-            console.warn(
-              "Could not fetch details for application",
-              app.id,
-              error,
-            );
             return app;
           }
         }),
       );
 
       const employerApplications = detailedApplications.filter((app: any) => {
-        // Check if the job's employer ID matches the current employer's profile ID
         const jobEmployerId =
           (typeof app.job !== "string" ? app.job?.employer?.id : undefined) ||
           app.job_details?.employer;
         const isMatch = jobEmployerId === userProfile.id;
-
-        if (!isMatch) {
-          console.log(
-            `Debug: Filtering out application ${app.id} - job employer ${jobEmployerId} doesn't match current employer ${userProfile.id}`,
-          );
-        }
-
         return isMatch;
       }) as JobApplicationWithDetails[];
-
-      console.log(
-        "Debug: Filtered applications count (only this employer's jobs):",
-        employerApplications.length,
-      );
-      console.log(
-        "Debug: Total applications before filtering:",
-        detailedApplications.length,
-      );
 
       setRealApplications(employerApplications);
 
@@ -302,7 +257,6 @@ const EmployerApplicationsPage = () => {
       setApplications(convertedApplications);
     } catch (error) {
       console.error("Error fetching employer applications:", error);
-      // Fallback to empty array on error
       setApplications([]);
     } finally {
       setApplicationsLoading(false);
@@ -342,21 +296,12 @@ const EmployerApplicationsPage = () => {
   // Handle postjob redirect
   useEffect(() => {
     try {
-      console.log("Postjob redirect check:", {
-        postjob,
-        userProfile,
-        hasProfile: hasUserProfile(),
-        currentUserId,
-      });
-
       if (postjob === "1") {
         if (!hasUserProfile()) {
-          console.log("No user profile found, showing profile setup modal");
           toast.error("Please complete your employer profile first");
           setShowProfileModal(true);
           setFilter("Profile Setup");
         } else {
-          console.log("User profile exists, showing upload job");
           setFilter("Upload Job");
         }
       }
@@ -367,7 +312,6 @@ const EmployerApplicationsPage = () => {
 
   // Update profile form when userProfile changes
   useEffect(() => {
-    console.log("User profile changed:", userProfile);
     if (userProfile) {
       setProfileForm({
         company_name: userProfile.company_name,
@@ -399,8 +343,6 @@ const EmployerApplicationsPage = () => {
   // Handle profile errors
   useEffect(() => {
     if (profileError) {
-      console.error("Profile error:", profileError);
-
       if (profileError !== "Employer profile not found") {
         const errorMessage =
           typeof profileError === "string"
@@ -512,18 +454,12 @@ const EmployerApplicationsPage = () => {
       return;
     }
 
-    console.log("Profile form data before submission:", profileForm);
-    console.log("User data:", user);
-    console.log("Authentication status:", isAuthenticated);
-
     try {
       const result = await handleCreateEmployerProfile(profileForm);
 
-      // Check if the action was rejected
       if (result.type.endsWith("/rejected")) {
         const errorPayload = result.payload;
 
-        // Handle field errors
         if (
           errorPayload &&
           typeof errorPayload === "object" &&
@@ -553,9 +489,6 @@ const EmployerApplicationsPage = () => {
               : "Failed to create profile",
           );
         }
-      } else if (result.type.endsWith("/fulfilled")) {
-        // Profile created successfully
-        console.log("Profile created successfully:", result.payload);
       }
     } catch (error: any) {
       console.error("Profile creation error:", error);
@@ -619,7 +552,6 @@ const EmployerApplicationsPage = () => {
     }
   };
 
-  // Show loading state during SSR or initial client load
   if (!isClient || (profileLoading && !userProfile)) {
     return (
       <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
@@ -984,7 +916,7 @@ const EmployerApplicationsPage = () => {
                     Business Type *
                   </label>
                   <select
-                    className="w-full p-3 border rounded-lg border-gray-300"
+                    className={`w-full p-3 border rounded-lg ${profileErrors.business_type ? "border-red-500" : "border-gray-300"}`}
                     value={profileForm.business_type}
                     onChange={(e) =>
                       handleProfileFormChange(
@@ -999,6 +931,12 @@ const EmployerApplicationsPage = () => {
                       </option>
                     ))}
                   </select>
+                  {/* Validation error display */}
+                  {profileErrors.business_type && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {profileErrors.business_type}
+                    </p>
+                  )}
                 </div>
 
                 <div>

@@ -125,30 +125,38 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-
-      // Fetch all data in parallel so the dashboard loads quickly
-      const [
-        workersResp,
-        employersResp,
-        jobsResp,
-        applicationsResp,
-        pendingUsersResp,
-        pendingJobsResp,
-        categoriesResp,
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         api.get("/workers/profiles/list/"),
         api.get("/employers/employer-profiles/"),
-        api.get("/adminpanel/admin/jobs/"),
+        api.get("/adminpanel/admin/jobs/"), 
         JobApplicationApi.getAllApplications({}),
         api.get("/adminpanel/users/pending/"),
         api.get("/adminpanel/jobs/pending/"),
         api.get("/jobs/categories/"),
       ]);
 
+      // Helper to extract value from settled promise
+      const getResult = (result: PromiseSettledResult<any>) =>
+        result.status === "fulfilled" ? result.value : null;
+
+      const workersResp = getResult(results[0]);
+      const employersResp = getResult(results[1]);
+      const jobsResp = getResult(results[2]);
+      const applicationsResp = getResult(results[3]);
+      const pendingUsersResp = getResult(results[4]);
+      const pendingJobsResp = getResult(results[5]);
+      const categoriesResp = getResult(results[6]);
+
+      // Log errors for debugging without crashing UI
+      results.forEach((res, index) => {
+        if (res.status === "rejected") {
+          console.warn(`Dashboard endpoint at index ${index} failed:`, res.reason);
+        }
+      });
+
       const workers = normalizeList(workersResp);
       const employers = normalizeList(employersResp);
 
-      // Jobs from adminpanel so we see approval status as well
       const jobs = Array.isArray(jobsResp)
         ? jobsResp
         : (jobsResp as any)?.data || normalizeList(jobsResp);
@@ -187,7 +195,6 @@ const AdminDashboard: React.FC = () => {
       const jobsByCategory: Record<string, number> = {};
       jobs.forEach((job: any) => {
         const cat = job.category;
-        // cat can be an id or an object
         const catId = typeof cat === "string" ? cat : cat?.id;
         if (!catId) return;
         jobsByCategory[catId] = (jobsByCategory[catId] || 0) + 1;
@@ -310,10 +317,8 @@ const AdminDashboard: React.FC = () => {
       setNewCategoryDescription("");
       setCreateCategoryErrors({});
 
-      // Refresh dashboard stats and top categories
       await fetchDashboardData();
 
-      // After creating from the dashboard, take the admin to full categories management
       router.push("/admin/categories");
     } catch (error: any) {
       toast.error(
