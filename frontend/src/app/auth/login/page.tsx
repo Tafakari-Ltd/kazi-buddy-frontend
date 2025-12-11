@@ -93,19 +93,19 @@ const LoginPage: React.FC = () => {
       }
 
     } catch (err: any) {
-      // Error Handling
+      console.log('Login error:', err);
+      
       let errorMessage = "Login failed";
      
       if (typeof err === 'string') {
         errorMessage = err;
       } else if (err?.message) {
         errorMessage = err.message;
-      } else if (err?.error) {
-        errorMessage = err.error;
       }
      
-      console.log('Login error:', err);
-     
+      const errorLower = errorMessage.toLowerCase();
+      
+      // Check for approval/activation errors
       if (isApprovalNeededError(errorMessage)) {
         toast.info(
           "Your account is pending admin approval. Please wait for approval notification via email.",
@@ -114,11 +114,28 @@ const LoginPage: React.FC = () => {
         setFormError(
           "Your account is pending admin approval. You will be able to login once approved."
         );
-      } else if (errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('invalid')) {
+      } 
+      // Check for email verification errors
+      else if (errorLower.includes('verify') || 
+               errorLower.includes('verification') ||
+               errorLower.includes('email not verified') ||
+               errorLower.includes('not verified')) {
+        toast.info(
+          "Please verify your email address before logging in.",
+          { duration: 5000 }
+        );
+        setFormError("Please verify your email before logging in. Check your inbox for the verification link.");
+      } 
+      // Check for invalid credentials
+      else if (errorLower.includes('not found') || 
+               errorLower.includes('invalid') || 
+               errorLower.includes('incorrect') ||
+               errorLower.includes('credentials')) {
         setFormError("Invalid email or password");
-      } else if (errorMessage.toLowerCase().includes('verified')) {
-        setFormError("Please verify your email before logging in");
-      } else {
+        toast.error("Invalid email or password", { duration: 4000 });
+      } 
+      // Generic error
+      else {
         setFormError(errorMessage);
         toast.error(errorMessage, { duration: 4000 });
       }
@@ -293,10 +310,142 @@ const LoginPage: React.FC = () => {
           </div>
 
           {(formError || error) && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">
-                {formError || error}
-              </p>
+            <div
+              className={`p-4 rounded-lg border ${
+                (formError || error)
+                  ?.toLowerCase()
+                  .includes("pending") ||
+                (formError || error)?.toLowerCase().includes("approval")
+                  ? "bg-yellow-50 border-yellow-300"
+                  : (formError || error)
+                      ?.toLowerCase()
+                      .includes("verify")
+                  ? "bg-blue-50 border-blue-300"
+                  : "bg-red-50 border-red-300"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  {((formError || error)
+                    ?.toLowerCase()
+                    .includes("pending") ||
+                    (formError || error)
+                      ?.toLowerCase()
+                      .includes("approval")) ? (
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  ) : (formError || error)
+                      ?.toLowerCase()
+                      .includes("verify") ? (
+                    <svg
+                      className="w-5 h-5 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className={`text-sm font-semibold mb-1 ${
+                      (formError || error)
+                        ?.toLowerCase()
+                        .includes("pending") ||
+                      (formError || error)
+                        ?.toLowerCase()
+                        .includes("approval")
+                        ? "text-yellow-800"
+                        : (formError || error)
+                            ?.toLowerCase()
+                            .includes("verify")
+                        ? "text-blue-800"
+                        : "text-red-800"
+                    }`}
+                  >
+                    {(formError || error)
+                      ?.toLowerCase()
+                      .includes("pending") ||
+                    (formError || error)
+                      ?.toLowerCase()
+                      .includes("approval")
+                      ? "Account Pending Approval"
+                      : (formError || error)
+                          ?.toLowerCase()
+                          .includes("verify")
+                      ? "Email Verification Required"
+                      : "Login Failed"}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      (formError || error)
+                        ?.toLowerCase()
+                        .includes("pending") ||
+                      (formError || error)
+                        ?.toLowerCase()
+                        .includes("approval")
+                        ? "text-yellow-700"
+                        : (formError || error)
+                            ?.toLowerCase()
+                            .includes("verify")
+                        ? "text-blue-700"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {formError || error}
+                  </p>
+                  {((formError || error)
+                    ?.toLowerCase()
+                    .includes("pending") ||
+                    (formError || error)
+                      ?.toLowerCase()
+                      .includes("approval")) && (
+                    <p className="text-xs text-yellow-600 mt-2">
+                      💡 You will receive an email notification once your
+                      account has been approved by an administrator.
+                    </p>
+                  )}
+                  {(formError || error)
+                    ?.toLowerCase()
+                    .includes("verify") && (
+                    <p className="text-xs text-blue-600 mt-2">
+                      💡 Check your email inbox (and spam folder) for the
+                      verification link.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

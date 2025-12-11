@@ -41,27 +41,27 @@ export const fetchEmployerProfiles = createAsyncThunk<
   async (filters, { rejectWithValue }) => {
     try {
       const queryParams = new URLSearchParams();
-
+      
       // Build query parameters - handle void filters
-      if (filters && typeof filters === "object") {
+      if (filters && typeof filters === 'object') {
         Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
+          if (value !== undefined && value !== null && value !== '') {
             queryParams.append(key, value.toString());
           }
         });
       }
 
       const queryString = queryParams.toString();
-      const url = `/employers/employer-profiles/${queryString ? `?${queryString}` : ""}`;
-
+      const url = `/employers/employer-profiles/${queryString ? `?${queryString}` : ''}`;
+      
       const response = await api.get(url);
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
-        error?.message || "Failed to fetch employer profiles",
+        error?.message || "Failed to fetch employer profiles"
       );
     }
-  },
+  }
 );
 
 // 2. Fetch single employer profile by ID
@@ -73,16 +73,14 @@ export const fetchEmployerProfileById = createAsyncThunk<
   "employerProfiles/fetchEmployerProfileById",
   async (profileId, { rejectWithValue }) => {
     try {
-      const response = await api.get(
-        `/employers/employer-profiles/${profileId}/`,
-      );
+      const response = await api.get(`/employers/employer-profiles/${profileId}/`);
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
-        error?.message || "Failed to fetch employer profile",
+        error?.message || "Failed to fetch employer profile"
       );
     }
-  },
+  }
 );
 
 // 3. Fetch current user's employer profile
@@ -97,60 +95,54 @@ export const fetchUserEmployerProfile = createAsyncThunk<
       const response = await api.get(`/employers/employer-profiles/${userId}/`);
       return response.data || response;
     } catch (error: any) {
+    
       if (error?.status === 404) {
         return rejectWithValue("Employer profile not found");
       }
       return rejectWithValue(
-        error?.message || "Failed to fetch user employer profile",
+        error?.message || "Failed to fetch user employer profile"
       );
     }
-  },
+  }
 );
 
 // 4. Create employer profile
 export const createEmployerProfile = createAsyncThunk<
   EmployerProfile,
   CreateEmployerProfileData,
-  {
-    rejectValue:
-      | string
-      | { message: string; fieldErrors: Record<string, string[]> };
-  }
+  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
 >(
   "employerProfiles/createEmployerProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      console.log("Sending profile data:", profileData);
-      const response = await api.post(
-        "/employers/employer-profiles/create/",
-        profileData,
-      );
-      console.log("Profile created successfully:", response);
+      console.log('Sending profile data:', profileData);
+      const response = await api.post("/employers/employer-profiles/create/", profileData);
+      console.log('Profile created successfully:', response);
       return response.data || response;
     } catch (error: any) {
-      console.error("Create profile error:", error);
-
+      console.error('Create profile error:', error);
+      
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
           message: "Validation errors occurred",
           fieldErrors: error.fieldErrors,
         } as any);
       }
-
-      if (error?.data && typeof error.data === "object") {
+      
+      if (error?.data && typeof error.data === 'object') {
         const fieldErrors: Record<string, string[]> = {};
         let hasFieldErrors = false;
-
+        
         Object.entries(error.data).forEach(([key, value]) => {
           if (Array.isArray(value)) {
             fieldErrors[key] = value;
             hasFieldErrors = true;
-          } else if (typeof value === "string") {
+          } else if (typeof value === 'string') {
             fieldErrors[key] = [value];
             hasFieldErrors = true;
           }
         });
-
+        
         if (hasFieldErrors) {
           return rejectWithValue({
             message: "Please fix the validation errors",
@@ -158,31 +150,22 @@ export const createEmployerProfile = createAsyncThunk<
           } as any);
         }
       }
-
-      return rejectWithValue(
-        error?.message || "Failed to create employer profile",
-      );
+      
+      return rejectWithValue(error?.message || "Failed to create employer profile");
     }
-  },
+  }
 );
 
 // 5. Update employer profile
 export const updateEmployerProfile = createAsyncThunk<
   EmployerProfile,
   { profileId: string; data: UpdateEmployerProfileData },
-  {
-    rejectValue:
-      | string
-      | { message: string; fieldErrors: Record<string, string[]> };
-  }
+  { rejectValue: string | { message: string; fieldErrors: Record<string, string[]> } }
 >(
   "employerProfiles/updateEmployerProfile",
   async ({ profileId, data }, { rejectWithValue }) => {
     try {
-      const response = await api.put(
-        `/employers/employer-profiles/${profileId}/update/`,
-        data,
-      );
+      const response = await api.put(`/employers/employer-profiles/${profileId}/update/`, data);
       return response.data || response;
     } catch (error: any) {
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
@@ -191,11 +174,9 @@ export const updateEmployerProfile = createAsyncThunk<
           fieldErrors: error.fieldErrors,
         } as any);
       }
-      return rejectWithValue(
-        error?.message || "Failed to update employer profile",
-      );
+      return rejectWithValue(error?.message || "Failed to update employer profile");
     }
-  },
+  }
 );
 
 // Employer profiles slice
@@ -210,10 +191,7 @@ const employerProfilesSlice = createSlice({
         sessionStorage.removeItem("employerProfiles");
       }
     },
-    hydrateEmployerProfiles: (
-      state,
-      action: PayloadAction<EmployerProfile[]>,
-    ) => {
+    hydrateEmployerProfiles: (state, action: PayloadAction<EmployerProfile[]>) => {
       state.profiles = action.payload;
     },
     clearEmployerProfileState: (state) => {
@@ -235,10 +213,7 @@ const employerProfilesSlice = createSlice({
         limit: 10,
       };
     },
-    setPagination: (
-      state,
-      action: PayloadAction<{ page: number; limit?: number }>,
-    ) => {
+    setPagination: (state, action: PayloadAction<{ page: number; limit?: number }>) => {
       state.pagination.page = action.payload.page;
       if (action.payload.limit) {
         state.pagination.limit = action.payload.limit;
@@ -259,16 +234,13 @@ const employerProfilesSlice = createSlice({
         } else {
           state.profiles = Array.isArray(action.payload) ? action.payload : [];
         }
-
+        
         if (action.payload.pagination) {
           state.pagination = action.payload.pagination;
         }
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "employerProfiles",
-            JSON.stringify(state.profiles),
-          );
+          sessionStorage.setItem("employerProfiles", JSON.stringify(state.profiles));
         }
       })
       .addCase(fetchEmployerProfiles.rejected, (state, action) => {
@@ -300,19 +272,17 @@ const employerProfilesSlice = createSlice({
       .addCase(fetchUserEmployerProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.userProfile = action.payload;
-
+        
         if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "userEmployerProfile",
-            JSON.stringify(action.payload),
-          );
+          sessionStorage.setItem("userEmployerProfile", JSON.stringify(action.payload));
         }
       })
       .addCase(fetchUserEmployerProfile.rejected, (state, action) => {
         state.loading = false;
-
+        
         const errorMsg = action.payload as string;
         if (errorMsg === "Employer profile not found") {
+         
           state.error = null;
           state.userProfile = null;
         } else {
@@ -334,22 +304,15 @@ const employerProfilesSlice = createSlice({
         state.successMessage = "Employer profile created successfully";
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "employerProfiles",
-            JSON.stringify(state.profiles),
-          );
-          sessionStorage.setItem(
-            "userEmployerProfile",
-            JSON.stringify(action.payload),
-          );
+          sessionStorage.setItem("employerProfiles", JSON.stringify(state.profiles));
+          sessionStorage.setItem("userEmployerProfile", JSON.stringify(action.payload));
         }
       })
       .addCase(createEmployerProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : "Failed to create employer profile";
+        state.error = typeof action.payload === "string"
+          ? action.payload
+          : "Failed to create employer profile";
       });
 
     // Update employer profile
@@ -362,39 +325,32 @@ const employerProfilesSlice = createSlice({
       .addCase(updateEmployerProfile.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.profiles.findIndex(
-          (profile) => profile.id === action.payload.id,
+          (profile) => profile.id === action.payload.id
         );
         if (index !== -1) {
           state.profiles[index] = action.payload;
         }
         state.currentProfile = action.payload;
-
+        
         // Update user profile if it matches
         if (state.userProfile?.id === action.payload.id) {
           state.userProfile = action.payload;
         }
-
+        
         state.successMessage = "Employer profile updated successfully";
 
         if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "employerProfiles",
-            JSON.stringify(state.profiles),
-          );
+          sessionStorage.setItem("employerProfiles", JSON.stringify(state.profiles));
           if (state.userProfile?.id === action.payload.id) {
-            sessionStorage.setItem(
-              "userEmployerProfile",
-              JSON.stringify(action.payload),
-            );
+            sessionStorage.setItem("userEmployerProfile", JSON.stringify(action.payload));
           }
         }
       })
       .addCase(updateEmployerProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : "Failed to update employer profile";
+        state.error = typeof action.payload === "string"
+          ? action.payload
+          : "Failed to update employer profile";
       });
   },
 });

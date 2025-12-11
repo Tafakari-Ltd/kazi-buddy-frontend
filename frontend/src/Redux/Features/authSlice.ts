@@ -83,14 +83,14 @@ export const login = createAsyncThunk<
     const accessToken = res.tokens.access;
     const refreshToken = res.tokens.refresh;
     const userId = res.user_id;
-    const userType = res.user_type; // "worker", "employer", "admin", etc.
+    const userType = res.user_type; 
 
     // Fetch user details
     const userFromApi = await api.get("/accounts/me/", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    // Ensure the stored user object always has user_type so role checks work
+    
     const user = {
       ...userFromApi,
       user_type: userFromApi.user_type ?? userType,
@@ -107,11 +107,15 @@ export const login = createAsyncThunk<
       user,
     };
   } catch (err: any) {
-    return rejectWithValue(
+    const errorMessage = 
+      err.response?.data?.detail ||
+      err.response?.data?.error ||
       err.response?.data?.non_field_errors?.[0] ||
-        err.response?.data?.message ||
-        "Login failed",
-    );
+      err.response?.data?.message ||
+      err.message ||
+      "Login failed";
+      
+    return rejectWithValue(errorMessage);
   }
 });
 

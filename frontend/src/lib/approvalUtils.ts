@@ -1,6 +1,4 @@
-/**
- * Check if an error indicates that the user needs admin approval
- */
+
 export const isApprovalNeededError = (error: any): boolean => {
   if (!error) return false;
 
@@ -14,6 +12,10 @@ export const isApprovalNeededError = (error: any): boolean => {
     "not activated",
     "not verified by admin",
     "approval required",
+    "inactive",
+    "disabled",
+    "account is disabled", 
+    "no active account" 
   ];
 
   return approvalPhrases.some((phrase) =>
@@ -30,10 +32,7 @@ export const extractUserIdFromError = (error: any): string | null => {
   return error?.userId || error?.user_id || null;
 };
 
-/**
- * Check if a user registration is pending admin approval
- * Used after signup to prompt admin approval flow
- */
+
 export const checkUserApprovalStatus = async (
   userId: string,
   email: string,
