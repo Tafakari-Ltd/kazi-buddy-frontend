@@ -6,6 +6,8 @@ import { AppDispatch, RootState } from "@/Redux/Store/Store";
 import { verifyEmail, resendOTP, clearState } from "@/Redux/Features/WorkersSlice";
 import { toast } from "sonner";
 import { useSearchParams, useRouter } from "next/navigation"; 
+import { AuthLayout } from "@/component/Authentication/AuthLayout";
+import { Shield, BadgeCheck, Lock } from "lucide-react";
 
 const VerifyEmail: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -35,7 +37,7 @@ const VerifyEmail: React.FC = () => {
     }
   }, [successMessage, error, dispatch]);
 
-  //Redirect to login when verified
+  // Redirect to login when verified
   useEffect(() => {
     if (verified) {
       const timer = setTimeout(() => {
@@ -76,7 +78,6 @@ const VerifyEmail: React.FC = () => {
     );
   };
 
-  // RESEND OTP LOGIC
   const handleResendOTP = () => {
     if (!userId || !email) {
       toast.error("Missing user information. Cannot resend OTP.");
@@ -89,34 +90,79 @@ const VerifyEmail: React.FC = () => {
     dispatch(resendOTP({ user_id: userId, email }));
   };
 
+  const heroContent = (
+    <>
+      <h1 className="text-5xl font-bold mb-6 leading-tight">
+        One Last Step!
+      </h1>
+      <p className="text-lg text-gray-100 mb-8">
+        We need to verify your identity to keep the platform secure for everyone.
+      </p>
+      <div className="space-y-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Lock className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Secure Account</h3>
+            <p className="text-gray-200 text-sm">
+              Protect your personal information
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <BadgeCheck className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Verified Badge</h3>
+            <p className="text-gray-200 text-sm">
+              Stand out to employers and workers
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Full Access</h3>
+            <p className="text-gray-200 text-sm">
+              Unlock all platform features instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-maroon via-purple-dark to-redish px-6">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-[400px]">
-        <h2 className="text-2xl font-bold text-center text-maroon mb-2">
-          Verify Your Email
+    <AuthLayout heroContent={heroContent}>
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Verify Email
         </h2>
-        <p className="text-center text-gray-600 mb-6 text-sm">
-          We sent a code to <span className="font-medium text-gray-800">{email}</span>
+        <p className="text-gray-600 mb-6">
+          We sent a verification code to <br/>
+          <span className="font-semibold text-maroon">{email || "your email"}</span>
         </p>
 
         {verified ? (
-          <div className="text-center py-4">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
+          <div className="text-center py-6">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+              <BadgeCheck className="h-8 w-8 text-green-600" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900">Verified!</h3>
+            <h3 className="text-xl font-bold text-gray-900">Email Verified!</h3>
             <p className="text-gray-500 mt-2">Redirecting you to login...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div>
               <label
                 htmlFor="otp"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Enter OTP
+                Enter 6-Digit Code
               </label>
               <input
                 id="otp"
@@ -124,8 +170,8 @@ const VerifyEmail: React.FC = () => {
                 name="otp"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                placeholder="123456"
-                className="w-full border border-gray-300 rounded-md px-4 py-2 text-center text-xl tracking-widest font-mono focus:ring-2 focus:ring-maroon focus:border-transparent outline-none"
+                placeholder="000 000"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono focus:ring-2 focus:ring-maroon focus:border-transparent outline-none transition"
                 required
                 maxLength={6}
               />
@@ -134,33 +180,32 @@ const VerifyEmail: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full bg-maroon hover:bg-redish disabled:opacity-50 text-white py-2 rounded-md font-medium transition"
+              className="w-full bg-maroon hover:bg-redish disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition"
             >
               {loading ? "Verifying..." : "Verify Email"}
             </button>
 
-            {/* RESEND OTP BUTTON */}
-            <div className="text-center mt-4">
+            <div className="text-center pt-2">
               <p className="text-sm text-gray-600">
-                Didn't receive code?{" "}
+                Didn't receive the code?{" "}
                 <button
                   type="button"
                   onClick={handleResendOTP}
                   disabled={resendDisabled || loading}
-                  className={`font-medium ${
+                  className={`font-medium transition ${
                     resendDisabled 
                       ? "text-gray-400 cursor-not-allowed" 
                       : "text-maroon hover:underline"
                   }`}
                 >
-                  {resendDisabled ? `Resend in ${countdown}s` : "Resend Code"}
+                  {resendDisabled ? `Resend available in ${countdown}s` : "Resend Code"}
                 </button>
               </p>
             </div>
           </form>
         )}
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

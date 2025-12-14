@@ -5,41 +5,32 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
-  Plus,
-  Edit,
   AlertCircle,
-  Settings,
-  Shield,
   MapPin,
   DollarSign,
   Clock,
-  Calendar,
   User,
   Badge,
   ArrowRight,
-  Briefcase,
   Star,
-  TrendingUp,
-  Eye,
-  CheckCircle,
   Activity,
-  Bell
+  Settings
 } from "lucide-react";
 
-// Import job application components
-import { AvailableJobs } from "@/components/WorkerProfile/AvailableJobs";
-import { MyApplicationsSection } from "@/components/WorkerProfile/MyApplicationsSection";
-import { JobDetails } from "@/types/jobApplication.types";
-
+// Hooks & Utils
 import { RootState } from "@/Redux/Store/Store";
 import { useWorkerProfiles } from "@/Redux/Functions/useWorkerProfiles";
 import { useJobs } from "@/Redux/Functions/useJobs";
-import WorkerProfileForm from "@/components/WorkerProfiles/WorkerProfileForm";
-import {
-  CreateWorkerProfileData,
-  VerificationStatus,
-  formatAvailabilitySchedule,
-} from "@/types/worker.types";
+import { formatAvailabilitySchedule, CreateWorkerProfileData } from "@/types/worker.types";
+import { JobDetails } from "@/types/jobApplication.types";
+
+// Components
+import DashboardWelcome from "@/components/Worker/DashboardWelcome";
+import WorkerStatsCards from "@/components/Worker/WorkerStatsCards";
+import WorkerProfileForm from "@/components/Worker/WorkerProfileForm";
+import WorkerTabs from "@/components/Worker/WorkerTabs";
+import { AvailableJobs } from "@/components/WorkerProfile/AvailableJobs";
+import { MyApplicationsSection } from "@/components/WorkerProfile/MyApplicationsSection";
 
 const STATUS_OPTIONS = [
   "Dashboard",
@@ -54,34 +45,10 @@ const WorkerDashboardPage = () => {
   const searchParams = useSearchParams();
   const [setupProfile, setSetupProfile] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setSetupProfile(searchParams?.get("setup") || null);
-    }
-  }, [searchParams]);
-
-  const authState = useSelector((state: RootState) => state.auth || {});
-  const { user, userId, isAuthenticated } = authState;
+  const { user, userId, isAuthenticated } = useSelector((state: RootState) => state.auth || {});
   const currentUserId = userId || user?.user_id || user?.id;
 
-  let workerProfiles;
-  let jobsHook;
-  try {
-    workerProfiles = useWorkerProfiles();
-    jobsHook = useJobs();
-  } catch (error) {
-    console.error('Error loading hooks:', error);
-    return (
-      <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-4">System Error</h2>
-          <p className="text-gray-600 mb-6">Failed to load worker profile system.</p>
-          <button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md">Refresh</button>
-        </div>
-      </div>
-    );
-  }
-
+  // Hooks
   const {
     userProfile,
     loading: profileLoading,
@@ -92,30 +59,37 @@ const WorkerDashboardPage = () => {
     handleUpdateWorkerProfile,
     handleClearState,
     hasUserProfile,
-  } = workerProfiles;
+  } = useWorkerProfiles();
 
-  const { handleFetchJobs } = jobsHook;
+  const { handleFetchJobs } = useJobs();
 
+  // Local State
   const [filter, setFilter] = useState<string>("Dashboard");
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [isClient, setIsClient] = useState(false);
 
   const [availableJobs, setAvailableJobs] = useState<JobDetails[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [jobsError, setJobsError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
+  // Sync with URL params
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSetupProfile(searchParams?.get("setup") || null);
+    }
+  }, [searchParams]);
+
+  // Fetch Profile
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
       handleFetchUserWorkerProfile(currentUserId);
     }
   }, [currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
 
+  // Handle Profile Setup Redirect
   useEffect(() => {
     if (setupProfile === "1") {
       if (!hasUserProfile()) {
@@ -127,70 +101,22 @@ const WorkerDashboardPage = () => {
     }
   }, [setupProfile, hasUserProfile]);
 
+  // Notifications
   useEffect(() => {
     if (successMessage) {
       toast.success(typeof successMessage === 'string' ? successMessage : 'Success');
       handleClearState();
       setShowProfileModal(false);
       setShowEditModal(false);
-      if (currentUserId && isAuthenticated) {
-        setTimeout(() => handleFetchUserWorkerProfile(currentUserId), 500);
-      }
+      if (currentUserId) setTimeout(() => handleFetchUserWorkerProfile(currentUserId), 500);
     }
-  }, [successMessage, handleClearState, currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
-
-  useEffect(() => {
-    if (profileError) {
-      if (typeof profileError === 'string' && !profileError.includes('No worker profile found')) {
-        toast.error(profileError);
-      }
+    if (profileError && typeof profileError === 'string' && !profileError.includes('No worker profile found')) {
+      toast.error(profileError);
       handleClearState();
     }
-  }, [profileError, handleClearState]);
+  }, [successMessage, profileError, handleClearState, currentUserId, handleFetchUserWorkerProfile]);
 
-  // Fetch jobs when needed (Dashboard preview or Available Jobs tab)
-  useEffect(() => {
-    if ((filter === "Available Jobs" || filter === "Dashboard") && availableJobs.length === 0 && !jobsLoading) {
-      fetchAvailableJobs();
-    }
-  }, [filter, availableJobs.length, jobsLoading]);
-
-  const validateProfileForm = (data: CreateWorkerProfileData) => {
-    const errors: Record<string, string> = {};
-    if (!data.location.trim()) errors.location = "Location is required";
-    if (!data.bio.trim()) errors.bio = "Bio is required";
-    if (!data.hourly_rate || parseFloat(data.hourly_rate) <= 0) errors.hourly_rate = "Valid rate required";
-    if (data.years_experience < 0) errors.years_experience = "Invalid experience";
-    const hasAvailability = Object.keys(data.availability_schedule).some(day =>
-      data.availability_schedule[day] && data.availability_schedule[day].length >= 2
-    );
-    if (!hasAvailability) errors.availability_schedule = "Set at least one availability day";
-    setProfileErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCreateProfile = async (data: CreateWorkerProfileData) => {
-    if (!validateProfileForm(data)) {
-      toast.error("Please fix form errors");
-      return;
-    }
-    try {
-      await handleCreateWorkerProfile(data);
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to create profile");
-    }
-  };
-
-  const handleUpdateProfile = async (data: CreateWorkerProfileData) => {
-    if (!validateProfileForm(data) || !userProfile?.id) return;
-    try {
-      await handleUpdateWorkerProfile(userProfile.id, data);
-    } catch (error) {
-      toast.error("Failed to update profile");
-    }
-  };
-
-  // Use the ORIGINAL fetching logic that works
+  // Fetch Jobs
   const fetchAvailableJobs = async () => {
     try {
       setJobsLoading(true);
@@ -198,14 +124,9 @@ const WorkerDashboardPage = () => {
       
       if (result && typeof result !== 'string') {
         let jobsArray = [];
-        // Handle different response formats
-        if ('data' in result && result.data && Array.isArray(result.data)) {
-          jobsArray = result.data;
-        } else if (Array.isArray(result)) {
-          jobsArray = result;
-        } else if ('jobs' in result && Array.isArray(result.jobs)) {
-          jobsArray = result.jobs;
-        }
+        if ('data' in result && Array.isArray(result.data)) jobsArray = result.data;
+        else if (Array.isArray(result)) jobsArray = result;
+        else if ('jobs' in result && Array.isArray(result.jobs)) jobsArray = result.jobs;
 
         if (jobsArray.length > 0) {
           const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
@@ -242,12 +163,22 @@ const WorkerDashboardPage = () => {
     }
   };
 
-  const getVerificationStatusColor = (status: VerificationStatus) => {
-    switch (status) {
-      case VerificationStatus.VERIFIED: return "bg-green-100 text-green-800";
-      case VerificationStatus.PENDING: return "bg-yellow-100 text-yellow-800";
-      case VerificationStatus.REJECTED: return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+  useEffect(() => {
+    if ((filter === "Available Jobs" || filter === "Dashboard") && availableJobs.length === 0 && !jobsLoading) {
+      fetchAvailableJobs();
+    }
+  }, [filter, availableJobs.length, jobsLoading]);
+
+  // Handlers
+  const handleProfileSubmit = async (data: CreateWorkerProfileData) => {
+    try {
+      if (showProfileModal) {
+        await handleCreateWorkerProfile(data);
+      } else if (userProfile?.id) {
+        await handleUpdateWorkerProfile(userProfile.id, data);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Operation failed");
     }
   };
 
@@ -266,31 +197,16 @@ const WorkerDashboardPage = () => {
 
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
-      {/* Welcome Banner (RED THEME) */}
-      <div className="mb-8 bg-gradient-to-r from-red-900 to-red-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden container">
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {userProfile?.user?.full_name || user?.full_name || "Worker"}! 👋
-          </h1>
-          <p className="text-red-100 max-w-2xl">
-            You have <span className="font-semibold text-white">{availableJobs.length} active jobs</span> waiting for you today.
-            Your profile is <span className="font-semibold text-white">{userProfile?.profile_completion_percentage || 0}% complete</span>.
-          </p>
-          <div className="mt-6 flex gap-3">
-            <button onClick={() => setFilter("Available Jobs")} className="bg-white text-red-900 px-5 py-2 rounded-lg font-semibold hover:bg-red-50 transition shadow-sm">
-              Browse Jobs
-            </button>
-            {userProfile && (
-              <button onClick={() => setShowEditModal(true)} className="bg-red-800 text-white border border-red-400 px-5 py-2 rounded-lg font-medium hover:bg-red-900 transition">
-                Complete Profile
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-white/10 transform skew-x-12 translate-x-12"></div>
-      </div>
+      
+      <DashboardWelcome 
+        userName={userProfile?.user?.full_name || user?.full_name || "Worker"}
+        availableJobsCount={availableJobs.length}
+        profileCompletion={userProfile?.profile_completion_percentage || 0}
+        onBrowseJobs={() => setFilter("Available Jobs")}
+        onCompleteProfile={() => setShowEditModal(true)}
+        showCompleteProfileBtn={!!userProfile}
+      />
 
-      {/* Profile Warning */}
       {!hasUserProfile() && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8 flex items-start gap-4 shadow-sm container">
           <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
@@ -306,80 +222,19 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* Quick Stats Row */}
-      {hasUserProfile() && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 container">
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-              <Briefcase className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">Total Jobs Applied</p>
-              <h4 className="text-2xl font-bold text-gray-800">--</h4>
-            </div>
-          </div>
+      {hasUserProfile() && <WorkerStatsCards />}
 
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">Applications Accepted</p>
-              <h4 className="text-2xl font-bold text-gray-800">--</h4>
-            </div>
-          </div>
+      <WorkerTabs activeTab={filter} setTab={setFilter} options={STATUS_OPTIONS} />
 
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
-              <Eye className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">Profile Views</p>
-              <h4 className="text-2xl font-bold text-gray-800">--</h4>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
-              <Star className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm font-medium">My Rating</p>
-              <h4 className="text-2xl font-bold text-gray-800">--</h4>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 container">
-        {STATUS_OPTIONS.map((statusOption) => (
-          <button
-            key={statusOption}
-            onClick={() => setFilter(statusOption)}
-            className={`whitespace-nowrap px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              filter === statusOption
-                ? "bg-red-800 text-white shadow-md"
-                : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200"
-            }`}
-          >
-            {statusOption}
-          </button>
-        ))}
-      </div>
-
-      {/* Dashboard Main Content Grid */}
+      {/* DASHBOARD CONTENT */}
       {filter === "Dashboard" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 container">
-          {/* Left Column - Main Content (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
-
             {/* Profile Snapshot */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <User className="w-5 h-5 text-gray-500" />
-                  My Profile
+                  <User className="w-5 h-5 text-gray-500" /> My Profile
                 </h3>
                 {userProfile && (
                   <button onClick={() => setShowEditModal(true)} className="text-red-600 text-sm font-medium hover:underline">
@@ -392,16 +247,13 @@ const WorkerDashboardPage = () => {
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-1 space-y-4">
                     <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>{userProfile?.location || "Location not set"}</span>
+                      <MapPin className="w-4 h-4" /> <span>{userProfile?.location || "Location not set"}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Badge className="w-4 h-4" />
-                      <span>{userProfile?.years_experience || 0} Years Experience</span>
+                      <Badge className="w-4 h-4" /> <span>{userProfile?.years_experience || 0} Years Experience</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{userProfile?.hourly_rate ? `${userProfile.hourly_rate}/hr` : "Rate not set"}</span>
+                      <DollarSign className="w-4 h-4" /> <span>{userProfile?.hourly_rate ? `${userProfile.hourly_rate}/hr` : "Rate not set"}</span>
                     </div>
                     <p className="text-gray-600 text-sm mt-4 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
                       {userProfile?.bio || "No bio added yet."}
@@ -416,12 +268,7 @@ const WorkerDashboardPage = () => {
                         <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${userProfile?.profile_completion_percentage || 0}%` }}></div>
                       </div>
                     </div>
-
-                    <div className={`p-4 rounded-xl border text-center ${
-                      userProfile?.is_available
-                        ? "bg-green-50 border-green-100 text-green-800"
-                        : "bg-red-50 border-red-100 text-red-800"
-                    }`}>
+                    <div className={`p-4 rounded-xl border text-center ${userProfile?.is_available ? "bg-green-50 border-green-100 text-green-800" : "bg-red-50 border-red-100 text-red-800"}`}>
                       <div className="text-sm font-semibold mb-1">Current Status</div>
                       <div className="font-bold flex items-center justify-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${userProfile?.is_available ? "bg-green-500" : "bg-red-500"}`}></div>
@@ -438,7 +285,7 @@ const WorkerDashboardPage = () => {
               )}
             </div>
 
-            {/* Recommended Jobs Preview */}
+            {/* Recommended Jobs */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -461,10 +308,7 @@ const WorkerDashboardPage = () => {
                             <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> {job.budget_min}-{job.budget_max}</span>
                           </div>
                         </div>
-                        <button 
-                          onClick={() => { setFilter("Available Jobs"); }}
-                          className="bg-white text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-semibold hover:bg-red-600 hover:text-white transition"
-                        >
+                        <button onClick={() => setFilter("Available Jobs")} className="bg-white text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-semibold hover:bg-red-600 hover:text-white transition">
                           View
                         </button>
                       </div>
@@ -472,16 +316,12 @@ const WorkerDashboardPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No jobs found matching your profile yet.
-                </div>
+                <div className="text-center py-8 text-gray-500">No jobs found matching your profile yet.</div>
               )}
             </div>
           </div>
 
-          
           <div className="space-y-8">
-            {/* Availability Card */}
             {userProfile && (
               <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
@@ -499,7 +339,6 @@ const WorkerDashboardPage = () => {
               </div>
             )}
 
-            {/* Recent Activity Widget */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-gray-500" /> Recent Activity
@@ -510,15 +349,9 @@ const WorkerDashboardPage = () => {
                   <p className="text-sm text-gray-800 font-medium">Logged in to Dashboard</p>
                   <p className="text-xs text-gray-500 mt-0.5">Just now</p>
                 </div>
-                <div className="relative pl-6">
-                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-gray-300 border-4 border-white"></div>
-                  <p className="text-sm text-gray-800 font-medium">Profile updated</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Today</p>
-                </div>
               </div>
             </div>
 
-            {/* Tips Widget */}
             <div className="bg-red-50 rounded-xl p-6 border border-red-100">
               <h3 className="font-bold text-red-900 mb-2">Pro Tip 💡</h3>
               <p className="text-red-800 text-sm leading-relaxed mb-4">
@@ -534,7 +367,7 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* Other Views (Available Jobs, My Applications, etc.) */}
+      {/* OTHER VIEWS */}
       {filter === "Available Jobs" && (
         <div className="container">
           {hasUserProfile() ? (
@@ -551,9 +384,7 @@ const WorkerDashboardPage = () => {
 
       {filter === "My Applications" && (
         <div className="container">
-          {hasUserProfile() ? (
-            <MyApplicationsSection showAll={true} />
-          ) : (
+          {hasUserProfile() ? <MyApplicationsSection showAll={true} /> : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
               <h3 className="font-bold text-yellow-800">Profile Required</h3>
               <button onClick={() => setShowProfileModal(true)} className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Create Profile</button>
@@ -571,7 +402,7 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* Modal Logic */}
+      {/* PROFILE MODAL */}
       {(showProfileModal || showEditModal) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -591,11 +422,11 @@ const WorkerDashboardPage = () => {
                   hourly_rate: userProfile.hourly_rate,
                   availability_schedule: userProfile.availability_schedule,
                   bio: userProfile.bio,
+                  skills: userProfile.skills || []
                 } : undefined}
-                onSubmit={showProfileModal ? handleCreateProfile : handleUpdateProfile}
-                onCancel={() => { setShowProfileModal(false); setShowEditModal(false); setProfileErrors({}); }}
+                onSubmit={handleProfileSubmit}
+                onCancel={() => { setShowProfileModal(false); setShowEditModal(false); }}
                 loading={profileLoading}
-                errors={profileErrors}
                 isEdit={showEditModal}
               />
             </div>
