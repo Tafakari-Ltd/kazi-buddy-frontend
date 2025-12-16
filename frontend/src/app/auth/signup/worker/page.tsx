@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
-import { registerWorker, clearState } from "@/Redux/Features/WorkersSlice";
+import { registerUser, clearAuthState } from "@/Redux/Features/authSlice";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/component/Authentication/AuthLayout";
@@ -23,8 +23,10 @@ interface IFormData {
 
 const WorkerSignup: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  
+
   const { loading, error, successMessage } = useSelector(
-    (state: RootState) => state.worker,
+    (state: RootState) => state.auth
   );
 
   const router = useRouter();
@@ -47,9 +49,7 @@ const WorkerSignup: React.FC = () => {
       toast.success(successMessage);
       toast.info(
         "Please check your email for the verification code. Don't forget to check your spam folder!",
-        {
-          duration: 6000,
-        },
+        { duration: 6000 }
       );
       setFormData({
         profile_photo: undefined,
@@ -60,7 +60,8 @@ const WorkerSignup: React.FC = () => {
         password: "",
         confirm_password: "",
       });
-      dispatch(clearState());
+      
+      dispatch(clearAuthState());
     }
   }, [successMessage, dispatch]);
 
@@ -83,107 +84,74 @@ const WorkerSignup: React.FC = () => {
     }
   };
 
-  // Password validation
   const validatePassword = (password: string) => {
     const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
     return pattern.test(password);
   };
 
-  // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Clear previous field errors
     setFieldErrors({});
 
-    // Password match check
     if (formData.password !== formData.confirm_password) {
       toast.error("Passwords do not match.");
       return;
     }
 
-    // Password strength check
     if (!validatePassword(formData.password)) {
       toast.error(
-        "Password must be at least 6 characters and include lowercase, uppercase, number, and special character.",
+        "Password must be at least 6 characters and include lowercase, uppercase, number, and special character."
       );
       return;
     }
 
     try {
+      
       const resultAction = await dispatch(
-        registerWorker({
+        registerUser({
           ...formData,
           user_type: "worker",
-        }),
+        })
       );
 
-      if (registerWorker.fulfilled.match(resultAction)) {
+      if (registerUser.fulfilled.match(resultAction)) {
         const userId = resultAction.payload.user_id;
         const userEmail = formData.email;
 
         router.push(
-          `/auth/verify-email?userId=${userId}&email=${encodeURIComponent(userEmail)}`,
+          `/auth/verify-email?userId=${userId}&email=${encodeURIComponent(userEmail)}`
         );
-      } else if (registerWorker.rejected.match(resultAction)) {
+      } else if (registerUser.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
 
         if (
           errorPayload &&
-          typeof errorPayload === "object" &&
-          "fieldErrors" in errorPayload
+          typeof errorPayload === "string" &&
+          errorPayload.includes("fieldErrors")
         ) {
-          const errors: Record<string, string> = {};
-          const payloadWithErrors = errorPayload as {
-            fieldErrors: Record<string, string[]>;
-          };
-
-          Object.entries(payloadWithErrors.fieldErrors).forEach(
-            ([field, messages]) => {
-              if (Array.isArray(messages) && messages.length > 0) {
-                errors[field] = messages[0];
-              }
-            },
-          );
-          setFieldErrors(errors);
-          toast.error(
-            `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`,
-          );
-          return;
-        }
-
-        if (typeof errorPayload === "string") {
           try {
             const parsedError = JSON.parse(errorPayload);
-
-            if (
-              parsedError?.fieldErrors &&
-              Object.keys(parsedError.fieldErrors).length > 0
-            ) {
+            if (parsedError?.fieldErrors) {
               const errors: Record<string, string> = {};
               Object.entries(parsedError.fieldErrors).forEach(
-                ([field, messages]) => {
+                ([field, messages]: [string, any]) => {
                   if (Array.isArray(messages) && messages.length > 0) {
                     errors[field] = messages[0];
                   }
-                },
+                }
               );
               setFieldErrors(errors);
               toast.error(
-                `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`,
+                `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`
               );
               return;
             }
           } catch (e) {
-            // Not valid JSON
+            // fallback
           }
         }
 
-        toast.error(
-          typeof errorPayload === "string"
-            ? errorPayload
-            : "Registration failed",
-        );
+        toast.error(typeof errorPayload === "string" ? errorPayload : "Registration failed");
       }
     } catch (err: any) {
       console.error("Unexpected error:", err);
@@ -191,7 +159,7 @@ const WorkerSignup: React.FC = () => {
     }
   };
 
-  const heroContent = (
+   const heroContent = (
     <>
       <h1 className="text-5xl font-bold mb-6 leading-tight">
         Start Your Job Search Journey

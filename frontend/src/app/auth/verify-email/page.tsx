@@ -3,17 +3,19 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/Redux/Store/Store";
-import { verifyEmail, resendOTP, clearState } from "@/Redux/Features/WorkersSlice";
+import { verifyEmail, resendOTP, clearAuthState } from "@/Redux/Features/authSlice";
 import { toast } from "sonner";
-import { useSearchParams, useRouter } from "next/navigation"; 
+import { useSearchParams, useRouter } from "next/navigation";
 import { AuthLayout } from "@/component/Authentication/AuthLayout";
 import { Shield, BadgeCheck, Lock } from "lucide-react";
 
 const VerifyEmail: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter(); 
-  const { loading, error, successMessage, verified } = useSelector(
-    (state: RootState) => state.worker,
+  const router = useRouter();
+  
+ 
+  const { loading, error, successMessage, isVerified } = useSelector(
+    (state: RootState) => state.auth
   );
 
   const searchParams = useSearchParams();
@@ -28,24 +30,24 @@ const VerifyEmail: React.FC = () => {
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
-      dispatch(clearState());
+      dispatch(clearAuthState());
     }
 
     if (error) {
       toast.error(error);
-      dispatch(clearState());
+      dispatch(clearAuthState());
     }
   }, [successMessage, error, dispatch]);
 
   // Redirect to login when verified
   useEffect(() => {
-    if (verified) {
+    if (isVerified) {
       const timer = setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [verified, router]);
+  }, [isVerified, router]);
 
   // Resend Countdown Timer Logic
   useEffect(() => {
@@ -74,7 +76,7 @@ const VerifyEmail: React.FC = () => {
       verifyEmail({
         user_id: userId,
         otp_code: otp,
-      }),
+      })
     );
   };
 
@@ -85,7 +87,7 @@ const VerifyEmail: React.FC = () => {
     }
 
     setResendDisabled(true);
-    setCountdown(60); 
+    setCountdown(60);
 
     dispatch(resendOTP({ user_id: userId, email }));
   };
@@ -147,7 +149,7 @@ const VerifyEmail: React.FC = () => {
           <span className="font-semibold text-maroon">{email || "your email"}</span>
         </p>
 
-        {verified ? (
+        {isVerified ? (
           <div className="text-center py-6">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
               <BadgeCheck className="h-8 w-8 text-green-600" />
