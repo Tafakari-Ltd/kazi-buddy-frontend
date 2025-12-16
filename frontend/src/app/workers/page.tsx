@@ -8,7 +8,7 @@ import { Users, Search, Filter, Mail, Phone, MapPin } from "lucide-react";
 
 import { RootState } from "@/Redux/Store/Store";
 import { useWorkerProfiles } from "@/Redux/Functions/useWorkerProfiles";
-import WorkerProfilesList from "@/components/WorkerProfiles/WorkerProfilesList";
+import WorkerProfilesList from "@/components/PublicWorkerDirectory/WorkerProfilesList";
 import { WorkerProfile, WorkerProfileFilters } from "@/types/worker.types";
 
 const WorkersListingPage = () => {

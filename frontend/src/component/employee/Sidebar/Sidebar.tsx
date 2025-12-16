@@ -9,6 +9,7 @@ import {
   Briefcase,
   FileText,
   FileCheck,
+  Users,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
@@ -34,6 +35,11 @@ const Sidebar = () => {
     { href: "/employer/manage/jobs", label: "Manage Jobs", icon: Briefcase },
 
     { href: "/", label: "Home", icon: Home },
+    { 
+      href: "/workers", 
+      label: "Find Workers", 
+      icon: Users 
+    },
   ];
 
   const employersLinks = [

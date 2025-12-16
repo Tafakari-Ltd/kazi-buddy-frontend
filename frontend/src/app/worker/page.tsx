@@ -25,12 +25,12 @@ import { formatAvailabilitySchedule, CreateWorkerProfileData } from "@/types/wor
 import { JobDetails } from "@/types/jobApplication.types";
 
 // Components
-import DashboardWelcome from "@/components/Worker/DashboardWelcome";
-import WorkerStatsCards from "@/components/Worker/WorkerStatsCards";
-import WorkerProfileForm from "@/components/Worker/WorkerProfileForm";
-import WorkerTabs from "@/components/Worker/WorkerTabs";
-import { AvailableJobs } from "@/components/WorkerProfile/AvailableJobs";
-import { MyApplicationsSection } from "@/components/WorkerProfile/MyApplicationsSection";
+import DashboardWelcome from "@/components/WorkerDashboard/DashboardWelcome";
+import WorkerStatsCards from "@/components/WorkerDashboard/WorkerStatsCards";
+import WorkerProfileForm from "@/components/WorkerDashboard/WorkerProfileForm";
+import WorkerTabs from "@/components/WorkerDashboard/WorkerTabs";
+import { AvailableJobs } from "@/components/WorkerDashboard/AvailableJobs";
+import { MyApplicationsSection } from "@/components/WorkerDashboard/MyApplicationsSection";
 
 const STATUS_OPTIONS = [
   "Dashboard",
