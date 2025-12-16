@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Calendar, DollarSign, MapPin, Users, Building2, Eye, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, DollarSign, MapPin, Users, Building2, Eye, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface PendingJobInterface {
   id: string;
@@ -57,6 +57,19 @@ const PendingJobsTable: React.FC<PendingJobsTableProps> = ({
     return d.toLocaleDateString("en-KE", { year: "numeric", month: "short", day: "numeric" });
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Active</span>;
+      case 'paused':
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">Paused</span>;
+      case 'draft':
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Draft</span>;
+      default:
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
@@ -111,9 +124,12 @@ const PendingJobsTable: React.FC<PendingJobsTableProps> = ({
                     </span>
                   </td>
                   <td className="px-6 py-4 align-top">
-                    <span className="inline-flex px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium text-xs">
-                      Awaiting Approval
-                    </span>
+                    <div className="flex flex-col gap-2 items-start">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 font-medium text-xs border border-yellow-200">
+                           <AlertCircle className="w-3 h-3" /> Awaiting Approval
+                        </span>
+                        {getStatusBadge(job.status)}
+                    </div>
                   </td>
                   <td className="px-6 py-4 align-top text-center">
                     <div className="flex flex-col md:flex-row gap-2 justify-center">

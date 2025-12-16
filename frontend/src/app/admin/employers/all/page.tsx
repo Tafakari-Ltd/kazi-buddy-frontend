@@ -85,13 +85,13 @@ const AllEmployersAdministration: React.FC = () => {
         
         await api.post(`/adminpanel/jobs/${jobId}/approve/`);
       } else {
-       
-        await api.patch(`/jobs/${jobId}/`, { status: newStatus });
+      
+        await api.post(`/jobs/${jobId}/status/`, { status: newStatus });
       }
 
       setAllJobs((prev) => prev.map((job) => job.id === jobId ? { ...job, status: newStatus as any } : job));
       
-      // Update pending set
+      
       setPendingJobIds((prev) => {
         const next = new Set(prev);
         next.delete(jobId);

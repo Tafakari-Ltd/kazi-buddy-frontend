@@ -58,13 +58,20 @@ const ApproveJobsPage: React.FC = () => {
     try {
       setLoadingJobs(true);
       setError(null);
-      const resp: any = await api.get("/adminpanel/jobs/pending/");
+      // Fetch ALL admin jobs
+      const resp: any = await api.get("/adminpanel/admin/jobs/");
+      
       let jobs: PendingJob[] = [];
       if (Array.isArray(resp)) jobs = resp;
       else if (Array.isArray(resp.data)) jobs = resp.data;
       else if (Array.isArray(resp.results)) jobs = resp.results;
       
-      setPendingJobs(jobs);
+      
+      const unapprovedJobs = jobs.filter(job => 
+        job.admin_approved === false || job.status === 'paused'
+      );
+      
+      setPendingJobs(unapprovedJobs);
     } catch (err: any) {
       const errorMessage = err?.message || "Failed to fetch pending jobs";
       setError(errorMessage);
@@ -79,7 +86,14 @@ const ApproveJobsPage: React.FC = () => {
     try {
       setProcessingJobId(job.id);
       setProcessingAction("approve");
-      await api.post(`/adminpanel/jobs/${job.id}/approve/`);
+      
+    
+      if (job.status === 'paused') {
+         await api.post(`/jobs/${job.id}/status/`, { status: "active" });
+      } else {
+         await api.post(`/adminpanel/jobs/${job.id}/approve/`);
+      }
+      
       toast.success(`Job "${job.title}" approved successfully`);
       
       if (showJobModal) setShowJobModal(false);
@@ -97,7 +111,10 @@ const ApproveJobsPage: React.FC = () => {
     try {
       setProcessingJobId(job.id);
       setProcessingAction("reject");
-      await api.patch(`/jobs/${job.id}/`, { status: "cancelled" });
+      
+      
+      await api.post(`/jobs/${job.id}/status/`, { status: "cancelled" });
+      
       toast.success(`Job "${job.title}" rejected`);
       
       if (showJobModal) setShowJobModal(false);

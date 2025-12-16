@@ -78,7 +78,6 @@ const AdminDashboard: React.FC = () => {
         api.get("/adminpanel/admin/jobs/"), 
         JobApplicationApi.getAllApplications({}),
         api.get("/adminpanel/users/pending/"),
-        api.get("/adminpanel/jobs/pending/"),
         api.get("/jobs/categories/"),
       ]);
 
@@ -89,16 +88,18 @@ const AdminDashboard: React.FC = () => {
       const jobsResp = getResult(results[2]);
       const applicationsResp = getResult(results[3]);
       const pendingUsersResp = getResult(results[4]);
-      const pendingJobsResp = getResult(results[5]);
-      const categoriesResp = getResult(results[6]);
+      const categoriesResp = getResult(results[5]);
 
       const workers = normalizeList(workersResp);
       const employers = normalizeList(employersResp);
       const jobs = Array.isArray(jobsResp) ? jobsResp : (jobsResp as any)?.data || normalizeList(jobsResp);
       const applications = (applicationsResp as any)?.applications || [];
       const pendingUsersList = normalizeList(pendingUsersResp) as PendingUser[];
-      const pendingJobsList = normalizeList(pendingJobsResp);
       const categories = normalizeList(categoriesResp) as { id: string; name: string }[];
+
+      const pendingJobsCount = jobs.filter((j: any) => 
+        j.admin_approved === false || j.status === 'paused'
+      ).length;
 
       const pendingApplicationsList = applications.filter((app: any) => app.status === "pending");
       const reviewedApplicationsList = applications.filter((app: any) => app.status === "reviewed");
@@ -130,7 +131,7 @@ const AdminDashboard: React.FC = () => {
         totalApplications: applications.length,
         totalCategories: categories.length,
         pendingUsers: pendingUsersList.length,
-        pendingJobs: pendingJobsList.length,
+        pendingJobs: pendingJobsCount, 
         pendingApplications: pendingApplicationsList.length,
         reviewedApplications: reviewedApplicationsList.length,
         acceptedApplications: acceptedApplicationsList.length,
