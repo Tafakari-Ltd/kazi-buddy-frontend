@@ -29,11 +29,8 @@ const initialState: EmployerProfileState = {
   successMessage: null,
 };
 
-// Async thunks
-
-// 1. Fetch all employer profiles with filters
 export const fetchEmployerProfiles = createAsyncThunk<
-  EmployerProfilesResponse,
+  any,
   EmployerProfileFilters | void,
   { rejectValue: string }
 >(
@@ -42,7 +39,6 @@ export const fetchEmployerProfiles = createAsyncThunk<
     try {
       const queryParams = new URLSearchParams();
       
-      // Build query parameters - handle void filters
       if (filters && typeof filters === 'object') {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -52,7 +48,7 @@ export const fetchEmployerProfiles = createAsyncThunk<
       }
 
       const queryString = queryParams.toString();
-      const url = `/employers/employer-profiles/${queryString ? `?${queryString}` : ''}`;
+      const url = `/adminpanel/employer-profiles/${queryString ? `?${queryString}` : ''}`;
       
       const response = await api.get(url);
       return response.data || response;
@@ -64,7 +60,6 @@ export const fetchEmployerProfiles = createAsyncThunk<
   }
 );
 
-// 2. Fetch single employer profile by ID
 export const fetchEmployerProfileById = createAsyncThunk<
   EmployerProfile,
   string,
@@ -73,7 +68,7 @@ export const fetchEmployerProfileById = createAsyncThunk<
   "employerProfiles/fetchEmployerProfileById",
   async (profileId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/employers/employer-profiles/${profileId}/`);
+      const response = await api.get(`/adminpanel/employer-profiles/${profileId}/`);
       return response.data || response;
     } catch (error: any) {
       return rejectWithValue(
@@ -83,7 +78,6 @@ export const fetchEmployerProfileById = createAsyncThunk<
   }
 );
 
-// 3. Fetch current user's employer profile
 export const fetchUserEmployerProfile = createAsyncThunk<
   EmployerProfile,
   string,
@@ -106,7 +100,6 @@ export const fetchUserEmployerProfile = createAsyncThunk<
   }
 );
 
-// 4. Create employer profile
 export const createEmployerProfile = createAsyncThunk<
   EmployerProfile,
   CreateEmployerProfileData,
@@ -115,13 +108,9 @@ export const createEmployerProfile = createAsyncThunk<
   "employerProfiles/createEmployerProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      console.log('Sending profile data:', profileData);
       const response = await api.post("/employers/employer-profiles/create/", profileData);
-      console.log('Profile created successfully:', response);
       return response.data || response;
     } catch (error: any) {
-      console.error('Create profile error:', error);
-      
       if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
         return rejectWithValue({
           message: "Validation errors occurred",
@@ -156,7 +145,6 @@ export const createEmployerProfile = createAsyncThunk<
   }
 );
 
-// 5. Update employer profile
 export const updateEmployerProfile = createAsyncThunk<
   EmployerProfile,
   { profileId: string; data: UpdateEmployerProfileData },
@@ -179,7 +167,6 @@ export const updateEmployerProfile = createAsyncThunk<
   }
 );
 
-// Employer profiles slice
 const employerProfilesSlice = createSlice({
   name: "employerProfiles",
   initialState,
@@ -221,7 +208,6 @@ const employerProfilesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Fetch employer profiles
     builder
       .addCase(fetchEmployerProfiles.pending, (state) => {
         state.loading = true;
@@ -229,14 +215,26 @@ const employerProfilesSlice = createSlice({
       })
       .addCase(fetchEmployerProfiles.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.data) {
-          state.profiles = action.payload.data;
-        } else {
-          state.profiles = Array.isArray(action.payload) ? action.payload : [];
-        }
         
-        if (action.payload.pagination) {
-          state.pagination = action.payload.pagination;
+        if (action.payload.results && Array.isArray(action.payload.results)) {
+          state.profiles = action.payload.results;
+          const count = action.payload.count || 0;
+          const limit = state.filters.limit || 10;
+          state.pagination = {
+            total: count,
+            page: state.filters.page || 1,
+            limit: limit,
+            total_pages: Math.ceil(count / limit),
+          };
+        } else if (action.payload.data && Array.isArray(action.payload.data)) {
+           state.profiles = action.payload.data;
+           if (action.payload.pagination) {
+             state.pagination = action.payload.pagination;
+           }
+        } else if (Array.isArray(action.payload)) {
+           state.profiles = action.payload;
+        } else {
+           state.profiles = [];
         }
 
         if (typeof window !== "undefined") {
@@ -248,7 +246,6 @@ const employerProfilesSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch employer profile by ID
     builder
       .addCase(fetchEmployerProfileById.pending, (state) => {
         state.loading = true;
@@ -263,7 +260,6 @@ const employerProfilesSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Fetch user employer profile
     builder
       .addCase(fetchUserEmployerProfile.pending, (state) => {
         state.loading = true;
@@ -282,7 +278,6 @@ const employerProfilesSlice = createSlice({
         
         const errorMsg = action.payload as string;
         if (errorMsg === "Employer profile not found") {
-         
           state.error = null;
           state.userProfile = null;
         } else {
@@ -290,7 +285,6 @@ const employerProfilesSlice = createSlice({
         }
       });
 
-    // Create employer profile
     builder
       .addCase(createEmployerProfile.pending, (state) => {
         state.loading = true;
@@ -300,7 +294,7 @@ const employerProfilesSlice = createSlice({
       .addCase(createEmployerProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.profiles.unshift(action.payload);
-        state.userProfile = action.payload; // Set as user's profile
+        state.userProfile = action.payload;
         state.successMessage = "Employer profile created successfully";
 
         if (typeof window !== "undefined") {
@@ -315,7 +309,6 @@ const employerProfilesSlice = createSlice({
           : "Failed to create employer profile";
       });
 
-    // Update employer profile
     builder
       .addCase(updateEmployerProfile.pending, (state) => {
         state.loading = true;
@@ -332,7 +325,6 @@ const employerProfilesSlice = createSlice({
         }
         state.currentProfile = action.payload;
         
-        // Update user profile if it matches
         if (state.userProfile?.id === action.payload.id) {
           state.userProfile = action.payload;
         }

@@ -74,7 +74,7 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       const results = await Promise.allSettled([
         api.get("/workers/profiles/list/"),
-        api.get("/employers/employer-profiles/"),
+        api.get("/adminpanel/employer-profiles/"),
         api.get("/adminpanel/admin/jobs/"), 
         JobApplicationApi.getAllApplications({}),
         api.get("/adminpanel/users/pending/"),
