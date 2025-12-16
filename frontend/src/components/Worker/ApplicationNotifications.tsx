@@ -79,7 +79,7 @@ const ApplicationNotifications = () => {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
 
-      setNotifications(newNotifications.slice(0, 10)); // Keep last 10 notifications
+      setNotifications(newNotifications.slice(0, 10));
     } catch (error) {
       console.error("Error fetching application updates:", error);
     } finally {

@@ -3,7 +3,6 @@ import React from "react";
 import { Briefcase, CheckCircle, Eye, Star } from "lucide-react";
 
 const WorkerStatsCards: React.FC = () => {
-  // In a real app, these would be props. Using placeholders as per original code.
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 container">
       <StatCard
