@@ -1,4 +1,3 @@
-// src/Redux/Features/categoriesSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/lib/axios";
 
@@ -27,13 +26,19 @@ const initialState: CategoryState = {
 };
 
 // Fetch all categories
+
 export const fetchCategories = createAsyncThunk<
   Category[],
   void,
   { rejectValue: string }
 >("categories/fetchCategories", async (_, { rejectWithValue }) => {
   try {
-    const response = await api.get("/jobs/categories/");
+   
+    const response = await api.get("/jobs/categories/?page_size=1000");
+
+    if (response.data && Array.isArray(response.data.results)) {
+       return response.data.results;
+    }
 
     return response.data || response;
   } catch (error: any) {
@@ -49,12 +54,12 @@ export const fetchCategoryById = createAsyncThunk<
 >("categories/fetchCategoryById", async (categoryId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/jobs/categories/${categoryId}/`);
-    // Handle the nested data structure from your API
     return response.data || response;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch category");
   }
 });
+
 // Create category
 export const createCategory = createAsyncThunk<
   Category,
@@ -173,12 +178,12 @@ const categoriesSlice = createSlice({
         fetchCategories.fulfilled,
         (state, action: PayloadAction<Category[]>) => {
           state.loading = false;
-          state.categories = action.payload;
+          state.categories = Array.isArray(action.payload) ? action.payload : (action.payload as any).results || [];
 
           if (typeof window !== "undefined") {
             sessionStorage.setItem(
               "categories",
-              JSON.stringify(action.payload),
+              JSON.stringify(state.categories),
             );
           }
         },
