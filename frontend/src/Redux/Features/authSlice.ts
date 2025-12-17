@@ -8,7 +8,6 @@ import type {
   ApproveUserData 
 } from "@/types";
 
-
 interface AuthState {
   user: any | null;
   accessToken: string | null;
@@ -21,9 +20,18 @@ interface AuthState {
   isVerified: boolean;
 }
 
+const setAuthCookie = (token: string) => {
+  if (typeof document !== 'undefined') {
+    document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax; Secure`;
+  }
+};
 
+const removeAuthCookie = () => {
+  if (typeof document !== 'undefined') {
+    document.cookie = "accessToken=; path=/; max-age=0";
+  }
+};
 
-// 1. Register User (Generic for Worker & Employer)
 export const registerUser = createAsyncThunk<
   { message: string; user_id: string },
   RegisterFormData,
@@ -40,22 +48,15 @@ export const registerUser = createAsyncThunk<
     const response = await api.post("accounts/register/", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-
     return response as any;
   } catch (err: any) {
     if (err?.fieldErrors) {
-      return rejectWithValue(
-        JSON.stringify({
-          message: "Validation failed",
-          fieldErrors: err.fieldErrors,
-        })
-      );
+      return rejectWithValue(JSON.stringify({ message: "Validation failed", fieldErrors: err.fieldErrors }));
     }
     return rejectWithValue(err?.message || "Registration failed");
   }
 });
 
-// 2. Verify Email
 export const verifyEmail = createAsyncThunk<
   { message: string },
   VerifyEmailData,
@@ -73,7 +74,6 @@ export const verifyEmail = createAsyncThunk<
   }
 });
 
-// 3. Resend OTP
 export const resendOTP = createAsyncThunk<
   { message: string },
   { user_id: string; email: string },
@@ -91,14 +91,8 @@ export const resendOTP = createAsyncThunk<
   }
 });
 
-// 4. Login
 export const login = createAsyncThunk<
-  {
-    accessToken: string;
-    refreshToken: string;
-    userId: string;
-    user: any;
-  },
+  { accessToken: string; refreshToken: string; userId: string; user: any },
   { email: string; password: string },
   { rejectValue: string }
 >("auth/login", async ({ email, password }, { rejectWithValue }) => {
@@ -108,86 +102,50 @@ export const login = createAsyncThunk<
       password,
     });
 
-    if (!res || !res.tokens) {
-      return rejectWithValue("Invalid login response");
-    }
+    if (!res || !res.tokens) return rejectWithValue("Invalid login response");
 
-    const accessToken = res.tokens.access;
-    const refreshToken = res.tokens.refresh;
+    const { access: accessToken, refresh: refreshToken } = res.tokens;
     const userId = res.user_id;
-    const userType = res.user_type;
 
-    // Fetch user details
+    // Set cookie for middleware
+    setAuthCookie(accessToken);
+
     const userFromApi = await api.get("/accounts/me/", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    const user = {
-      ...userFromApi,
-      user_type: userFromApi.user_type ?? userType,
-    };
+    const user = { ...userFromApi, user_type: userFromApi.user_type ?? res.user_type };
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("user", JSON.stringify(user));
     }
 
-    return {
-      accessToken,
-      refreshToken,
-      userId,
-      user,
-    };
+    return { accessToken, refreshToken, userId, user };
   } catch (err: any) {
-    const errorMessage =
-      err.response?.data?.detail ||
-      err.response?.data?.error ||
-      err.response?.data?.non_field_errors?.[0] ||
-      err.response?.data?.message ||
-      err.message ||
-      "Login failed";
-
+    const errorMessage = err.response?.data?.detail || err.message || "Login failed";
     return rejectWithValue(errorMessage);
   }
 });
 
-// 5. Approve User
 export const approveUser = createAsyncThunk<
-  {
-    message: string;
-    user: {
-      id: string;
-      phone_number: string;
-      is_verified: boolean;
-      email_verified: boolean;
-      phone_verified: boolean;
-    };
-  },
+  { message: string; user: any },
   { userId: string; data: ApproveUserData },
   { rejectValue: string }
 >("auth/approveUser", async ({ userId, data }, { rejectWithValue }) => {
   try {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value as any);
-      }
+      if (value !== undefined && value !== null) formData.append(key, value as any);
     });
 
-    const res = await api.post(
-      `/adminpanel/users/${userId}/approve/`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-
+    const res = await api.post(`/adminpanel/users/${userId}/approve/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res as any;
   } catch (err: any) {
     return rejectWithValue(err.message || "Failed to approve user");
   }
 });
-
-// --- Slice ---
 
 const initialState: AuthState = {
   accessToken: null,
@@ -227,6 +185,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       sessionStorage.clear();
+      removeAuthCookie();
     },
     clearAuthState: (state) => {
       state.error = null;
@@ -236,7 +195,6 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Login
     builder
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -259,10 +217,7 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Register
-    builder
+      })
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -275,10 +230,7 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Verify Email
-    builder
+      })
       .addCase(verifyEmail.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -291,10 +243,7 @@ const authSlice = createSlice({
       .addCase(verifyEmail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Resend OTP
-    builder
+      })
       .addCase(resendOTP.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -306,10 +255,7 @@ const authSlice = createSlice({
       .addCase(resendOTP.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
-
-    // Approve User
-    builder
+      })
       .addCase(approveUser.pending, (state) => {
         state.loading = true;
         state.error = null;

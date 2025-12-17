@@ -50,7 +50,7 @@ export const fetchJobs = createAsyncThunk<
     const url = `/jobs/${queryString ? `?${queryString}` : ""}`;
 
     const response = await api.get(url);
-    return response;
+    return response as any;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch jobs");
   }
@@ -63,7 +63,7 @@ export const fetchJobById = createAsyncThunk<
 >("jobs/fetchJobById", async (jobId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/jobs/${jobId}/`);
-    return response;
+    return response as any;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch job details");
   }
@@ -80,7 +80,7 @@ export const createJob = createAsyncThunk<
 >("jobs/createJob", async (jobData, { rejectWithValue }) => {
   try {
     const response = await api.post("/jobs/create/", jobData);
-    return response;
+    return response as any;
   } catch (error: any) {
     if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
       return rejectWithValue({
@@ -103,7 +103,7 @@ export const updateJob = createAsyncThunk<
 >("jobs/updateJob", async ({ jobId, data }, { rejectWithValue }) => {
   try {
     const response = await api.put(`/jobs/update/${jobId}/`, data);
-    return response;
+    return response as any;
   } catch (error: any) {
     if (error?.fieldErrors && Object.keys(error.fieldErrors).length > 0) {
       return rejectWithValue({
@@ -150,7 +150,7 @@ export const fetchJobsByEmployer = createAsyncThunk<
     const response = await api.get(
       `/jobs/employers/?employer_id=${employerId}`,
     );
-    return response;
+    return response as any;
   } catch (error: any) {
     return rejectWithValue(
       error?.message || "Failed to fetch jobs by employer",
@@ -165,7 +165,7 @@ export const fetchJobsByCategory = createAsyncThunk<
 >("jobs/fetchJobsByCategory", async (categoryId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/jobs/category/${categoryId}/filter/`);
-    return response;
+    return response as any;
   } catch (error: any) {
     return rejectWithValue(
       error?.message || "Failed to fetch jobs by category",
@@ -180,9 +180,7 @@ const jobsSlice = createSlice({
     clearJobs: (state) => {
       state.jobs = [];
       state.error = null;
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("jobs");
-      }
+      // Removed sessionStorage clearing since we don't store it there anymore
     },
     hydrateJobs: (state, action: PayloadAction<Job[]>) => {
       state.jobs = action.payload;
@@ -223,29 +221,21 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        
         const payload = action.payload as any;
 
-        // 1. DATA EXTRACTION LOGIC 
         if (payload.results && Array.isArray(payload.results)) {
-           
             state.jobs = payload.results;
         } else if (payload.data && Array.isArray(payload.data)) {
-            
             state.jobs = payload.data;
         } else if (Array.isArray(payload)) {
-           
             state.jobs = payload;
         } else {
-            
             state.jobs = [];
         }
 
-        // 2. PAGINATION EXTRACTION LOGIC
         if (payload.pagination) {
           state.pagination = payload.pagination;
         } else if (payload.count !== undefined) {
-           
            const total = payload.count;
            const limit = state.filters.limit || 10;
            state.pagination = {
@@ -255,17 +245,13 @@ const jobsSlice = createSlice({
              total_pages: Math.ceil(total / limit)
            };
         }
-
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jobs", JSON.stringify(state.jobs));
-        }
+        // Removed sessionStorage.setItem
       })
       .addCase(fetchJobs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
 
-      
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;
@@ -280,7 +266,6 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
-   
     builder
       .addCase(createJob.pending, (state) => {
         state.loading = true;
@@ -291,17 +276,11 @@ const jobsSlice = createSlice({
         state.loading = false;
         state.jobs.unshift(action.payload);
         state.successMessage = "Job created successfully";
-
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jobs", JSON.stringify(state.jobs));
-        }
+        // Removed sessionStorage.setItem
       })
       .addCase(createJob.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : "Failed to create job";
+        state.error = typeof action.payload === "string" ? action.payload : "Failed to create job";
       });
 
     builder
@@ -312,25 +291,14 @@ const jobsSlice = createSlice({
       })
       .addCase(updateJob.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.jobs.findIndex(
-          (job) => job.id === action.payload.id,
-        );
-        if (index !== -1) {
-          state.jobs[index] = action.payload;
-        }
+        const index = state.jobs.findIndex((job) => job.id === action.payload.id);
+        if (index !== -1) state.jobs[index] = action.payload;
         state.currentJob = action.payload;
         state.successMessage = "Job updated successfully";
-
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jobs", JSON.stringify(state.jobs));
-        }
       })
       .addCase(updateJob.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : "Failed to update job";
+        state.error = typeof action.payload === "string" ? action.payload : "Failed to update job";
       });
 
     builder
@@ -341,14 +309,8 @@ const jobsSlice = createSlice({
       .addCase(deleteJob.fulfilled, (state, action) => {
         state.loading = false;
         state.jobs = state.jobs.filter((job) => job.id !== action.payload);
-        if (state.currentJob?.id === action.payload) {
-          state.currentJob = null;
-        }
+        if (state.currentJob?.id === action.payload) state.currentJob = null;
         state.successMessage = "Job deleted successfully";
-
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jobs", JSON.stringify(state.jobs));
-        }
       })
       .addCase(deleteJob.rejected, (state, action) => {
         state.loading = false;
@@ -364,17 +326,9 @@ const jobsSlice = createSlice({
         state.loading = false;
         const { jobId, status } = action.payload;
         const index = state.jobs.findIndex((job) => job.id === jobId);
-        if (index !== -1) {
-          state.jobs[index].status = status;
-        }
-        if (state.currentJob?.id === jobId) {
-          state.currentJob.status = status;
-        }
+        if (index !== -1) state.jobs[index].status = status;
+        if (state.currentJob?.id === jobId) state.currentJob.status = status;
         state.successMessage = "Job status updated successfully";
-
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jobs", JSON.stringify(state.jobs));
-        }
       })
       .addCase(updateJobStatus.rejected, (state, action) => {
         state.loading = false;
@@ -396,10 +350,7 @@ const jobsSlice = createSlice({
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
-
-        if (action.payload && action.payload.pagination) {
-          state.pagination = action.payload.pagination;
-        }
+        if (action.payload && action.payload.pagination) state.pagination = action.payload.pagination;
       })
       .addCase(fetchJobsByEmployer.rejected, (state, action) => {
         state.loading = false;
@@ -421,10 +372,7 @@ const jobsSlice = createSlice({
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
-
-        if (action.payload && action.payload.pagination) {
-          state.pagination = action.payload.pagination;
-        }
+        if (action.payload && action.payload.pagination) state.pagination = action.payload.pagination;
       })
       .addCase(fetchJobsByCategory.rejected, (state, action) => {
         state.loading = false;
