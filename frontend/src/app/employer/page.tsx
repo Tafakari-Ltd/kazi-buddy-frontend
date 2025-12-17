@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
   Ban, CheckCircle, Mail, ArrowRight, Calendar, Phone, Users,
-  AlertCircle, Briefcase, Shield, Building
+  AlertCircle, Briefcase, Shield, Building, MessageSquare, Home
 } from "lucide-react";
 
 // Components
@@ -90,7 +90,6 @@ const EmployerApplicationsPage = () => {
     }
   }, [currentUserId, isAuthenticated, handleFetchUserEmployerProfile]);
 
-  // Handle "Post Job" Redirect Logic
   useEffect(() => {
     if (postjob === "1") {
       if (!hasUserProfile()) {
@@ -243,6 +242,24 @@ const EmployerApplicationsPage = () => {
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
       
+      {/* Back to Homepage Button */}
+      <div className="container mb-6 flex gap-4">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
+        >
+          <Home className="w-4 h-4" />
+          Back to Homepage
+        </button>
+        <button
+          onClick={() => router.push("/messages")}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Messages
+        </button>
+      </div>
+
       {/* Header Info */}
       <EmployerHeader 
         profile={userProfile} 

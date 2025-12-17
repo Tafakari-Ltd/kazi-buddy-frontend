@@ -14,7 +14,9 @@ import {
   ArrowRight,
   Star,
   Activity,
-  Settings
+  Settings,
+  Home,
+  MessageSquare
 } from "lucide-react";
 
 // Hooks & Utils
@@ -198,6 +200,17 @@ const WorkerDashboardPage = () => {
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
       
+      {/* Back to Homepage Button */}
+      <div className="container mb-6">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
+        >
+          <Home className="w-4 h-4" />
+          Back to Homepage
+        </button>
+      </div>
+
       <DashboardWelcome 
         userName={userProfile?.user?.full_name || user?.full_name || "Worker"}
         availableJobsCount={availableJobs.length}
@@ -322,6 +335,25 @@ const WorkerDashboardPage = () => {
           </div>
 
           <div className="space-y-8">
+            {/* Messages Quick Access */}
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Messages</h3>
+                  <p className="text-xs text-gray-600">Connect with employers</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => router.push('/messages')} 
+                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium text-sm shadow-sm"
+              >
+                View Messages
+              </button>
+            </div>
+
             {userProfile && (
               <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">

@@ -13,6 +13,7 @@ import jobsSlice from "../Features/jobsSlice";
 import jobEmployerSlice from "../Features/jobs/jobEmployerSlice";
 import employerProfilesSlice from "../Features/employerProfilesSlice";
 import workerProfilesSlice from "../Features/workerProfilesSlice";
+import chatSlice from "../Features/chatSlice";
 
 import { authMiddleware } from "../middleware/authMiddleware";
 
@@ -31,6 +32,7 @@ export const store = configureStore({
     jobEmployer: jobEmployerSlice.reducer,
     employerProfiles: employerProfilesSlice.reducer,
     workerProfiles: workerProfilesSlice.reducer,
+    chat: chatSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(authMiddleware),

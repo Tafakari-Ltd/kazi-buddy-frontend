@@ -37,43 +37,52 @@ const HotJobs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hoveredJob, setHoveredJob] = useState<string | null>(null);
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
-  const jobsPerPage = 12;
+  const jobsPerPage = 9;
 
-  // Reset to page 1 when filters change
+  
   useEffect(() => {
-    setCurrentPage(1);
+    dispatch(clearFilters());
+    setIsInitialMount(false);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isInitialMount) {
+      setCurrentPage(1);
+    }
   }, [
     searchFilters.search_query,
     searchFilters.location,
     searchFilters.category,
     searchFilters.job_type,
+    isInitialMount
   ]);
 
-  // Fetch jobswhen component mounts or filters change
+  
   useEffect(() => {
+  
     const filters = {
       ...searchFilters,
       page: currentPage,
       limit: jobsPerPage,
-      status: "active",
+      status: "active", 
     };
 
     handleFetchJobs(filters);
-  }, [currentPage, searchFilters]);
+  }, [currentPage, searchFilters, handleFetchJobs]); 
 
   const totalJobs = pagination.total;
   const totalPages = pagination.total_pages;
   const paginatedJobs = jobs; 
 
-  // Check if any filters are active
   const hasActiveFilters =
     searchFilters.search_query ||
     searchFilters.location ||
     searchFilters.category ||
     searchFilters.job_type;
 
-  // Helper function to format job type for display
+
   const formatJobType = (type: string) => {
     return type
       .split("_")
@@ -100,10 +109,38 @@ const HotJobs = () => {
     (page: number) => {
       if (page < 1 || page > totalPages) return;
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    
+      const section = document.getElementById("jobs-section");
+      if (section) section.scrollIntoView({ behavior: "smooth" });
     },
     [totalPages],
   );
+
+  const getPageNumbers = useMemo(() => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  }, [currentPage, totalPages]);
 
   const dispatchJobDescription = useCallback((job: Job) => {
     dispatch(
@@ -136,7 +173,6 @@ const HotJobs = () => {
       
       // 1. Check Authentication
       if (!isAuthenticated) {
-        // Redirect to login with return param
         const returnUrl = `/?applyJobId=${jobId}`;
         router.push(`/auth/login?returnTo=${encodeURIComponent(returnUrl)}`);
         return;
@@ -234,32 +270,6 @@ const HotJobs = () => {
     });
   }, []);
 
-  const getPageNumbers = useMemo(() => {
-    const pages = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      }
-    }
-    return pages;
-  }, [currentPage, totalPages]);
-
   return (
     <div
       id="jobs-section"
@@ -348,38 +358,6 @@ const HotJobs = () => {
                   We couldn't find any jobs matching your search criteria.
                 </p>
               </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6 text-left">
-                <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                  <Star className="w-5 h-5" />
-                  Try these tips:
-                </h4>
-                <ul className="space-y-2 text-blue-800 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-1">•</span>
-                    <span>Check your spelling and try different keywords</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-1">•</span>
-                    <span>
-                      Try searching for broader job categories (e.g.,
-                      "Agriculture" instead of "Farming")
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-1">•</span>
-                    <span>Remove some filters to see more results</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-1">•</span>
-                    <span>
-                      Check the category dropdown to see available job
-                      categories
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
               <button
                 onClick={handleClearFilters}
                 className="inline-flex items-center gap-2 bg-[#800000] hover:bg-[#600000] text-white px-6 py-3 rounded-lg font-medium transition-colors"

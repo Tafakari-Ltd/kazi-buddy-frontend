@@ -32,55 +32,78 @@ const Hero = () => {
     }
   }, []);
 
-  // Calculate job counts per category whenever jobs change
+  
   useEffect(() => {
     const counts: Record<string, number> = {};
-    jobs.forEach((job: any) => {
-      const categoryId = typeof job.category === 'string' ? job.category : job.category?.id;
-      if (categoryId) {
-        counts[categoryId] = (counts[categoryId] || 0) + 1;
-      }
-    });
-    setCategoryJobCounts(counts);
-  }, [jobs]);
+    
+    if (jobs && jobs.length > 0) {
+      jobs.forEach((job: any) => {
+        let categoryId = "";
 
-  // Standard search handler (uses current state)
+        if (job.category && typeof job.category === 'object' && job.category.id) {
+            categoryId = job.category.id;
+        } 
+
+        else if (typeof job.category === 'string') {
+          
+            const matchById = categories.find(cat => cat.id === job.category);
+            
+            if (matchById) {
+                categoryId = matchById.id;
+            } else {
+                
+                const matchByName = categories.find(
+                    cat => cat.name.toLowerCase() === job.category.toLowerCase()
+                );
+                if (matchByName) {
+                    categoryId = matchByName.id;
+                }
+            }
+        }
+
+        if (categoryId) {
+          counts[categoryId] = (counts[categoryId] || 0) + 1;
+        }
+      });
+    }
+    setCategoryJobCounts(counts);
+  }, [jobs, categories]);
+
+  
   const handleSearch = () => {
-    // Build search filters
+  
     const filters: any = {
       page: 1,
       limit: 12,
-      status: 'approved'
+      status: 'active' 
     };
 
-    // Add search query if provided
     if (searchQuery.trim()) {
       filters.search_query = searchQuery.trim();
     }
 
-    // Add location if provided
+  
     if (locationQuery.trim()) {
       filters.location = locationQuery.trim();
     }
 
-    // Add category if not "All categories"
+  
     if (selectedCategory && selectedCategory !== "All categories") {
-      // Find the category ID from the categories list
+  
       const category = categories.find(cat => cat.name === selectedCategory);
       if (category) {
         filters.category = category.id;
       }
     }
 
-    // Add job type if selected
+  
     if (selectedJobType) {
       filters.job_type = selectedJobType;
     }
 
-    // Dispatch filters to Redux
+  
     dispatch(setFilters(filters));
 
-    // Show search feedback
     const searchTerms = [];
     if (searchQuery) searchTerms.push(`"${searchQuery}"`);
     if (locationQuery) searchTerms.push(`in ${locationQuery}`);
@@ -94,23 +117,20 @@ const Hero = () => {
   };
 
   const handleQuickCategorySearch = (category: any) => {
-    // Update visual state
     setSelectedCategory(category.name);
     
-    // Build filters immediately with the clicked category ID
+    
     const filters: any = {
       page: 1,
       limit: 12,
-      status: 'approved',
-      category: category.id // Use direct ID
+      status: 'active',
+      category: category.id 
     };
 
-    // Include other existing filters if user has typed them
     if (searchQuery.trim()) filters.search_query = searchQuery.trim();
     if (locationQuery.trim()) filters.location = locationQuery.trim();
     if (selectedJobType) filters.job_type = selectedJobType;
 
-    // Dispatch immediately
     dispatch(setFilters(filters));
     
     toast.success(`Showing ${category.name} jobs`);
@@ -324,7 +344,7 @@ const Hero = () => {
                     .map(cat => (
                       <button
                         key={cat.id}
-                        // Use the new quick search handler here
+                        
                         onClick={() => handleQuickCategorySearch(cat)}
                         className="text-xs bg-white/90 hover:bg-white text-[#800000] px-3 py-1.5 rounded-full font-medium transition flex items-center gap-1 shadow-sm"
                       >

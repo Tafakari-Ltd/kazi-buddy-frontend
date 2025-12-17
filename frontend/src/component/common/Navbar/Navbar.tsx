@@ -79,9 +79,12 @@ const Navbar: React.FC = () => {
 
         {/* CTA Buttons (Desktop) */}
         <div className="hidden md:flex items-center space-x-3 ml-4">
+          {isAuthenticated && (
+            <Link href="/messages">
+              <button className="apply-button">Messages</button>
+            </Link>
+          )}
           {[
-            { label: "Worker", href: "/worker" },
-            { label: "Employer", href: "/employer" },
             { label: "Post Job", href: "/employer?postjob=1" },
           ].map(({ label, href }) => (
             <Link key={label} href={href}>
@@ -89,15 +92,20 @@ const Navbar: React.FC = () => {
             </Link>
           ))}
 
-          {/* ✅ Show login/logout depending on session */}
+          {/* Show login/logout depending on session */}
           {isAuthenticated ? (
             <button className="apply-button" onClick={handleLogout}>
               Logout
             </button>
           ) : (
-            <Link href="/auth/login">
-              <button className="apply-button">Login</button>
-            </Link>
+            <>
+              <Link href="/auth/signup">
+                <button className="apply-button">Sign Up</button>
+              </Link>
+              <Link href="/auth/login">
+                <button className="apply-button">Login</button>
+              </Link>
+            </>
           )}
         </div>
 
@@ -144,6 +152,7 @@ const Navbar: React.FC = () => {
                       {(() => {
                         const items = [
                           { label: "Profile", href: "/profile" },
+                          { label: "Messages", href: "/messages" },
                           {
                             label: "Account Settings",
                             href: "/account-settings",

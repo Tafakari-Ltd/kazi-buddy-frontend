@@ -223,14 +223,37 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload && action.payload.data) {
-          state.jobs = action.payload.data;
+        
+        const payload = action.payload as any;
+
+        // 1. DATA EXTRACTION LOGIC 
+        if (payload.results && Array.isArray(payload.results)) {
+           
+            state.jobs = payload.results;
+        } else if (payload.data && Array.isArray(payload.data)) {
+            
+            state.jobs = payload.data;
+        } else if (Array.isArray(payload)) {
+           
+            state.jobs = payload;
         } else {
-          state.jobs = Array.isArray(action.payload) ? action.payload : [];
+            
+            state.jobs = [];
         }
 
-        if (action.payload && action.payload.pagination) {
-          state.pagination = action.payload.pagination;
+        // 2. PAGINATION EXTRACTION LOGIC
+        if (payload.pagination) {
+          state.pagination = payload.pagination;
+        } else if (payload.count !== undefined) {
+           
+           const total = payload.count;
+           const limit = state.filters.limit || 10;
+           state.pagination = {
+             total: total,
+             page: state.filters.page || 1,
+             limit: limit,
+             total_pages: Math.ceil(total / limit)
+           };
         }
 
         if (typeof window !== "undefined") {
@@ -242,6 +265,7 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
+      
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;
@@ -256,6 +280,7 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
+   
     builder
       .addCase(createJob.pending, (state) => {
         state.loading = true;
@@ -363,8 +388,11 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobsByEmployer.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload && action.payload.data) {
-          state.jobs = action.payload.data;
+        const payload = action.payload as any;
+        if (payload.results && Array.isArray(payload.results)) {
+            state.jobs = payload.results;
+        } else if (payload && payload.data) {
+          state.jobs = payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
@@ -385,8 +413,11 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobsByCategory.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload && action.payload.data) {
-          state.jobs = action.payload.data;
+        const payload = action.payload as any;
+        if (payload.results && Array.isArray(payload.results)) {
+             state.jobs = payload.results;
+        } else if (payload && payload.data) {
+          state.jobs = payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
         }
