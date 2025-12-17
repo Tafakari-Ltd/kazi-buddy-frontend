@@ -1,6 +1,6 @@
 "use client";
 import { Clock, Heart, Locate, Star, Sparkles, ArrowRight, Award, FilterX } from "lucide-react";
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -35,6 +35,9 @@ const Featured = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hoveredJob, setHoveredJob] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Ref to prevent duplicate toasts
+  const toastShownRef = useRef(false);
 
   const isFiltering = useMemo(() => {
     return !!(filters.category || filters.search_query || filters.location || filters.job_type);
@@ -111,8 +114,16 @@ const Featured = () => {
 
   useEffect(() => {
     const applyJobIdParam = searchParams.get("applyJobId");
+    
+    if (!applyJobIdParam) {
+      toastShownRef.current = false;
+      return;
+    }
+
     const handleRedirectApply = async () => {
       if (applyJobIdParam && isAuthenticated && !loading && displayJobs.length > 0) {
+        if (toastShownRef.current) return;
+
         const jobId = applyJobIdParam;
         const jobToApply = displayJobs.find((j) => String(j.id) === jobId);
 
@@ -121,17 +132,26 @@ const Featured = () => {
               try {
                  const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
                  if (!result) {
-                    toast.info("Please create a worker profile");
+                    if (!toastShownRef.current) {
+                        toast.info("Please create a worker profile");
+                        toastShownRef.current = true;
+                    }
                     router.push("/worker");
                     return;
                  }
               } catch {
-                 toast.info("Please create a worker profile");
+                 if (!toastShownRef.current) {
+                    toast.info("Please create a worker profile");
+                    toastShownRef.current = true;
+                 }
                  router.push("/worker");
                  return;
               }
            }
+           
+           toastShownRef.current = true;
            toast.success("Welcome back! Continue with your application");
+           
            document.getElementById(`featured-job-${jobId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
            dispatchJobDescription(jobToApply);
            dispatch(setSelectedJob(jobToApply as unknown as JobDetails));

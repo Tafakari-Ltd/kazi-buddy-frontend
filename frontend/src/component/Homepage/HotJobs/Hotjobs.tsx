@@ -9,7 +9,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -37,6 +37,9 @@ const HotJobs = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hoveredJob, setHoveredJob] = useState<string | null>(null);
   const [isInitialMount, setIsInitialMount] = useState(true);
+  
+  // Ref to prevent duplicate toasts
+  const toastShownRef = useRef(false);
 
   const jobsPerPage = 9;
 
@@ -181,8 +184,18 @@ const HotJobs = () => {
 
   useEffect(() => {
     const applyJobIdParam = searchParams.get("applyJobId");
+
+    
+    if (!applyJobIdParam) {
+      toastShownRef.current = false;
+      return;
+    }
+
     const handleRedirectApply = async () => {
         if (applyJobIdParam && isAuthenticated && jobs.length > 0 && !loading) {
+            
+            if (toastShownRef.current) return;
+
             const jobId = applyJobIdParam;
             const jobToApply = jobs.find((j) => String(j.id) === jobId);
 
@@ -191,17 +204,26 @@ const HotJobs = () => {
                      try {
                         const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
                         if (!result) {
-                            toast.info("Please create a worker profile to continue application");
+                            if (!toastShownRef.current) {
+                                toast.info("Please create a worker profile to continue application");
+                                toastShownRef.current = true;
+                            }
                             router.push("/worker");
                             return;
                         }
                      } catch {
-                        toast.info("Please create a worker profile to continue application");
+                        if (!toastShownRef.current) {
+                            toast.info("Please create a worker profile to continue application");
+                            toastShownRef.current = true;
+                        }
                         router.push("/worker");
                         return;
                      }
                 }
+                
+                toastShownRef.current = true;
                 toast.success("Welcome back! Continue with your application");
+                
                 const cardElement = document.getElementById(`job-card-${jobId}`);
                 if (cardElement) {
                     cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
