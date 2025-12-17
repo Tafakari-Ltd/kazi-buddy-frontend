@@ -1,6 +1,3 @@
-// Job Types and Interfaces
-
-// Application related types (existing)
 export type ApplicationStage =
   | "Application Review"
   | "Phone Interview"
@@ -33,7 +30,6 @@ export interface Application {
   rejectionReason?: string;
 }
 
-// New Job-related interfaces
 export interface Job {
   id: string;
   employer: string;
@@ -165,7 +161,6 @@ export interface JobEmployerResponse {
   data: JobEmployer;
 }
 
-// Enums
 export enum JobType {
   FULL_TIME = "full_time",
   PART_TIME = "part_time",
@@ -211,9 +206,9 @@ export enum SkillLevel {
   EXPERT = "expert",
 }
 
-// State Interfaces
 export interface JobsState {
   jobs: Job[];
+  featuredJobs: Job[];
   currentJob: Job | null;
   jobSkills: JobSkill[];
   jobEmployer: JobEmployer | null;
@@ -229,7 +224,6 @@ export interface JobsState {
   successMessage: string | null;
 }
 
-// Form Validation
 export interface JobFormErrors {
   title?: string;
   description?: string;
@@ -248,7 +242,6 @@ export interface JobFormErrors {
   visibility?: string;
 }
 
-// Constants for dropdown options
 export const JOB_TYPE_OPTIONS = [
   { value: JobType.FULL_TIME, label: "Full Time" },
   { value: JobType.PART_TIME, label: "Part Time" },

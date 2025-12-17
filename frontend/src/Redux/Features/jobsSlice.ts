@@ -12,6 +12,7 @@ import {
 
 const initialState: JobsState = {
   jobs: [],
+  featuredJobs: [],
   currentJob: null,
   jobSkills: [],
   jobEmployer: null,
@@ -53,6 +54,20 @@ export const fetchJobs = createAsyncThunk<
     return response as any;
   } catch (error: any) {
     return rejectWithValue(error?.message || "Failed to fetch jobs");
+  }
+});
+
+export const fetchFeaturedJobs = createAsyncThunk<
+  JobsResponse,
+  void,
+  { rejectValue: string }
+>("jobs/fetchFeaturedJobs", async (_, { rejectWithValue }) => {
+  try {
+    
+    const response = await api.get("/jobs/featured/");
+    return response as any;
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to fetch featured jobs");
   }
 });
 
@@ -226,7 +241,6 @@ const jobsSlice = createSlice({
         if (payload.results && !Array.isArray(payload.results) && payload.results.data && Array.isArray(payload.results.data)) {
             state.jobs = payload.results.data;
         } 
-        
         else if (payload.results && Array.isArray(payload.results)) {
             state.jobs = payload.results;
         } 
@@ -240,7 +254,6 @@ const jobsSlice = createSlice({
             state.jobs = [];
         }
 
-        // Pagination Extraction
         if (payload.pagination) {
           state.pagination = payload.pagination;
         } else if (payload.count !== undefined) {
@@ -259,7 +272,22 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
- 
+    builder
+      .addCase(fetchFeaturedJobs.fulfilled, (state, action) => {
+        const payload = action.payload as any;
+        if (payload.results && !Array.isArray(payload.results) && payload.results.data && Array.isArray(payload.results.data)) {
+            state.featuredJobs = payload.results.data;
+        } else if (payload.results && Array.isArray(payload.results)) {
+            state.featuredJobs = payload.results;
+        } else if (payload.data && Array.isArray(payload.data)) {
+            state.featuredJobs = payload.data;
+        } else if (Array.isArray(payload)) {
+            state.featuredJobs = payload;
+        } else {
+            state.featuredJobs = [];
+        }
+      });
+
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;

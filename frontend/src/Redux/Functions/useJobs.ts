@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../Store/Store";
 import {
   fetchJobs,
+  fetchFeaturedJobs,
   fetchJobById,
   createJob,
   updateJob,
@@ -31,6 +32,7 @@ export const useJobs = () => {
 
   const {
     jobs,
+    featuredJobs,
     currentJob,
     filters,
     pagination,
@@ -43,9 +45,13 @@ export const useJobs = () => {
     (state: RootState) => state.jobEmployer,
   );
 
-  // Jobs CRUD operations
   const handleFetchJobs = useCallback(async (filters?: JobFilters) => {
     const result = await dispatch(fetchJobs(filters));
+    return result.payload;
+  }, [dispatch]);
+
+  const handleFetchFeaturedJobs = useCallback(async () => {
+    const result = await dispatch(fetchFeaturedJobs());
     return result.payload;
   }, [dispatch]);
 
@@ -74,7 +80,6 @@ export const useJobs = () => {
     return result.payload;
   }, [dispatch]);
 
-  // Filtering and search operations
   const handleFetchJobsByEmployer = useCallback(async (employerId: string) => {
     const result = await dispatch(fetchJobsByEmployer(employerId));
     return result.payload;
@@ -102,7 +107,6 @@ export const useJobs = () => {
     return result.payload;
   }, [dispatch]);
 
-  // State management
   const handleClearState = useCallback(() => {
     dispatch(clearState());
   }, [dispatch]);
@@ -144,42 +148,31 @@ export const useJobs = () => {
   };
 
   return {
-    // State
     jobs,
+    featuredJobs,
     currentJob,
-
     jobEmployer,
     filters,
     pagination,
     loading,
-
     employerLoading,
     error,
     successMessage,
-
-    // CRUD operations
     handleFetchJobs,
+    handleFetchFeaturedJobs,
     handleFetchJobById,
     handleCreateJob,
     handleUpdateJob,
     handleDeleteJob,
     handleUpdateJobStatus,
-
-    // Filtering and search
     handleFetchJobsByEmployer,
     handleFetchJobsByCategory,
     handleSetFilters,
     handleClearFilters,
     handleSetPagination,
-
-    // Additional data
     handleFetchJobEmployer,
-
-    // State management
     handleClearState,
     handleClearCurrentJob,
-
-    // Utility functions
     getJobById,
     getJobsByStatus,
     getJobsByCategory,
