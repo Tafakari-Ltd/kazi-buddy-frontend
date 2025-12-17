@@ -63,7 +63,6 @@ export const fetchFeaturedJobs = createAsyncThunk<
   { rejectValue: string }
 >("jobs/fetchFeaturedJobs", async (_, { rejectWithValue }) => {
   try {
-    
     const response = await api.get("/jobs/featured/");
     return response as any;
   } catch (error: any) {
@@ -272,20 +271,32 @@ const jobsSlice = createSlice({
         state.error = action.payload as string;
       });
 
+   
     builder
       .addCase(fetchFeaturedJobs.fulfilled, (state, action) => {
         const payload = action.payload as any;
+        let rawJobs: any[] = [];
+
         if (payload.results && !Array.isArray(payload.results) && payload.results.data && Array.isArray(payload.results.data)) {
-            state.featuredJobs = payload.results.data;
+            rawJobs = payload.results.data;
         } else if (payload.results && Array.isArray(payload.results)) {
-            state.featuredJobs = payload.results;
+            rawJobs = payload.results;
         } else if (payload.data && Array.isArray(payload.data)) {
-            state.featuredJobs = payload.data;
+            rawJobs = payload.data;
         } else if (Array.isArray(payload)) {
-            state.featuredJobs = payload;
-        } else {
-            state.featuredJobs = [];
+            rawJobs = payload;
         }
+
+        
+        state.featuredJobs = rawJobs.map((job) => ({
+            ...job,
+           
+            category: job.category || (job.category_name ? { name: job.category_name } : { name: "General" }),
+            
+            employer: job.employer || (job.employer_name ? { company_name: job.employer_name } : null),
+            
+            description: job.description || "View details to see full job description.",
+        }));
       });
 
     builder

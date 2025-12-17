@@ -296,6 +296,12 @@ const Featured = () => {
                     {job.budget_min && job.budget_max ? `KSh ${job.budget_min} - ${job.budget_max}` : 'Negotiable'}
                   </span>
                 </div>
+                {/* SAFE CATEGORY RENDERING */}
+                <div className="flex items-center gap-2">
+                  <span className="bg-gradient-to-r from-green-100 to-green-200 text-green-800 px-3 py-1 rounded-sm text-xs font-semibold border border-green-300">
+                    {typeof job.category === 'string' ? job.category : (job.category as any)?.name || 'General'}
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-3">
