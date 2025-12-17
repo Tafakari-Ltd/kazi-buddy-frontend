@@ -21,19 +21,18 @@ import { useJobs } from "@/Redux/Functions/useJobs";
 import { fetchUserWorkerProfile } from "@/Redux/Features/workerProfilesSlice";
 import { clearFilters } from "@/Redux/Features/jobsSlice";
 import { Job } from "@/types/job.types";
+import { JobDetails } from "@/types/jobApplication.types";
 
 const HotJobs = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Redux State
   const { jobs, loading, handleFetchJobs, pagination } = useJobs();
   const { isAuthenticated, userId } = useSelector((state: RootState) => state.auth);
   const { userProfile } = useSelector((state: RootState) => state.workerProfiles);
   const searchFilters = useSelector((state: RootState) => state.jobs.filters);
 
-  // Local State
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hoveredJob, setHoveredJob] = useState<string | null>(null);
@@ -41,7 +40,6 @@ const HotJobs = () => {
 
   const jobsPerPage = 9;
 
-  
   useEffect(() => {
     dispatch(clearFilters());
     setIsInitialMount(false);
@@ -59,16 +57,13 @@ const HotJobs = () => {
     isInitialMount
   ]);
 
-  
   useEffect(() => {
-  
     const filters = {
       ...searchFilters,
       page: currentPage,
       limit: jobsPerPage,
-      status: "active", 
+      status: "active" as any, 
     };
-
     handleFetchJobs(filters);
   }, [currentPage, searchFilters, handleFetchJobs]); 
 
@@ -81,7 +76,6 @@ const HotJobs = () => {
     searchFilters.location ||
     searchFilters.category ||
     searchFilters.job_type;
-
 
   const formatJobType = (type: string) => {
     return type
@@ -109,7 +103,6 @@ const HotJobs = () => {
     (page: number) => {
       if (page < 1 || page > totalPages) return;
       setCurrentPage(page);
-    
       const section = document.getElementById("jobs-section");
       if (section) section.scrollIntoView({ behavior: "smooth" });
     },
@@ -119,7 +112,6 @@ const HotJobs = () => {
   const getPageNumbers = useMemo(() => {
     const pages = [];
     const maxVisiblePages = 5;
-
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
@@ -148,74 +140,53 @@ const HotJobs = () => {
         id: String(job.id),
         title: job.title,
         jobType: job.job_type,
-        category:
-          typeof job.category === "string"
-            ? job.category
-            : (job.category as any)?.name || "General",
-        location:
-          (job as any).location_address ||
-          job.location_text ||
-          job.location ||
-          "Not specified",
-        rate:
-          job.budget_min && job.budget_max
-            ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}`
-            : "Negotiable",
+        category: typeof job.category === "string" ? job.category : (job.category as any)?.name || "General",
+        location: (job as any).location_address || job.location_text || job.location || "Not specified",
+        rate: job.budget_min && job.budget_max ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}` : "Negotiable",
         description: job.description,
         image: (job as any).job_image || "",
       } as any)
     );
   }, [dispatch]);
 
-  // --- Handle Apply Logic ---
   const handleApply = useCallback(
     async (jobTitle: string, jobId: string, jobData: Job) => {
-      
-      // 1. Check Authentication
       if (!isAuthenticated) {
         const returnUrl = `/?applyJobId=${jobId}`;
         router.push(`/auth/login?returnTo=${encodeURIComponent(returnUrl)}`);
         return;
       }
 
-      // 2. Check Worker Profile
-      if (userId) {
-        if (!userProfile) {
-            try {
-                const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
-                if (!result) {
-                    toast.info("Please create a worker profile to apply for jobs");
-                    router.push("/worker");
-                    return;
-                }
-            } catch (error) {
-                toast.info("Please create a worker profile to apply for jobs");
-                router.push("/worker");
-                return;
-            }
-        }
+      if (userId && !userProfile) {
+          try {
+              const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
+              if (!result) {
+                  toast.info("Please create a worker profile to apply for jobs");
+                  router.push("/worker");
+                  return;
+              }
+          } catch (error) {
+              toast.info("Please create a worker profile to apply for jobs");
+              router.push("/worker");
+              return;
+          }
       }
+      
       dispatchJobDescription(jobData);
-      dispatch(setSelectedJob({ id: jobId, title: jobTitle }));
+      dispatch(setSelectedJob(jobData as unknown as JobDetails));
       dispatch(openJobModal());
-      console.log(`Applied for job: ${jobTitle} (ID: ${jobId})`);
     },
     [dispatch, isAuthenticated, router, userId, userProfile, dispatchJobDescription]
   );
 
   useEffect(() => {
     const applyJobIdParam = searchParams.get("applyJobId");
-
     const handleRedirectApply = async () => {
-        // Ensure jobs are loaded before trying to find the job
         if (applyJobIdParam && isAuthenticated && jobs.length > 0 && !loading) {
             const jobId = applyJobIdParam;
-            
-            // Find job details
             const jobToApply = jobs.find((j) => String(j.id) === jobId);
 
             if (jobToApply) {
-              
                 if (userId && !userProfile) {
                      try {
                         const result = await dispatch(fetchUserWorkerProfile(userId)).unwrap();
@@ -231,25 +202,20 @@ const HotJobs = () => {
                      }
                 }
                 toast.success("Welcome back! Continue with your application");
-
                 const cardElement = document.getElementById(`job-card-${jobId}`);
                 if (cardElement) {
                     cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-
                 dispatchJobDescription(jobToApply);
-                dispatch(setSelectedJob({ id: jobToApply.id, title: jobToApply.title }));
+                dispatch(setSelectedJob(jobToApply as unknown as JobDetails));
                 dispatch(openJobModal());
                 router.replace("/", { scroll: false });
             }
         }
     };
-
     handleRedirectApply();
   }, [searchParams, isAuthenticated, dispatch, router, jobs, loading, userId, userProfile, dispatchJobDescription]);
 
-
-  // Handle View Details Click
   const handleViewDetails = useCallback(
     (job: Job) => {
       dispatchJobDescription(job);
@@ -271,10 +237,7 @@ const HotJobs = () => {
   }, []);
 
   return (
-    <div
-      id="jobs-section"
-      className="mx-auto px-6 md:px-12 bg-gradient-to-b from-gray-50 to-white container "
-    >
+    <div id="jobs-section" className="mx-auto px-6 md:px-12 bg-gradient-to-b from-gray-50 to-white container ">
       <div className="mb-12 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="p-3 bg-gradient-to-r from-[#800000] to-amber-600 rounded-sm shadow-lg">
@@ -285,8 +248,7 @@ const HotJobs = () => {
           </h3>
         </div>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Discover exciting opportunities that match your skills and career
-          goals. Start your journey with us today.
+          Discover exciting opportunities that match your skills and career goals. Start your journey with us today.
         </p>
         <div className="mt-4 flex items-center justify-center gap-6 text-sm text-gray-500">
           <span className="flex items-center gap-2">
@@ -297,12 +259,9 @@ const HotJobs = () => {
           <span>Updated Daily</span>
         </div>
 
-        {/* Active Filters Display */}
         {hasActiveFilters && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <span className="text-sm font-medium text-gray-600">
-              Active filters:
-            </span>
+            <span className="text-sm font-medium text-gray-600">Active filters:</span>
             {searchFilters.search_query && (
               <span className="inline-flex items-center gap-1 bg-[#800000] text-white px-3 py-1 rounded-full text-sm">
                 <Search className="w-3 h-3" />
@@ -327,10 +286,7 @@ const HotJobs = () => {
                 {formatJobType(searchFilters.job_type)}
               </span>
             )}
-            <button
-              onClick={handleClearFilters}
-              className="inline-flex items-center gap-1 bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-full text-sm font-medium transition-colors"
-            >
+            <button onClick={handleClearFilters} className="inline-flex items-center gap-1 bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-full text-sm font-medium transition-colors">
               <X className="w-3 h-3" />
               Clear all
             </button>
@@ -338,7 +294,6 @@ const HotJobs = () => {
         )}
       </div>
 
-      {/* Jobs Grid */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
@@ -351,19 +306,11 @@ const HotJobs = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                   <Briefcase className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  No Jobs Found
-                </h3>
-                <p className="text-gray-600 text-lg mb-6">
-                  We couldn't find any jobs matching your search criteria.
-                </p>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">No Jobs Found</h3>
+                <p className="text-gray-600 text-lg mb-6">We couldn't find any jobs matching your search criteria.</p>
               </div>
-              <button
-                onClick={handleClearFilters}
-                className="inline-flex items-center gap-2 bg-[#800000] hover:bg-[#600000] text-white px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Clear All Filters & Show All Jobs
+              <button onClick={handleClearFilters} className="inline-flex items-center gap-2 bg-[#800000] hover:bg-[#600000] text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                <X className="w-4 h-4" /> Clear All Filters & Show All Jobs
               </button>
             </>
           ) : (
@@ -371,13 +318,8 @@ const HotJobs = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                 <Briefcase className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                No Jobs Available
-              </h3>
-              <p className="text-gray-600 text-lg">
-                There are currently no approved jobs. Check back soon for new
-                opportunities!
-              </p>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">No Jobs Available</h3>
+              <p className="text-gray-600 text-lg">There are currently no approved jobs. Check back soon for new opportunities!</p>
             </>
           )}
         </div>
@@ -393,30 +335,13 @@ const HotJobs = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={
-                    (job as any).job_image ||
-                    "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  }
+                  src={(job as any).job_image || "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"}
                   alt={job.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br from-[#800000]/60 to-gray-900/60 mix-blend-multiply transition-opacity duration-300 ${
-                    hoveredJob === job.id ? "opacity-60" : "opacity-80"
-                  }`}
-                />
-                <button
-                  onClick={(e) => toggleFavorite(job.id, e)}
-                  aria-label="Toggle favorite"
-                  className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30"
-                >
-                  <Heart
-                    className={`w-5 h-5 ${
-                      favorites.has(job.id)
-                        ? "fill-red-500 text-red-500"
-                        : "text-white hover:text-red-300"
-                    }`}
-                  />
+                <div className={`absolute inset-0 bg-gradient-to-br from-[#800000]/60 to-gray-900/60 mix-blend-multiply transition-opacity duration-300 ${hoveredJob === job.id ? "opacity-60" : "opacity-80"}`} />
+                <button onClick={(e) => toggleFavorite(job.id, e)} aria-label="Toggle favorite" className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30">
+                  <Heart className={`w-5 h-5 ${favorites.has(job.id) ? "fill-red-500 text-red-500" : "text-white hover:text-red-300"}`} />
                 </button>
                 <div className="absolute top-3 left-3">
                   <span className="bg-[#800000] text-white px-3 py-1 rounded-sm text-xs font-semibold shadow-lg">
@@ -426,51 +351,26 @@ const HotJobs = () => {
               </div>
 
               <div className="p-6">
-                <h4 className="text-xl font-bold text-[#800000] mb-3 line-clamp-2 group-hover:text-[#600000] transition-colors">
-                  {job.title}
-                </h4>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-                  {job.description}
-                </p>
-
+                <h4 className="text-xl font-bold text-[#800000] mb-3 line-clamp-2 group-hover:text-[#600000] transition-colors">{job.title}</h4>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{job.description}</p>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <div className="p-1 bg-green-100 rounded">
-                      <Locate className="w-3 h-3 text-green-700" />
-                    </div>
+                    <div className="p-1 bg-green-100 rounded"><Locate className="w-3 h-3 text-green-700" /></div>
                     <span>{job.location_text || job.location || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <div className="p-1 bg-blue-100 rounded">
-                      <Clock className="w-3 h-3 text-blue-700" />
-                    </div>
-                    <span className="font-semibold text-[#800000]">
-                      {job.budget_min && job.budget_max
-                        ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}`
-                        : "Negotiable"}
-                    </span>
+                    <div className="p-1 bg-blue-100 rounded"><Clock className="w-3 h-3 text-blue-700" /></div>
+                    <span className="font-semibold text-[#800000]">{job.budget_min && job.budget_max ? `KSh ${job.budget_min.toLocaleString()} - ${job.budget_max.toLocaleString()}` : "Negotiable"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                      {typeof job.category === "string"
-                        ? job.category
-                        : (job.category as any)?.name || "General"}
-                    </span>
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">{typeof job.category === "string" ? job.category : (job.category as any)?.name || "General"}</span>
                   </div>
                 </div>
-
                 <div className="space-y-3">
-                  <button
-                    onClick={() => handleViewDetails(job)}
-                    className="w-full flex items-center justify-center gap-2 text-[#800000] hover:text-white hover:bg-gradient-to-r hover:from-[#800000] hover:to-[#600000] border-2 border-[#800000] px-4 py-2 rounded-sm text-sm font-bold transition-all duration-200 group/btn"
-                  >
-                    View Details
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                  <button onClick={() => handleViewDetails(job)} className="w-full flex items-center justify-center gap-2 text-[#800000] hover:text-white hover:bg-gradient-to-r hover:from-[#800000] hover:to-[#600000] border-2 border-[#800000] px-4 py-2 rounded-sm text-sm font-bold transition-all duration-200 group/btn">
+                    View Details <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                   </button>
-                  <button
-                    onClick={() => handleApply(job.title, job.id, job)}
-                    className="w-full bg-gradient-to-r from-[#800000] via-[#600000] to-amber-600 text-white px-4 py-2 rounded-sm text-sm font-bold hover:from-[#600000] hover:via-[#400000] hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 relative overflow-hidden"
-                  >
+                  <button onClick={() => handleApply(job.title, job.id, job)} className="w-full bg-gradient-to-r from-[#800000] via-[#600000] to-amber-600 text-white px-4 py-2 rounded-sm text-sm font-bold hover:from-[#600000] hover:via-[#400000] hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 relative overflow-hidden">
                     <span className="relative z-10">Apply Now</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:animate-pulse"></div>
                   </button>
@@ -481,54 +381,16 @@ const HotJobs = () => {
         </div>
       )}
 
-      {/* Pagination */}
       <div className="flex flex-col lg:flex-row justify-between items-center bg-white rounded-sm p-6 border border-gray-200">
         <div className="mb-4 lg:mb-0 text-sm text-gray-600">
-          Showing{" "}
-          <span className="font-semibold text-[#800000]">
-            {paginationInfo.start}
-          </span>{" "}
-          -
-          <span className="font-semibold text-[#800000]">
-            {" "}
-            {paginationInfo.end}
-          </span>{" "}
-          of
-          <span className="font-semibold text-[#800000]">
-            {" "}
-            {paginationInfo.total}
-          </span>{" "}
-          jobs
+          Showing <span className="font-semibold text-[#800000]">{paginationInfo.start}</span> - <span className="font-semibold text-[#800000]">{paginationInfo.end}</span> of <span className="font-semibold text-[#800000]">{paginationInfo.total}</span> jobs
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded border text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-          >
-            Previous
-          </button>
+          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 rounded border text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50">Previous</button>
           {getPageNumbers.map((num, idx) => (
-            <button
-              key={idx}
-              onClick={() => typeof num === "number" && handlePageChange(num)}
-              disabled={num === "..."}
-              className={`px-3 py-1 rounded text-sm font-medium ${
-                num === currentPage
-                  ? "bg-[#800000] text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {num}
-            </button>
+            <button key={idx} onClick={() => typeof num === "number" && handlePageChange(num)} disabled={num === "..."} className={`px-3 py-1 rounded text-sm font-medium ${num === currentPage ? "bg-[#800000] text-white" : "text-gray-600 hover:bg-gray-100"}`}>{num}</button>
           ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded border text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-          >
-            Next
-          </button>
+          <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 rounded border text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50">Next</button>
         </div>
       </div>
     </div>

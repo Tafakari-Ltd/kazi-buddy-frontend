@@ -4,49 +4,30 @@ import {
   JobApplication,
   JobApplicationWithDetails,
   ApplicationFormErrors,
-  ApplicationStatus
+  ApplicationStatus,
+  JobDetails
 } from '../../types/jobApplication.types';
 import JobApplicationApi from '../../services/jobApplicationApi';
 
 interface ApplyJobState {
-  // Form state
   formData: JobApplicationRequest;
-  
-  // Application lists
   myApplications: JobApplication[];
   jobApplications: JobApplication[];
   allApplications: JobApplication[];
-  
-  // Current application details
   currentApplication: JobApplicationWithDetails | null;
-
-  // Selected Job for Application 
-  selectedJob: {
-    id: string | number;
-    title: string;
-  } | null;
-  
-  // UI state
+  selectedJob: JobDetails | null;
   isModalOpen: boolean;
   isLoading: boolean;
   isSubmitting: boolean;
-  
-  // Error handling
   errors: ApplicationFormErrors;
   apiError: string | null;
-  
-  // Success messages
   successMessage: string | null;
-  
-  // Pagination and filtering
   pagination: {
     currentPage: number;
     totalPages: number;
     totalItems: number;
     itemsPerPage: number;
   };
-  
-  // Application statistics
   stats: {
     total: number;
     pending: number;
@@ -70,7 +51,7 @@ const initialState: ApplyJobState = {
   jobApplications: [],
   allApplications: [],
   currentApplication: null,
-  selectedJob: null,// Initialize selectedJob
+  selectedJob: null,
   isModalOpen: false,
   isLoading: false,
   isSubmitting: false,
@@ -92,7 +73,6 @@ const initialState: ApplyJobState = {
   }
 };
 
-// Async Thunks for API calls
 export const applyForJob = createAsyncThunk(
   'jobApplication/apply',
   async ({ jobId, applicationData }: { jobId: string; applicationData: JobApplicationRequest }) => {
@@ -153,61 +133,45 @@ const applyJobSlice = createSlice({
   name: "jobApplication",
   initialState,
   reducers: {
-    // Form data management
     updateFormData(state, action: PayloadAction<Partial<JobApplicationRequest>>) {
       state.formData = { ...state.formData, ...action.payload };
     },
-    
     setCoverLetter(state, action: PayloadAction<string>) {
       state.formData.cover_letter = action.payload;
     },
-    
     setProposedRate(state, action: PayloadAction<number>) {
       state.formData.proposed_rate = action.payload;
     },
-    
     setAvailabilityStart(state, action: PayloadAction<string>) {
       state.formData.availability_start = action.payload;
     },
-    
     setWorkerNotes(state, action: PayloadAction<string>) {
       state.formData.worker_notes = action.payload;
     },
-
-    // Set Selected Job 
-    setSelectedJob(state, action: PayloadAction<{ id: string | number; title: string }>) {
+    setSelectedJob(state, action: PayloadAction<JobDetails>) {
       state.selectedJob = action.payload;
     },
-    
-    // Form validation
     setFormErrors(state, action: PayloadAction<ApplicationFormErrors>) {
       state.errors = action.payload;
     },
-    
     clearFormErrors(state) {
       state.errors = {};
     },
-    
-    // Form reset
     resetForm(state) {
       state.formData = initialFormData;
       state.errors = {};
     },
-    
     clearForm(state) {
       state.formData = initialFormData;
       state.errors = {};
       state.apiError = null;
       state.successMessage = null;
     },
-    
-    // Modal management
     openJobModal(state) {
       state.isModalOpen = true;
       state.apiError = null;
       state.successMessage = null; 
     },
-    
     closeJobModal(state) {
       state.isModalOpen = false;
       state.formData = initialFormData;
@@ -215,59 +179,35 @@ const applyJobSlice = createSlice({
       state.apiError = null;
       state.successMessage = null; 
     },
-    
-    // Success/Error message management
     setSuccessMessage(state, action: PayloadAction<string>) {
       state.successMessage = action.payload;
       state.apiError = null;
     },
-    
     setApiError(state, action: PayloadAction<string>) {
       state.apiError = action.payload;
       state.successMessage = null;
     },
-    
     clearMessages(state) {
       state.successMessage = null;
       state.apiError = null;
     },
-    
-    // Application status update 
     updateApplicationStatus(state, action: PayloadAction<{ id: string; status: ApplicationStatus }>) {
       const { id, status } = action.payload;
-      
-      // Update in myApplications
       const myApp = state.myApplications.find(app => app.id === id);
-      if (myApp) {
-        myApp.status = status;
-      }
-      
-      // Update in jobApplications
+      if (myApp) myApp.status = status;
       const jobApp = state.jobApplications.find(app => app.id === id);
-      if (jobApp) {
-        jobApp.status = status;
-      }
-      
-      // Update in allApplications
+      if (jobApp) jobApp.status = status;
       const allApp = state.allApplications.find(app => app.id === id);
-      if (allApp) {
-        allApp.status = status;
-      }
-      
-      // Update current application if it matches
+      if (allApp) allApp.status = status;
       if (state.currentApplication && state.currentApplication.id === id) {
         state.currentApplication.status = status;
       }
     },
-    
-    // Pagination
     setPagination(state, action: PayloadAction<Partial<typeof initialState.pagination>>) {
       state.pagination = { ...state.pagination, ...action.payload };
     }
   },
-  
   extraReducers: (builder) => {
-    // Apply for job
     builder
       .addCase(applyForJob.pending, (state) => {
         state.isSubmitting = true;
@@ -285,7 +225,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to submit application';
       });
     
-    // Fetch my applications
     builder
       .addCase(fetchMyApplications.pending, (state) => {
         state.isLoading = true;
@@ -300,7 +239,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to fetch applications';
       });
     
-    // Fetch application details
     builder
       .addCase(fetchApplicationDetails.pending, (state) => {
         state.isLoading = true;
@@ -315,7 +253,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to fetch application details';
       });
     
-    // Fetch job applications
     builder
       .addCase(fetchJobApplications.pending, (state) => {
         state.isLoading = true;
@@ -330,7 +267,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to fetch job applications';
       });
     
-    // Update application
     builder
       .addCase(updateApplication.pending, (state) => {
         state.isSubmitting = true;
@@ -346,7 +282,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to update application';
       });
     
-    // Delete application
     builder
       .addCase(deleteApplication.pending, (state) => {
         state.isSubmitting = true;
@@ -355,14 +290,10 @@ const applyJobSlice = createSlice({
       .addCase(deleteApplication.fulfilled, (state, action) => {
         state.isSubmitting = false;
         state.successMessage = 'Application deleted successfully!';
-        
-        // Remove from all lists
         const applicationId = action.payload;
         state.myApplications = state.myApplications.filter(app => app.id !== applicationId);
         state.jobApplications = state.jobApplications.filter(app => app.id !== applicationId);
         state.allApplications = state.allApplications.filter(app => app.id !== applicationId);
-        
-        // Clear current if it was the deleted one
         if (state.currentApplication?.id === applicationId) {
           state.currentApplication = null;
         }
@@ -372,7 +303,6 @@ const applyJobSlice = createSlice({
         state.apiError = action.error.message || 'Failed to delete application';
       });
     
-    // Fetch application stats
     builder
       .addCase(fetchApplicationStats.fulfilled, (state, action) => {
         state.stats = action.payload;

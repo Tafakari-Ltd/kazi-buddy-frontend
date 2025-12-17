@@ -32,7 +32,6 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     hideJobModal();
   };
 
-  // Don't render if no job details
   if (!jobDetails) {
     return null;
   }
@@ -59,10 +58,10 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
               <div className="flex-1 mr-4">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Apply for Position
+                  Apply for {jobDetails.title}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Submit your application for this job opportunity
+                  Complete the form below to submit your application.
                 </p>
               </div>
               <button
