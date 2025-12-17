@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../Store/Store";
 import {
@@ -43,74 +44,73 @@ export const useJobs = () => {
   );
 
   // Jobs CRUD operations
-  const handleFetchJobs = async (filters?: JobFilters) => {
+  const handleFetchJobs = useCallback(async (filters?: JobFilters) => {
     const result = await dispatch(fetchJobs(filters));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleFetchJobById = async (jobId: string) => {
+  const handleFetchJobById = useCallback(async (jobId: string) => {
     const result = await dispatch(fetchJobById(jobId));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleCreateJob = async (jobData: CreateJobData) => {
+  const handleCreateJob = useCallback(async (jobData: CreateJobData) => {
     const result = await dispatch(createJob(jobData));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleUpdateJob = async (jobId: string, data: UpdateJobData) => {
+  const handleUpdateJob = useCallback(async (jobId: string, data: UpdateJobData) => {
     const result = await dispatch(updateJob({ jobId, data }));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleDeleteJob = async (jobId: string) => {
+  const handleDeleteJob = useCallback(async (jobId: string) => {
     const result = await dispatch(deleteJob(jobId));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleUpdateJobStatus = async (jobId: string, status: JobStatus) => {
+  const handleUpdateJobStatus = useCallback(async (jobId: string, status: JobStatus) => {
     const result = await dispatch(updateJobStatus({ jobId, status }));
     return result.payload;
-  };
+  }, [dispatch]);
 
   // Filtering and search operations
-  const handleFetchJobsByEmployer = async (employerId: string) => {
+  const handleFetchJobsByEmployer = useCallback(async (employerId: string) => {
     const result = await dispatch(fetchJobsByEmployer(employerId));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleFetchJobsByCategory = async (categoryId: string) => {
+  const handleFetchJobsByCategory = useCallback(async (categoryId: string) => {
     const result = await dispatch(fetchJobsByCategory(categoryId));
     return result.payload;
-  };
+  }, [dispatch]);
 
-  const handleSetFilters = (newFilters: JobFilters) => {
+  const handleSetFilters = useCallback((newFilters: JobFilters) => {
     dispatch(setFilters(newFilters));
-  };
+  }, [dispatch]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     dispatch(clearFilters());
-  };
+  }, [dispatch]);
 
-  const handleSetPagination = (page: number, limit?: number) => {
+  const handleSetPagination = useCallback((page: number, limit?: number) => {
     dispatch(setPagination({ page, limit }));
-  };
+  }, [dispatch]);
 
-  const handleFetchJobEmployer = async (jobId: string) => {
+  const handleFetchJobEmployer = useCallback(async (jobId: string) => {
     const result = await dispatch(fetchJobEmployer(jobId));
     return result.payload;
-  };
+  }, [dispatch]);
 
   // State management
-  const handleClearState = () => {
+  const handleClearState = useCallback(() => {
     dispatch(clearState());
-  };
+  }, [dispatch]);
 
-  const handleClearCurrentJob = () => {
+  const handleClearCurrentJob = useCallback(() => {
     dispatch(clearCurrentJob());
-  };
+  }, [dispatch]);
 
-  // Utility functions
   const getJobById = (jobId: string) => {
     return jobs.find((job) => job.id === jobId);
   };
@@ -173,7 +173,6 @@ export const useJobs = () => {
     handleSetPagination,
 
     // Additional data
-
     handleFetchJobEmployer,
 
     // State management

@@ -5,18 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
-  AlertCircle,
-  MapPin,
-  DollarSign,
-  Clock,
-  User,
-  Badge,
-  ArrowRight,
-  Star,
-  Activity,
-  Settings,
-  Home,
-  MessageSquare
+  AlertCircle, MapPin, DollarSign, Clock, User, Badge, ArrowRight, Star,
+  Activity, Settings, Home, MessageSquare
 } from "lucide-react";
 
 // Hooks & Utils
@@ -50,7 +40,6 @@ const WorkerDashboardPage = () => {
   const { user, userId, isAuthenticated } = useSelector((state: RootState) => state.auth || {});
   const currentUserId = userId || user?.user_id || user?.id;
 
-  // Hooks
   const {
     userProfile,
     loading: profileLoading,
@@ -65,7 +54,6 @@ const WorkerDashboardPage = () => {
 
   const { handleFetchJobs } = useJobs();
 
-  // Local State
   const [filter, setFilter] = useState<string>("Dashboard");
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -77,21 +65,18 @@ const WorkerDashboardPage = () => {
 
   useEffect(() => { setIsClient(true); }, []);
 
-  // Sync with URL params
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setSetupProfile(searchParams?.get("setup") || null);
     }
   }, [searchParams]);
 
-  // Fetch Profile
   useEffect(() => {
     if (currentUserId && isAuthenticated) {
       handleFetchUserWorkerProfile(currentUserId);
     }
   }, [currentUserId, isAuthenticated, handleFetchUserWorkerProfile]);
 
-  // Handle Profile Setup Redirect
   useEffect(() => {
     if (setupProfile === "1") {
       if (!hasUserProfile()) {
@@ -103,7 +88,6 @@ const WorkerDashboardPage = () => {
     }
   }, [setupProfile, hasUserProfile]);
 
-  // Notifications
   useEffect(() => {
     if (successMessage) {
       toast.success(typeof successMessage === 'string' ? successMessage : 'Success');
@@ -118,7 +102,7 @@ const WorkerDashboardPage = () => {
     }
   }, [successMessage, profileError, handleClearState, currentUserId, handleFetchUserWorkerProfile]);
 
-  // Fetch Jobs
+  
   const fetchAvailableJobs = async () => {
     try {
       setJobsLoading(true);
@@ -126,9 +110,22 @@ const WorkerDashboardPage = () => {
       
       if (result && typeof result !== 'string') {
         let jobsArray = [];
-        if ('data' in result && Array.isArray(result.data)) jobsArray = result.data;
-        else if (Array.isArray(result)) jobsArray = result;
-        else if ('jobs' in result && Array.isArray(result.jobs)) jobsArray = result.jobs;
+        
+        if (result.results && !Array.isArray(result.results) && result.results.data && Array.isArray(result.results.data)) {
+            jobsArray = result.results.data;
+        }
+       
+        else if (result.results && Array.isArray(result.results)) {
+            jobsArray = result.results;
+        }
+        
+        else if ('data' in result && Array.isArray(result.data)) {
+            jobsArray = result.data;
+        }
+        
+        else if (Array.isArray(result)) {
+            jobsArray = result;
+        }
 
         if (jobsArray.length > 0) {
           const transformedJobs: JobDetails[] = jobsArray.map((job: any) => ({
@@ -171,7 +168,6 @@ const WorkerDashboardPage = () => {
     }
   }, [filter, availableJobs.length, jobsLoading]);
 
-  // Handlers
   const handleProfileSubmit = async (data: CreateWorkerProfileData) => {
     try {
       if (showProfileModal) {
@@ -200,7 +196,6 @@ const WorkerDashboardPage = () => {
   return (
     <div className="px-6 md:px-12 py-10 bg-gray-50 min-h-screen">
       
-      {/* Back to Homepage Button */}
       <div className="container mb-6">
         <button
           onClick={() => router.push("/")}
@@ -243,7 +238,6 @@ const WorkerDashboardPage = () => {
       {filter === "Dashboard" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 container">
           <div className="lg:col-span-2 space-y-8">
-            {/* Profile Snapshot */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -298,7 +292,6 @@ const WorkerDashboardPage = () => {
               )}
             </div>
 
-            {/* Recommended Jobs */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -335,7 +328,6 @@ const WorkerDashboardPage = () => {
           </div>
 
           <div className="space-y-8">
-            {/* Messages Quick Access */}
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -399,7 +391,6 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* OTHER VIEWS */}
       {filter === "Available Jobs" && (
         <div className="container">
           {hasUserProfile() ? (
@@ -434,7 +425,6 @@ const WorkerDashboardPage = () => {
         </div>
       )}
 
-      {/* PROFILE MODAL */}
       {(showProfileModal || showEditModal) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">

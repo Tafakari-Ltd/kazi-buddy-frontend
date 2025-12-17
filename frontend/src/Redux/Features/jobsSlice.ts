@@ -180,7 +180,6 @@ const jobsSlice = createSlice({
     clearJobs: (state) => {
       state.jobs = [];
       state.error = null;
-      // Removed sessionStorage clearing since we don't store it there anymore
     },
     hydrateJobs: (state, action: PayloadAction<Job[]>) => {
       state.jobs = action.payload;
@@ -221,18 +220,27 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
+        
         const payload = action.payload as any;
 
-        if (payload.results && Array.isArray(payload.results)) {
+        if (payload.results && !Array.isArray(payload.results) && payload.results.data && Array.isArray(payload.results.data)) {
+            state.jobs = payload.results.data;
+        } 
+        
+        else if (payload.results && Array.isArray(payload.results)) {
             state.jobs = payload.results;
-        } else if (payload.data && Array.isArray(payload.data)) {
+        } 
+        else if (payload.data && Array.isArray(payload.data)) {
             state.jobs = payload.data;
-        } else if (Array.isArray(payload)) {
+        } 
+        else if (Array.isArray(payload)) {
             state.jobs = payload;
-        } else {
+        } 
+        else {
             state.jobs = [];
         }
 
+        // Pagination Extraction
         if (payload.pagination) {
           state.pagination = payload.pagination;
         } else if (payload.count !== undefined) {
@@ -245,13 +253,13 @@ const jobsSlice = createSlice({
              total_pages: Math.ceil(total / limit)
            };
         }
-        // Removed sessionStorage.setItem
       })
       .addCase(fetchJobs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
 
+ 
     builder
       .addCase(fetchJobById.pending, (state) => {
         state.loading = true;
@@ -259,7 +267,8 @@ const jobsSlice = createSlice({
       })
       .addCase(fetchJobById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentJob = action.payload;
+        const job = (action.payload as any).data || action.payload;
+        state.currentJob = job;
       })
       .addCase(fetchJobById.rejected, (state, action) => {
         state.loading = false;
@@ -274,9 +283,9 @@ const jobsSlice = createSlice({
       })
       .addCase(createJob.fulfilled, (state, action) => {
         state.loading = false;
-        state.jobs.unshift(action.payload);
+        const job = (action.payload as any).data || action.payload;
+        state.jobs.unshift(job);
         state.successMessage = "Job created successfully";
-        // Removed sessionStorage.setItem
       })
       .addCase(createJob.rejected, (state, action) => {
         state.loading = false;
@@ -291,9 +300,10 @@ const jobsSlice = createSlice({
       })
       .addCase(updateJob.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.jobs.findIndex((job) => job.id === action.payload.id);
-        if (index !== -1) state.jobs[index] = action.payload;
-        state.currentJob = action.payload;
+        const job = (action.payload as any).data || action.payload;
+        const index = state.jobs.findIndex((j) => j.id === job.id);
+        if (index !== -1) state.jobs[index] = job;
+        state.currentJob = job;
         state.successMessage = "Job updated successfully";
       })
       .addCase(updateJob.rejected, (state, action) => {
@@ -343,9 +353,11 @@ const jobsSlice = createSlice({
       .addCase(fetchJobsByEmployer.fulfilled, (state, action) => {
         state.loading = false;
         const payload = action.payload as any;
-        if (payload.results && Array.isArray(payload.results)) {
+        if (payload.results && !Array.isArray(payload.results) && payload.results.data) {
+             state.jobs = payload.results.data;
+        } else if (payload.results && Array.isArray(payload.results)) {
             state.jobs = payload.results;
-        } else if (payload && payload.data) {
+        } else if (payload.data && Array.isArray(payload.data)) {
           state.jobs = payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
@@ -365,9 +377,11 @@ const jobsSlice = createSlice({
       .addCase(fetchJobsByCategory.fulfilled, (state, action) => {
         state.loading = false;
         const payload = action.payload as any;
-        if (payload.results && Array.isArray(payload.results)) {
+        if (payload.results && !Array.isArray(payload.results) && payload.results.data) {
+             state.jobs = payload.results.data;
+        } else if (payload.results && Array.isArray(payload.results)) {
              state.jobs = payload.results;
-        } else if (payload && payload.data) {
+        } else if (payload.data && Array.isArray(payload.data)) {
           state.jobs = payload.data;
         } else {
           state.jobs = Array.isArray(action.payload) ? action.payload : [];
