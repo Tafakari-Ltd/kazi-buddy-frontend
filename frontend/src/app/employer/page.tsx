@@ -36,14 +36,28 @@ import { useCategories } from "@/Redux/Functions/useCategories";
 const TABS = [
   "Dashboard",
   "My Jobs",
-  "All Applications",
+  "Applications",
+  "Settings",
+];
+
+const APPLICATION_FILTERS = [
+  "All",
   "Pending",
   "Interview Scheduled",
   "Final Interview",
   "Accepted",
   "Rejected",
   "Cancelled",
-  "Settings",
+];
+
+const JOB_FILTERS = [
+  "All",
+  "Active",
+  "Pending",
+  "Draft",
+  "Rejected",
+  "Closed",
+  "Filled",
 ];
 
 const STAGES: ApplicationStage[] = [
@@ -83,6 +97,8 @@ const EmployerDashboardPage = () => {
 
   // State
   const [activeTab, setActiveTab] = useState<string>("Dashboard");
+  const [activeApplicationFilter, setActiveApplicationFilter] = useState<string>("All");
+  const [activeJobFilter, setActiveJobFilter] = useState<string>("All");
   const [applications, setApplications] = useState<Application[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -265,30 +281,48 @@ const EmployerDashboardPage = () => {
   );
 
   const filteredApplications = useMemo(() => {
-    const statusMap: Record<string, string> = {
-      "All Applications": "",
-      Pending: "Pending",
-      "Interview Scheduled": "Interview Scheduled",
-      "Final Interview": "Final Interview",
-      Accepted: "Accepted",
-      Rejected: "Rejected",
-      Cancelled: "Cancelled",
-    };
-    const status = statusMap[activeTab];
-    return status ? applications.filter((app) => app.status === status) : applications;
-  }, [activeTab, applications]);
+    if (activeApplicationFilter === "All") return applications;
+    return applications.filter((app) => app.status === activeApplicationFilter);
+  }, [activeApplicationFilter, applications]);
 
   const recentApplications = applications.slice(0, 5);
 
   const filteredJobs = useMemo(() => {
-    if (!selectedCategoryId) return jobs;
-    return jobs.filter((job: any) => {
-      const catRaw = job?.category;
-      const catId: string =
-        typeof catRaw === "string" ? catRaw : catRaw?.id ? String(catRaw.id) : "";
-      return catId === selectedCategoryId;
-    });
-  }, [jobs, selectedCategoryId]);
+    let filtered = jobs;
+
+    // Filter by category
+    if (selectedCategoryId) {
+      filtered = filtered.filter((job: any) => {
+        const catRaw = job?.category;
+        const catId: string =
+          typeof catRaw === "string" ? catRaw : catRaw?.id ? String(catRaw.id) : "";
+        return catId === selectedCategoryId;
+      });
+    }
+
+    // Filter by status
+    if (activeJobFilter !== "All") {
+      filtered = filtered.filter((job) => {
+        if (activeJobFilter === "Pending") {
+         
+          return job.status === JobStatus.PENDING || job.admin_approved === false;
+        }
+        if (activeJobFilter === "Active") {
+          
+          return job.status === JobStatus.ACTIVE && job.admin_approved !== false;
+        }
+        if (activeJobFilter === "Rejected") {
+          return job.status === JobStatus.CANCELLED;
+        }
+        if (activeJobFilter === "Draft") {
+          return job.status === JobStatus.DRAFT;
+        }
+        return job.status.toLowerCase() === activeJobFilter.toLowerCase();
+      });
+    }
+
+    return filtered;
+  }, [jobs, selectedCategoryId, activeJobFilter]);
 
   // Loading state
   if (!isClient || (profileLoading && !userProfile)) {
@@ -326,44 +360,77 @@ const EmployerDashboardPage = () => {
             recentApplications={recentApplications}
             companyName={userProfile?.company_name}
             industry={userProfile?.industry}
-            onViewAllApplications={() => setActiveTab("All Applications")}
+            onViewAllApplications={() => {
+              setActiveTab("Applications");
+              setActiveApplicationFilter("All");
+            }}
             onUpdateProfile={() => setShowEditModal(true)}
           />
         )}
 
         {activeTab === "My Jobs" && (
-          <MyJobsList
-            jobs={filteredJobs}
-            categories={categories}
-            selectedCategoryId={selectedCategoryId}
-            onCategoryChange={setSelectedCategoryId}
-            onPostJob={() => setShowJobPostModal(true)}
-            onViewJob={handleViewJob}
-            onEditJob={handleEditJob}
-            onDeleteJob={handleDeleteJob}
-          />
+          <div className="space-y-6">
+            {/* Job Status Filters */}
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
+              {JOB_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveJobFilter(filter)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    activeJobFilter === filter
+                      ? "bg-[#800000] text-white shadow-sm"
+                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            <MyJobsList
+              jobs={filteredJobs}
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onCategoryChange={setSelectedCategoryId}
+              onPostJob={() => setShowJobPostModal(true)}
+              onViewJob={handleViewJob}
+              onEditJob={handleEditJob}
+              onDeleteJob={handleDeleteJob}
+            />
+          </div>
         )}
 
-        {[
-          "All Applications",
-          "Pending",
-          "Interview Scheduled",
-          "Final Interview",
-          "Accepted",
-          "Rejected",
-          "Cancelled",
-        ].includes(activeTab) && (
-          <ApplicationsList
-            title={activeTab}
-            applications={filteredApplications}
-            stages={STAGES}
-            loading={applicationsLoading}
-            onEmailCandidate={(email) => (window.location.href = `mailto:${email}`)}
-            onRejectApplication={(app) => {
-              setApplicationToReject(app);
-              setShowRejectModal(true);
-            }}
-          />
+        {activeTab === "Applications" && (
+          <div className="space-y-6">
+            {/* Application Status Filters */}
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-200">
+              {APPLICATION_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveApplicationFilter(filter)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    activeApplicationFilter === filter
+                      ? "bg-[#800000] text-white shadow-sm"
+                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            <ApplicationsList
+              title={activeApplicationFilter === "All" ? "All Applications" : `${activeApplicationFilter} Applications`}
+              applications={filteredApplications}
+              stages={STAGES}
+              loading={applicationsLoading}
+              onEmailCandidate={(email) => (window.location.href = `mailto:${email}`)}
+              onRejectApplication={(app) => {
+                setApplicationToReject(app);
+                setShowRejectModal(true);
+              }}
+            />
+          </div>
         )}
 
         {activeTab === "Settings" && <SettingsView onEditProfile={() => setShowEditModal(true)} />}
