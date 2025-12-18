@@ -84,13 +84,11 @@ const Navbar: React.FC = () => {
               <button className="apply-button">Messages</button>
             </Link>
           )}
-          {[
-            { label: "Post Job", href: "/employer?postjob=1" },
-          ].map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <button className="apply-button">{label}</button>
-            </Link>
-          ))}
+          <Link href="/employer?postjob=1">
+            <button className="bg-[#800000] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#600000] transition-colors whitespace-nowrap">
+              Post Job
+            </button>
+          </Link>
 
           {/* Show login/logout depending on session */}
           {isAuthenticated ? (

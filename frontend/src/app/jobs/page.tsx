@@ -40,13 +40,13 @@ const JobListPage = () => {
       <h1 className="text-4xl font-bold text-[#800000] mb-6 container">Jobs</h1>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-3 mb-10 container">
+      <div className="flex flex-wrap gap-2 mb-10 container">
         <button
           onClick={() => setActiveCategoryId("all")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium border transition ${
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             activeCategoryId === "all"
-              ? "bg-[#800000] text-white"
-              : "border-gray-400 text-gray-700 hover:bg-gray-100"
+              ? "bg-[#800000] text-white shadow-sm"
+              : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
           }`}
         >
           All
@@ -55,10 +55,10 @@ const JobListPage = () => {
           <button
             key={cat.id}
             onClick={() => setActiveCategoryId(cat.id)}
-            className={`px-4 py-2 rounded-sm text-sm font-medium border transition ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               activeCategoryId === cat.id
-                ? "bg-[#800000] text-white"
-                : "border-gray-400 text-gray-700 hover:bg-gray-100"
+                ? "bg-[#800000] text-white shadow-sm"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
             }`}
           >
             {cat.name}
@@ -77,7 +77,7 @@ const JobListPage = () => {
         {visibleJobs.map((job) => (
           <div
             key={job.id}
-            className="rounded-sm overflow-hidden shadow border bg-white"
+            className="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white hover:shadow-md transition-shadow"
           >
             <div className="p-5 space-y-3">
               <h4 className="text-lg font-bold text-[#800000]">{job.title}</h4>

@@ -78,10 +78,8 @@ const AdminApplicationsPage = () => {
     try {
       setProcessingIds((prev) => new Set([...prev, id]));
 
-      // Call the Admin endpoint
       await JobApplicationApi.adminChangeStatus(id, status, notes);
 
-      // Optimistic Update: Update local state immediately without re-fetching
       setApplications((prev) =>
         prev.map((app) =>
           app.id === id
@@ -89,14 +87,11 @@ const AdminApplicationsPage = () => {
                 ...app,
                 status: status,
                 responded_at: new Date().toISOString(),
-                // Update notes locally so they appear in UI instantly
                 employer_notes: notes || app.employer_notes,
               }
             : app,
         ),
       );
-
-      // If the detailed modal is open, update that too
       if (selectedApplication?.id === id) {
         setSelectedApplication((prev) =>
           prev
@@ -107,8 +102,6 @@ const AdminApplicationsPage = () => {
               }
             : null,
         );
-
-        // Close modal if action is complete
         if (status === "rejected") setShowDetailModal(false);
       }
 
@@ -136,7 +129,6 @@ const AdminApplicationsPage = () => {
   const filteredApplications = applications.filter((app) => {
     const statusMatch = filter === "all" || app.status === filter;
 
-    // Handle nested data safely (it might be an object or an ID string)
     const workerName =
       (typeof app.worker !== "string"
         ? app.worker?.user?.full_name
@@ -243,7 +235,7 @@ const AdminApplicationsPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
           <div className="flex-shrink-0">
             <Clock className="h-8 w-8 text-yellow-600" />
           </div>
@@ -252,7 +244,7 @@ const AdminApplicationsPage = () => {
             <p className="text-2xl font-bold text-gray-900">{pendingCount}</p>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
           <div className="flex-shrink-0">
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
@@ -261,7 +253,7 @@ const AdminApplicationsPage = () => {
             <p className="text-2xl font-bold text-gray-900">{acceptedCount}</p>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border p-6 flex items-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
           <div className="flex-shrink-0">
             <Users className="h-8 w-8 text-blue-600" />
           </div>
@@ -277,7 +269,7 @@ const AdminApplicationsPage = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -342,7 +334,7 @@ const AdminApplicationsPage = () => {
           filteredApplications.map((application) => (
             <div
               key={application.id}
-              className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -474,7 +466,7 @@ const AdminApplicationsPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl border max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-start p-6 border-b sticky top-0 bg-white z-10">
                 <div>
@@ -634,8 +626,8 @@ const AdminApplicationsPage = () => {
                       </button>
                       <button
                         onClick={() => {
-                          setShowDetailModal(false); // Close detail modal
-                          initiateRejection(selectedApplication.id); // Open rejection modal
+                          setShowDetailModal(false); 
+                          initiateRejection(selectedApplication.id); 
                         }}
                         disabled={processingIds.has(selectedApplication.id)}
                         className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
