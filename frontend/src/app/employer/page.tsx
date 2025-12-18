@@ -7,7 +7,7 @@ import {
   Ban, CheckCircle, Mail, ArrowRight, Calendar, Phone, Users,
   AlertCircle, Briefcase, Shield, Building, MessageSquare, Home,
   Plus, FileText, Clock, XCircle, Star, Search, UserSearch, Edit2,
-  Trash2, Eye, MoreVertical, MapPin, DollarSign, Pause, Play
+  Trash2, Eye, MoreVertical, MapPin, DollarSign, Pause, Play, Filter
 } from "lucide-react";
 
 // Components
@@ -30,6 +30,7 @@ import { useCategories } from "@/Redux/Functions/useCategories";
 
 const TABS = [
   "Dashboard",
+  "My Jobs",
   "All Applications", 
   "Pending",
   "Interview Scheduled",
@@ -94,6 +95,7 @@ const EmployerDashboardPage = () => {
   const [showDeleteJobModal, setShowDeleteJobModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [jobToEdit, setJobToEdit] = useState<Job | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
   useEffect(() => { 
     setIsClient(true); 
@@ -312,6 +314,29 @@ const EmployerDashboardPage = () => {
 
   const recentApplications = applications.slice(0, 5);
 
+  // Filter jobs by selected category
+  const filteredJobs = useMemo(() => {
+    if (!selectedCategoryId) return jobs;
+    return jobs.filter((job: any) => {
+      const catRaw = job?.category;
+      const catId: string = typeof catRaw === "string" ? catRaw : catRaw?.id ? String(catRaw.id) : "";
+      return catId === selectedCategoryId;
+    });
+  }, [jobs, selectedCategoryId]);
+
+  const getDetailedStatus = (status: JobStatus) => {
+  switch (status) {
+    case JobStatus.ACTIVE:
+      return { label: "Approved & Live", color: "bg-green-100 text-green-700", icon: <CheckCircle className="w-3 h-3" /> };
+    case JobStatus.PAUSED:
+      return { label: "Awaiting Admin Approval", color: "bg-yellow-100 text-yellow-700", icon: <Clock className="w-3 h-3" /> };
+    case JobStatus.CANCELLED:
+      return { label: "Rejected by Admin", color: "bg-red-100 text-red-700", icon: <XCircle className="w-3 h-3" /> };
+    default:
+      return { label: status.replace("_", " "), color: "bg-gray-100 text-gray-700", icon: <AlertCircle className="w-3 h-3" /> };
+  }
+};
+
   const getStatusBadgeClass = (status: ApplicationStatus) => {
     switch (status) {
       case "Rejected": return "bg-red-100 text-red-800";
@@ -472,7 +497,8 @@ const EmployerDashboardPage = () => {
                   </div>
                 )}
               </div>
-
+                
+     
               {/* Quick Actions & Profile Summary */}
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -515,6 +541,119 @@ const EmployerDashboardPage = () => {
             </div>
           </div>
         )}
+
+        {/* --- MY JOBS VIEW --- */}
+{activeTab === "My Jobs" && (
+  <div className="bg-white shadow-sm rounded-xl overflow-hidden min-h-[500px]">
+    <div className="p-6 bg-gray-50">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <Briefcase className="w-5 h-5 text-gray-500" /> My Job Postings
+        </h2>
+        <button 
+          onClick={() => setShowJobPostModal(true)}
+          className="text-sm bg-red-800 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          + Post New Job
+        </button>
+      </div>
+
+      {/* Category Filter */}
+      <div className="flex items-center gap-3">
+        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+          <Filter className="w-4 h-4" />
+          Filter by Category:
+        </label>
+        <select
+          value={selectedCategoryId}
+          onChange={(e) => setSelectedCategoryId(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm bg-white"
+        >
+          <option value="">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        {selectedCategoryId && (
+          <span className="text-sm text-gray-600 font-medium">
+            ({filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'})
+          </span>
+        )}
+      </div>
+    </div>
+
+    <div className="p-6">
+      {filteredJobs.length === 0 ? (
+        <div className="text-center py-20">
+          <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium">
+            {selectedCategoryId ? "No jobs in this category" : "No jobs posted yet"}
+          </h3>
+          <p className="text-gray-500">
+            {selectedCategoryId 
+              ? "Try selecting a different category or clear the filter." 
+              : "Post your first job to start receiving applications."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filteredJobs.map((job) => {
+            const status = getDetailedStatus(job.status);
+            return (
+              <div key={job.id} className="p-5 rounded-xl hover:shadow-md transition bg-white group shadow-sm">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-red-800 transition mb-2">{job.title}</h3>
+                    <div className="flex flex-wrap gap-3 mt-2 text-sm items-center mb-3">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                        {typeof job.category === "string" 
+                          ? categories.find(c => c.id === job.category)?.name || "Uncategorized"
+                          : job.category?.name || "Uncategorized"}
+                      </span>
+                      <span className="flex items-center gap-1 text-gray-500"><MapPin className="w-3 h-3" /> {job.location}</span>
+                      <span className="flex items-center gap-1 text-gray-500"><DollarSign className="w-3 h-3" /> {job.budget_min.toLocaleString()} - {job.budget_max.toLocaleString()}</span>
+                    </div>
+                    {job.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {job.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${status.color}`}>
+                      {status.icon}
+                      {status.label}
+                    </span>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleViewJob(job)} className="p-2 text-gray-500 hover:bg-gray-100 rounded" title="View"><Eye className="w-4 h-4" /></button>
+                      <button onClick={() => handleEditJob(job)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Edit"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleDeleteJob(job)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Status Message for Users */}
+                <div className="mt-4 p-3 rounded-lg bg-gray-50 text-xs text-gray-600">
+                  {job.status === JobStatus.ACTIVE ? (
+                    "Your job is live! Workers can now see and apply to this position."
+                  ) : job.status === JobStatus.PAUSED ? (
+                    "An administrator is currently reviewing your job posting. This usually takes 12-24 hours."
+                  ) : job.status === JobStatus.CANCELLED ? (
+                    "This posting did not meet our guidelines. Please edit and resubmit or contact support."
+                  ) : (
+                    "Current status: " + job.status
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
         {/* --- APPLICATIONS VIEWS (All, Pending, Interview Scheduled, etc.) --- */}
         {["All Applications", "Pending", "Interview Scheduled", "Final Interview", "Accepted", "Rejected", "Cancelled"].includes(activeTab) && (

@@ -1,5 +1,5 @@
 "use client";
-
+import { Plus, Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Trash2 } from "lucide-react";
@@ -610,20 +610,32 @@ const JobPostingModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-neutral-300  flex justify-end gap-2">
-          <button
-            className="px-4 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-1 rounded text-white bg-red-800 hover:bg-red-700"
-          >
-            Create Job
-          </button>
-        </div>
+        <div className="p-4 border-t border-neutral-300 flex justify-end gap-2">
+  <button
+    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+    onClick={onClose}
+    disabled={loading}
+  >
+    Cancel
+  </button>
+  <button
+    onClick={handleSubmit}
+    disabled={loading}
+    className="inline-flex items-center gap-2 px-6 py-2 rounded-lg text-white bg-red-800 hover:bg-red-700 transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+  >
+    {loading ? (
+      <>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Posting Job...</span>
+      </>
+    ) : (
+      <>
+        <Plus className="h-4 w-4" />
+        <span>Create Job</span>
+      </>
+    )}
+  </button>
+</div>
       </div>
     </div>
   );
