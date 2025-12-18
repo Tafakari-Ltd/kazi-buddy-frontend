@@ -185,6 +185,7 @@ export enum PaymentType {
 
 export enum JobStatus {
   DRAFT = "draft",
+  PENDING = "pending",
   ACTIVE = "active",
   PAUSED = "paused",
   CLOSED = "closed",

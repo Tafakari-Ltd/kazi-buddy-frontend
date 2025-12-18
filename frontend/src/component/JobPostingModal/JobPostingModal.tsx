@@ -92,7 +92,7 @@ const JobPostingModal = ({
     end_date: "",
     estimated_hours: "",
     max_applicants: "50",
-    status: JobStatus.ACTIVE,
+    status: JobStatus.PENDING,
     visibility: JobVisibility.PUBLIC,
   });
 
