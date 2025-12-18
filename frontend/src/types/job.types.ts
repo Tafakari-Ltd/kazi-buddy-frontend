@@ -48,8 +48,9 @@ export interface Job {
   estimated_hours: number;
   max_applicants: number;
   status: JobStatus;
+  admin_approved: boolean;
   visibility: JobVisibility;
-  created_at?: string;
+  created_at: string;
   updated_at?: string;
 }
 

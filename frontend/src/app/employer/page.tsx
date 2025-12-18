@@ -257,7 +257,9 @@ const EmployerDashboardPage = () => {
       hired: applications.filter((a) => a.status === "Accepted").length,
       rejected: applications.filter((a) => a.status === "Rejected").length,
       cancelled: applications.filter((a) => a.status === "Cancelled").length,
-      activeJobs: jobs.length,
+      activeJobs: jobs.filter(
+        (j) => j.status === JobStatus.ACTIVE && j.admin_approved !== false
+      ).length,
     }),
     [applications, jobs]
   );

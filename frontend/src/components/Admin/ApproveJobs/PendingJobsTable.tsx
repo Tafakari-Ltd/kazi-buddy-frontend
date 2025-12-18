@@ -12,6 +12,7 @@ interface PendingJobInterface {
   budget_min: string | number;
   budget_max: string | number;
   status: string;
+  admin_approved?: boolean;
   start_date?: string;
   end_date?: string;
   max_applicants?: number;
@@ -58,6 +59,10 @@ const PendingJobsTable: React.FC<PendingJobsTableProps> = ({
   };
 
   const getStatusBadge = (status: string) => {
+    // In the pending jobs table, "active" status means it's waiting for approval but user set it to active
+    if (status === 'active') {
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">Pending</span>;
+    }
     switch (status) {
       case 'active':
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Active</span>;

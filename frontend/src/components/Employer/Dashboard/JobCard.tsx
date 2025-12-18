@@ -22,10 +22,10 @@ const JobCard: React.FC<JobCardProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const status = getDetailedStatus(job.status);
+  const status = getDetailedStatus(job.status, job.admin_approved);
   const StatusIcon = status.icon;
   const categoryName = getCategoryName(job.category, categories);
-  const statusMessage = getJobStatusMessage(job.status);
+  const statusMessage = getJobStatusMessage(job.status, job.admin_approved);
 
   return (
     <div className="p-5 rounded-xl hover:shadow-md transition bg-white group shadow-sm">

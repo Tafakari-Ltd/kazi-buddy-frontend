@@ -24,7 +24,16 @@ export const getStatusColor = (status: JobStatus): string => {
 /**
  * Get detailed status information including label, color, and icon
  */
-export const getDetailedStatus = (status: JobStatus) => {
+export const getDetailedStatus = (status: JobStatus, admin_approved?: boolean) => {
+ 
+  if (admin_approved === false && status !== JobStatus.CANCELLED) {
+    return {
+      label: "Awaiting Admin Approval",
+      color: "bg-yellow-100 text-yellow-700",
+      icon: Clock,
+    };
+  }
+
   switch (status) {
     case JobStatus.ACTIVE:
       return {
@@ -32,6 +41,7 @@ export const getDetailedStatus = (status: JobStatus) => {
         color: "bg-green-100 text-green-700",
         icon: CheckCircle,
       };
+    case JobStatus.PENDING:
     case JobStatus.PAUSED:
       return {
         label: "Awaiting Admin Approval",
@@ -136,10 +146,15 @@ export const mapApplicationStage = (status: string): ApplicationStage => {
 /**
  * Get status message for job posting
  */
-export const getJobStatusMessage = (status: JobStatus): string => {
+export const getJobStatusMessage = (status: JobStatus, admin_approved?: boolean): string => {
+  if (admin_approved === false && status !== JobStatus.CANCELLED) {
+    return "An administrator is currently reviewing your job posting. This usually takes 12-24 hours.";
+  }
+
   switch (status) {
     case JobStatus.ACTIVE:
       return "Your job is live! Workers can now see and apply to this position.";
+    case JobStatus.PENDING:
     case JobStatus.PAUSED:
       return "An administrator is currently reviewing your job posting. This usually takes 12-24 hours.";
     case JobStatus.CANCELLED:
