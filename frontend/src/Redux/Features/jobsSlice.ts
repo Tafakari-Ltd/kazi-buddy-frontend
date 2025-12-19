@@ -38,17 +38,27 @@ export const fetchJobs = createAsyncThunk<
 >("jobs/fetchJobs", async (filters, { rejectWithValue }) => {
   try {
     const queryParams = new URLSearchParams();
+    let hasLimit = false;
 
     if (filters && typeof filters === "object") {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
-          queryParams.append(key, value.toString());
+          if (key === "limit") {
+            queryParams.append("page_size", value.toString());
+            hasLimit = true;
+          } else {
+            queryParams.append(key, value.toString());
+          }
         }
       });
     }
 
+    if (!hasLimit) {
+      queryParams.append("page_size", "1000");
+    }
+
     const queryString = queryParams.toString();
-    const url = `/jobs/${queryString ? `?${queryString}&page_size=1000` : "?page_size=1000"}`;
+    const url = `/jobs/${queryString ? `?${queryString}` : ""}`;
 
     const response = await api.get(url);
     return response as any;

@@ -403,7 +403,7 @@ const HotJobs = () => {
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row justify-between items-center bg-white rounded-sm p-6 border border-gray-200">
+      <div className="flex flex-col lg:flex-row justify-between items-center bg-white rounded-sm p-6 border border-gray-200 mb-12">
         <div className="mb-4 lg:mb-0 text-sm text-gray-600">
           Showing <span className="font-semibold text-[#800000]">{paginationInfo.start}</span> - <span className="font-semibold text-[#800000]">{paginationInfo.end}</span> of <span className="font-semibold text-[#800000]">{paginationInfo.total}</span> jobs
         </div>
