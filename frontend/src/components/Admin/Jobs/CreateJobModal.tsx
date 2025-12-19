@@ -100,22 +100,22 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({ isOpen, onClose, onSubm
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">Min Budget (KES) *</label>
-                  <input type="number" name="budget_min" value={formData.budget_min} onChange={handleChange} className={inputClass(errors.budget_min)} />
+                  <input type="number" name="budget_min" value={formData.budget_min ?? ""} onChange={handleChange} className={inputClass(errors.budget_min)} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">Max Budget (KES) *</label>
-                  <input type="number" name="budget_max" value={formData.budget_max} onChange={handleChange} className={inputClass(errors.budget_max)} />
+                  <input type="number" name="budget_max" value={formData.budget_max ?? ""} onChange={handleChange} className={inputClass(errors.budget_max)} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">Start Date *</label>
-                  <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} className={inputClass(errors.start_date)} />
+                  <input type="date" name="start_date" value={formData.start_date ?? ""} onChange={handleChange} className={inputClass(errors.start_date)} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">End Date *</label>
-                  <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className={inputClass(errors.end_date)} />
+                  <input type="date" name="end_date" value={formData.end_date ?? ""} onChange={handleChange} className={inputClass(errors.end_date)} />
                 </div>
               </div>
 

@@ -111,12 +111,15 @@ const WorkerDashboardPage = () => {
       if (result && typeof result !== 'string') {
         let jobsArray = [];
         
-        if (result.results && !Array.isArray(result.results) && result.results.data && Array.isArray(result.results.data)) {
-            jobsArray = result.results.data;
+        if ((result as any).results && !Array.isArray((result as any).results) && (result as any).results.data && Array.isArray((result as any).results.data)) {
+            jobsArray = (result as any).results.data;
         }
        
-        else if (result.results && Array.isArray(result.results)) {
-            jobsArray = result.results;
+        else if ((result as any).results && Array.isArray((result as any).results)) {
+            jobsArray = (result as any).results;
+        }
+        else if (result.data && Array.isArray(result.data)) {
+            jobsArray = result.data;
         }
         
         else if ('data' in result && Array.isArray(result.data)) {
@@ -207,7 +210,7 @@ const WorkerDashboardPage = () => {
       </div>
 
       <DashboardWelcome 
-        userName={userProfile?.user?.full_name || user?.full_name || "Worker"}
+        userName={(typeof userProfile?.user !== 'string' ? userProfile?.user?.full_name : undefined) || user?.full_name || "Worker"}
         availableJobsCount={availableJobs.length}
         profileCompletion={userProfile?.profile_completion_percentage || 0}
         onBrowseJobs={() => setFilter("Available Jobs")}
@@ -443,8 +446,8 @@ const WorkerDashboardPage = () => {
                   years_experience: userProfile.years_experience,
                   hourly_rate: userProfile.hourly_rate,
                   availability_schedule: userProfile.availability_schedule,
-                  bio: userProfile.bio,
-                  skills: userProfile.skills || []
+                  bio: userProfile.bio
+                  // skills: userProfile.skills || []
                 } : undefined}
                 onSubmit={handleProfileSubmit}
                 onCancel={() => { setShowProfileModal(false); setShowEditModal(false); }}

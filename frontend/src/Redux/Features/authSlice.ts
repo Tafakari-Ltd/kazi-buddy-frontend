@@ -114,7 +114,7 @@ export const login = createAsyncThunk<
 
     const userFromApi = await api.get("/accounts/me/", {
       headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    }) as any;
 
     const user = { ...userFromApi, user_type: userFromApi.user_type ?? res.user_type };
 

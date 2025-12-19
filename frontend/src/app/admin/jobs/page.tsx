@@ -49,7 +49,7 @@ const JobsManagementPage = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [localFilters, setLocalFilters] = useState({
-    status: statusParam || "",
+    status: (statusParam || "") as JobStatus | "",
     category: "",
     job_type: "" as JobType | "",
     payment_type: "" as PaymentType | "",
@@ -166,7 +166,7 @@ const JobsManagementPage = () => {
     // Filter locally by category if selected (to be safe, though API handles it)
     const filtered = localFilters.category 
       ? jobs.filter(j => {
-          const catId = typeof j.category === "string" ? j.category : j.category?.id || "";
+          const catId = typeof j.category === "string" ? j.category : (j.category as any)?.id || "";
           return String(catId) === localFilters.category;
         }) 
       : jobs;
@@ -274,7 +274,7 @@ const JobsManagementPage = () => {
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
         job={jobToView}
-        categoryName={jobToView ? getCategoryName(typeof jobToView.category === "string" ? jobToView.category : jobToView.category.id) : ""}
+        categoryName={jobToView ? getCategoryName(typeof jobToView.category === "string" ? jobToView.category : (jobToView.category as any).id) : ""}
         onEdit={handleEditClick}
       />
 

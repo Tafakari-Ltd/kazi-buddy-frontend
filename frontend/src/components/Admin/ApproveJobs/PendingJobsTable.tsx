@@ -12,18 +12,24 @@ interface PendingJobInterface {
   budget_min: string | number;
   budget_max: string | number;
   status: string;
+  visibility: string;
   admin_approved?: boolean;
+  created_at: string;
   start_date?: string;
   end_date?: string;
   max_applicants?: number;
+  estimated_hours?: number;
   employer: {
+    id: string;
     company_name: string;
     user: {
+      id: string;
       full_name: string;
       email: string;
     };
   };
   category: {
+    id: string;
     name: string;
   };
 }

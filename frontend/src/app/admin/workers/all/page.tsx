@@ -51,8 +51,7 @@ const AllWorkersAdministration: React.FC = () => {
         ordering: "-applied_at",
         expand: "job_details,worker_details,employer_details",
       });
-      // We also need to enrich them if job_details are missing, similar to the row logic
-      // For brevity in this controller, assume logic is similar or API provides it via expand
+      
       setAllApplications(resp.applications as unknown as JobApplicationWithDetails[]);
     } catch (e) {
       console.error("Failed to fetch applications", e);
@@ -74,11 +73,6 @@ const AllWorkersAdministration: React.FC = () => {
         setApplicationToView(prev => prev ? { ...prev, status } : null);
       }
 
-      // Note: WorkerListRow manages its own state, so it will need to re-fetch or we force a re-render.
-      // Since we don't share state down to rows (they fetch themselves), the easiest way to reflect change 
-      // in the row is to toggle it close/open or for the row to listen to a context. 
-      // Given the architecture, the user might need to refresh the row (toggle) to see the status change there 
-      // if we don't lift state up. However, for admin actions, usually the modal is primary.
       
     } catch (error) {
       console.error("Status update failed", error);
@@ -96,7 +90,7 @@ const AllWorkersAdministration: React.FC = () => {
     const q = searchTerm.toLowerCase();
     return profiles.filter(p => 
       p.location_text.toLowerCase().includes(q) || 
-      p.user?.full_name?.toLowerCase().includes(q) ||
+      (typeof p.user !== 'string' && p.user?.full_name?.toLowerCase().includes(q)) ||
       p.verification_status.includes(q)
     );
   }, [profiles, searchTerm]);

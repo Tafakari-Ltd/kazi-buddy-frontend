@@ -30,40 +30,42 @@ const JobMoreDescription = () => {
   // If no job data, return null
   if (!jobData) return null;
 
+  const rawJob = jobData as any;
+
   // Format the job data from backend
   const job = {
-    id: jobData.id,
-    title: jobData.title || "Job Title",
-    jobType: jobData.jobType || jobData.job_type || "Full-Time",
+    id: rawJob.id,
+    title: rawJob.title || "Job Title",
+    jobType: rawJob.jobType || rawJob.job_type || "Full-Time",
     category:
-      typeof jobData.category === "string"
-        ? jobData.category
-        : jobData.category?.name || "General",
+      typeof rawJob.category === "string"
+        ? rawJob.category
+        : rawJob.category?.name || "General",
     location:
-      (jobData as any).location_address ||
-      jobData.location_text ||
-      jobData.location ||
+      rawJob.location_address ||
+      rawJob.location_text ||
+      rawJob.location ||
       "Location not specified",
     rate:
-      jobData.budget_min && jobData.budget_max
-        ? `KSh ${jobData.budget_min} - ${jobData.budget_max}`
+      rawJob.budget_min && rawJob.budget_max
+        ? `KSh ${rawJob.budget_min} - ${rawJob.budget_max}`
         : "Negotiable",
-    description: jobData.description || "No description available",
+    description: rawJob.description || "No description available",
     image:
-      (jobData as any).job_image ||
-      (jobData as any).image ||
+      rawJob.job_image ||
+      rawJob.image ||
       "https://images.pexels.com/photos/4239016/pexels-photo-4239016.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    postedDate: jobData.created_at
-      ? new Date(jobData.created_at).toLocaleDateString()
-      : (jobData as any).postedDate || "Recently",
+    postedDate: rawJob.created_at
+      ? new Date(rawJob.created_at).toLocaleDateString()
+      : rawJob.postedDate || "Recently",
     urgency:
-      (jobData as any).is_urgent || jobData.urgency_level === "urgent"
+      rawJob.is_urgent || rawJob.urgency_level === "urgent"
         ? "Hiring Immediately"
         : "Open Position",
-    requirements: (jobData as any).requirements || [
+    requirements: rawJob.requirements || [
       "Please contact employer for details",
     ],
-    benefits: (jobData as any).benefits || [
+    benefits: rawJob.benefits || [
       "Competitive compensation",
       "Professional work environment",
     ],
@@ -218,7 +220,7 @@ const JobMoreDescription = () => {
               <div className="h-1 w-8 bg-gray-400 rounded"></div>
             </h3>
             <div className="space-y-3">
-              {job.requirements.map((req, index) => (
+              {job.requirements.map((req: any, index: number) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
@@ -240,7 +242,7 @@ const JobMoreDescription = () => {
               <div className="h-1 w-8 bg-gray-400 rounded"></div>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {job.benefits.map((benefit, index) => (
+              {job.benefits.map((benefit: any, index: number) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
