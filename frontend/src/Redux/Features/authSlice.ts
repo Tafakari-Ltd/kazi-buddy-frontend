@@ -50,9 +50,11 @@ export const registerUser = createAsyncThunk<
     });
     return response as any;
   } catch (err: any) {
-    if (err?.fieldErrors) {
+    // Only return field errors if they actually exist and are not empty
+    if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
       return rejectWithValue(JSON.stringify({ message: "Validation failed", fieldErrors: err.fieldErrors }));
     }
+    // Fallback to the message
     return rejectWithValue(err?.message || "Registration failed");
   }
 });
@@ -122,7 +124,24 @@ export const login = createAsyncThunk<
 
     return { accessToken, refreshToken, userId, user };
   } catch (err: any) {
-    const errorMessage = err.response?.data?.detail || err.message || "Login failed";
+    let errorMessage = err?.message || "Login failed";
+    
+    // Handle 401 Unauthorized specifically
+    if (err?.status === 401 || err?.response?.status === 401) {
+      errorMessage = "Invalid email or password";
+    }
+    
+    if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+      const errors = Object.values(err.fieldErrors).flat();
+      if (errors.length > 0) {
+        errorMessage = errors.join(". ");
+      }
+    }
+    
+    if (err?.response?.data?.detail) {
+      errorMessage = err.response.data.detail;
+    }
+
     return rejectWithValue(errorMessage);
   }
 });

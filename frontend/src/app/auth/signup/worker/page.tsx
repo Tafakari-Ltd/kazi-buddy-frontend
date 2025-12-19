@@ -137,25 +137,48 @@ const WorkerSignup: React.FC = () => {
                 ([field, messages]: [string, any]) => {
                   if (Array.isArray(messages) && messages.length > 0) {
                     errors[field] = messages[0];
+                  } else if (typeof messages === 'string') {
+                    errors[field] = messages;
                   }
                 }
               );
-              setFieldErrors(errors);
-              toast.error(
-                `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`
-              );
-              return;
+              
+              if (Object.keys(errors).length > 0) {
+                setFieldErrors(errors);
+                
+                // Check for specific email error
+                if (errors.email) {
+                  toast.error(errors.email);
+                } else if (Object.keys(errors).includes('email')) {
+                   toast.error("This email address is already registered.");
+                } else {
+                  toast.error(
+                    `Please fix ${Object.keys(errors).length} error${Object.keys(errors).length > 1 ? "s" : ""} in the form`
+                  );
+                }
+                return;
+              }
             }
           } catch (e) {
-            // fallback
+          
           }
         }
-
-        toast.error(typeof errorPayload === "string" ? errorPayload : "Registration failed");
+        
+        // Handle non-field specific errors
+        if (typeof errorPayload === 'string') {
+           if (errorPayload.toLowerCase().includes("email already exists") || errorPayload.toLowerCase().includes("user with this email already exists")) {
+             toast.error("This email address is already registered. Please use a different email or login.");
+             setFieldErrors(prev => ({...prev, email: "This email is already in use"}));
+           } else {
+             toast.error(errorPayload || "Registration failed");
+           }
+        } else {
+           toast.error("Registration failed. Please try again.");
+        }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Unexpected error:", err);
-      toast.error(err?.message || "An unexpected error occurred");
+      toast.error("An unexpected error occurred.");
     }
   };
 

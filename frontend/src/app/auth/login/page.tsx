@@ -118,26 +118,42 @@ const LoginPage: React.FC = () => {
       // Check for email verification errors
       else if (errorLower.includes('verify') || 
                errorLower.includes('verification') ||
-               errorLower.includes('email not verified') ||
                errorLower.includes('not verified')) {
-        toast.info(
-          "Please verify your email address before logging in.",
-          { duration: 5000 }
-        );
-        setFormError("Please verify your email before logging in. Check your inbox for the verification link.");
-      } 
-      // Check for invalid credentials
-      else if (errorLower.includes('not found') || 
-               errorLower.includes('invalid') || 
-               errorLower.includes('incorrect') ||
-               errorLower.includes('credentials')) {
-        setFormError("Invalid email or password");
-        toast.error("Invalid email or password", { duration: 4000 });
-      } 
-      // Generic error
+        setFormError("Please verify your email address before logging in.");
+        toast.warning("Email verification required");
+        
+        // Optionally redirect to verification page if we have the email
+        if (email) {
+          setTimeout(() => {
+            router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+          }, 2000);
+        }
+      }
+      // Check for specific credential errors
+      else if (errorLower.includes('no active account found')) {
+        setFormError("No account found with this email address.");
+      }
+      else if (errorLower.includes('password')) {
+        setFormError("Incorrect password. Please try again.");
+      }
+      else if (errorLower.includes('invalid credentials')) {
+        setFormError("Invalid email or password.");
+      }
+      else if (errorLower.includes('error during login')) {
+        setFormError("Invalid email or password.");
+      }
+      else if (errorLower === 'login failed') {
+        setFormError("Invalid email or password.");
+      }
       else {
         setFormError(errorMessage);
-        toast.error(errorMessage, { duration: 4000 });
+      }
+      
+      if (!isApprovalNeededError(errorMessage)) {
+      
+        if (!formError) {
+           toast.error(errorMessage);
+        }
       }
     }
   };
