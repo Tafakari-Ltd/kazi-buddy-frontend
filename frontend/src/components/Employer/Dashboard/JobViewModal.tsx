@@ -42,7 +42,6 @@ const JobViewModal: React.FC<JobViewModalProps> = ({
               <MapPin className="w-4 h-4" /> {job.location}
             </span>
             <span className="flex items-center gap-1 text-gray-600">
-              <DollarSign className="w-4 h-4" />{" "}
               {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
             </span>
           </div>

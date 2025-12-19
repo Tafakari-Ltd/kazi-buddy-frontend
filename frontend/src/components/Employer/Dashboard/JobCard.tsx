@@ -42,9 +42,8 @@ const JobCard: React.FC<JobCardProps> = ({
               <MapPin className="w-3 h-3" /> {job.location}
             </span>
             <span className="flex items-center gap-1 text-gray-500">
-              <DollarSign className="w-3 h-3" />{" "}
-              {job.budget_min.toLocaleString()} -{" "}
-              {job.budget_max.toLocaleString()}
+              KES {job.budget_min.toLocaleString()} -{" "}
+              KES {job.budget_max.toLocaleString()}
             </span>
           </div>
           {job.description && (

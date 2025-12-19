@@ -263,7 +263,7 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Proposed Rate:</span>
             <span className="text-sm font-medium text-gray-900">
-              ${parseFloat(application.proposed_rate).toFixed(2)}
+              KES {parseFloat(application.proposed_rate).toFixed(2)}
             </span>
           </div>
 

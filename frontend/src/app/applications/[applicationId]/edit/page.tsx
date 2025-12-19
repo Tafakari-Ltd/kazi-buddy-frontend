@@ -308,14 +308,13 @@ export default function EditApplicationPage() {
                 htmlFor="proposed_rate"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Proposed Rate ($) *
+                Proposed Rate (KES) *
               </label>
               <div className="relative">
                 <input
                   type="number"
                   id="proposed_rate"
                   min="1"
-                  max="10000"
                   step="0.01"
                   value={formData.proposed_rate || ""}
                   onChange={(e) =>
@@ -331,9 +330,6 @@ export default function EditApplicationPage() {
                   }`}
                   placeholder="Enter your rate"
                 />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 sm:text-sm">$</span>
-                </div>
               </div>
               {localErrors.proposed_rate && (
                 <p className="mt-1 text-sm text-red-600">

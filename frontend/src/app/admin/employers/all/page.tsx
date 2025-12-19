@@ -35,7 +35,7 @@ const AllEmployersAdministration: React.FC = () => {
   const [jobToView, setJobToView] = useState<Job | null>(null);
 
   // Helper Functions
-  const formatCurrency = (n: any) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n) || 0);
+  const formatCurrency = (n: any) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(Number(n) || 0);
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   const getStatusColor = (s: string) => JOB_STATUS_OPTIONS.find((o) => o.value === s)?.color || "text-gray-600 bg-gray-100";
   const getUrgencyColor = (u: string) => URGENCY_LEVEL_OPTIONS.find((o) => o.value === u)?.color || "text-gray-600 bg-gray-100";

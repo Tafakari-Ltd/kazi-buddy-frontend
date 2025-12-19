@@ -72,13 +72,14 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      // Fetch with large page_size to get accurate stats for charts/graphs
       const results = await Promise.allSettled([
-        api.get("/workers/profiles/list/"),
-        api.get("/adminpanel/employer-profiles/"),
-        api.get("/adminpanel/admin/jobs/"), 
-        JobApplicationApi.getAllApplications({}),
-        api.get("/adminpanel/users/pending/"),
-        api.get("/jobs/categories/"),
+        api.get("/workers/profiles/list/?page_size=1000"),
+        api.get("/adminpanel/employer-profiles/?page_size=1000"),
+        api.get("/adminpanel/admin/jobs/?page_size=1000"), 
+        JobApplicationApi.getAllApplications({ per_page: 1000 }),
+        api.get("/adminpanel/users/pending/?page_size=1000"),
+        api.get("/jobs/categories/?page_size=1000"),
       ]);
 
       const getResult = (result: PromiseSettledResult<any>) => result.status === "fulfilled" ? result.value : null;
@@ -96,6 +97,17 @@ const AdminDashboard: React.FC = () => {
       const applications = (applicationsResp as any)?.applications || [];
       const pendingUsersList = normalizeList(pendingUsersResp) as PendingUser[];
       const categories = normalizeList(categoriesResp) as { id: string; name: string }[];
+
+      // Helper to get total count from response or list length
+      const getCount = (resp: any, list: any[]) => {
+        if (!resp) return list.length;
+        if (typeof resp.count === 'number') return resp.count;
+        if (resp.data && typeof resp.data.count === 'number') return resp.data.count;
+        if (resp.pagination && typeof resp.pagination.total === 'number') return resp.pagination.total;
+        if (typeof resp.total === 'number') return resp.total;
+        if (typeof resp.total_count === 'number') return resp.total_count;
+        return list.length;
+      };
 
       const pendingJobsCount = jobs.filter((j: any) => 
         j.admin_approved === false || j.status === 'paused'
@@ -125,12 +137,12 @@ const AdminDashboard: React.FC = () => {
       })).sort((a, b) => b.jobsCount - a.jobsCount || a.name.localeCompare(b.name));
 
       setStats({
-        totalWorkers: (workersResp as any)?.pagination?.total ?? workers.length,
-        totalEmployers: (employersResp as any)?.pagination?.total ?? employers.length,
-        totalJobs: jobs.length,
-        totalApplications: applications.length,
-        totalCategories: categories.length,
-        pendingUsers: pendingUsersList.length,
+        totalWorkers: getCount(workersResp, workers),
+        totalEmployers: getCount(employersResp, employers),
+        totalJobs: getCount(jobsResp, jobs),
+        totalApplications: getCount(applicationsResp, applications),
+        totalCategories: getCount(categoriesResp, categories),
+        pendingUsers: getCount(pendingUsersResp, pendingUsersList),
         pendingJobs: pendingJobsCount, 
         pendingApplications: pendingApplicationsList.length,
         reviewedApplications: reviewedApplicationsList.length,

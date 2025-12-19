@@ -176,6 +176,7 @@ const EmployerDashboardPage = () => {
       setApplicationsLoading(true);
       const response: ApplicationListResponse = await JobApplicationApi.getAllApplications({
         ordering: "-applied_at",
+        per_page: 1000,
       });
 
       const detailedApplications = await Promise.all(

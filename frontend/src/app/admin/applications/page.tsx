@@ -193,10 +193,10 @@ const AdminApplicationsPage = () => {
   };
 
   const formatCurrency = (amount: string | number) => {
-    if (!amount) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
+    if (!amount) return "KES 0.00";
+    return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "USD",
+      currency: "KES",
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 

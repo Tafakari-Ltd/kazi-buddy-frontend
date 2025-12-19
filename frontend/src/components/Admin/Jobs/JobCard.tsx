@@ -17,7 +17,7 @@ interface JobCardProps {
   job: Job;
   categoryName: string;
   onView: (job: Job) => void;
-  onEdit: (jobId: string) => void; // URL navigation handled by parent or link
+  onEdit: (jobId: string) => void; 
   onDelete: (jobId: string) => void;
   onStatusChange: (jobId: string, status: JobStatus) => void;
 }
@@ -26,7 +26,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, categoryName, onView, onEdit, on
   const getStatusColor = (status: string) => JOB_STATUS_OPTIONS.find((o) => o.value === status)?.color || "bg-gray-100 text-gray-600";
   const getUrgencyColor = (urgency: string) => URGENCY_LEVEL_OPTIONS.find((o) => o.value === urgency)?.color || "bg-gray-100 text-gray-600";
 
-  const formatCurrency = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+  const formatCurrency = (n: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(n);
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
   return (
@@ -52,7 +52,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, categoryName, onView, onEdit, on
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
                   {formatCurrency(job.budget_min)} - {formatCurrency(job.budget_max)}
                 </div>
                 <div className="flex items-center gap-1">

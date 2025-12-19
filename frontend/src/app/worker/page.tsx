@@ -106,7 +106,7 @@ const WorkerDashboardPage = () => {
   const fetchAvailableJobs = async () => {
     try {
       setJobsLoading(true);
-      const result = await handleFetchJobs({ status: 'active' as any, page: 1, limit: 50 });
+      const result = await handleFetchJobs({ status: 'active' as any, page: 1, limit: 1000 });
       
       if (result && typeof result !== 'string') {
         let jobsArray = [];

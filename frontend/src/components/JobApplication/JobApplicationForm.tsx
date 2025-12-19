@@ -177,8 +177,8 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
           <div>
-            <span className="font-medium">Budget:</span> $
-            {jobDetails.budget_min} - ${jobDetails.budget_max}
+            <span className="font-medium">Budget:</span> KES{" "}
+            {jobDetails.budget_min} - KES {jobDetails.budget_max}
           </div>
           <div>
             <span className="font-medium">Type:</span>{" "}
@@ -234,7 +234,7 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
           htmlFor="proposed_rate"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Proposed Rate ($
+          Proposed Rate (KES{" "}
           {jobDetails.payment_type === "hourly" ? "per hour" : "total"}) *
         </label>
         <div className="relative">
@@ -242,7 +242,6 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
             type="number"
             id="proposed_rate"
             min="1"
-            max="10000"
             step="0.01"
             value={formData.proposed_rate || ""}
             onChange={(e) =>
@@ -255,9 +254,6 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
             }`}
             placeholder="Enter your rate"
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 sm:text-sm">$</span>
-          </div>
         </div>
         {(errors.proposed_rate || localErrors.proposed_rate) && (
           <p className="mt-1 text-sm text-red-600">
@@ -265,7 +261,7 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
           </p>
         )}
         <p className="mt-1 text-xs text-gray-500">
-          Budget range: ${jobDetails.budget_min} - ${jobDetails.budget_max}
+          Budget range: KES {jobDetails.budget_min} - KES {jobDetails.budget_max}
         </p>
       </div>
 

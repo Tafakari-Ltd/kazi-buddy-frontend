@@ -15,7 +15,7 @@ interface JobViewModalProps {
 const JobViewModal: React.FC<JobViewModalProps> = ({ isOpen, onClose, job, categoryName, onEdit }) => {
   if (!job) return null;
 
-  const formatCurrency = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+  const formatCurrency = (n: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(n);
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
   const getStatusColor = (status: string) => JOB_STATUS_OPTIONS.find((o) => o.value === status)?.color || "bg-gray-100 text-gray-600";

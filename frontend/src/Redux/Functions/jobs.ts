@@ -183,7 +183,7 @@ export const useMyApplications = () => {
 
   const fetchApplications = useCallback(
     (params?: ApplicationQueryParams) => {
-      dispatch(fetchMyApplications(params));
+      dispatch(fetchMyApplications({ ...params, per_page: 1000 }));
     },
     [dispatch],
   );
@@ -233,7 +233,7 @@ export const useJobApplications = (jobId?: string) => {
   const fetchApplications = useCallback(
     (params?: ApplicationQueryParams) => {
       if (jobId) {
-        dispatch(fetchJobApplications({ jobId, params }));
+        dispatch(fetchJobApplications({ jobId, params: { ...params, per_page: 1000 } }));
       }
     },
     [dispatch, jobId],

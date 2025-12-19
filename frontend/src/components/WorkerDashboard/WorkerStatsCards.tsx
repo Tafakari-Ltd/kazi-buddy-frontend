@@ -1,32 +1,40 @@
 "use client";
 import React from "react";
 import { Briefcase, CheckCircle, Eye, Star } from "lucide-react";
+import { useMyApplications } from "../../Redux/Functions/jobs";
 
 const WorkerStatsCards: React.FC = () => {
+  const { applications, isLoading } = useMyApplications();
+
+  const totalApplied = applications.length;
+  const acceptedApplications = applications.filter(
+    (app) => app.status === "accepted"
+  ).length;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 container">
       <StatCard
         icon={<Briefcase className="w-6 h-6" />}
         label="Total Jobs Applied"
-        value="--"
+        value={isLoading ? "..." : totalApplied.toString()}
         color="blue"
       />
       <StatCard
         icon={<CheckCircle className="w-6 h-6" />}
         label="Applications Accepted"
-        value="--"
+        value={isLoading ? "..." : acceptedApplications.toString()}
         color="green"
       />
       <StatCard
         icon={<Eye className="w-6 h-6" />}
         label="Profile Views"
-        value="--"
+        value="0"
         color="purple"
       />
       <StatCard
         icon={<Star className="w-6 h-6" />}
         label="My Rating"
-        value="--"
+        value="0.0"
         color="amber"
       />
     </div>

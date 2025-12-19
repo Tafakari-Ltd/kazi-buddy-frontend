@@ -48,7 +48,7 @@ export const fetchJobs = createAsyncThunk<
     }
 
     const queryString = queryParams.toString();
-    const url = `/jobs/${queryString ? `?${queryString}` : ""}`;
+    const url = `/jobs/${queryString ? `?${queryString}&page_size=1000` : "?page_size=1000"}`;
 
     const response = await api.get(url);
     return response as any;
@@ -162,7 +162,7 @@ export const fetchJobsByEmployer = createAsyncThunk<
 >("jobs/fetchJobsByEmployer", async (employerId, { rejectWithValue }) => {
   try {
     const response = await api.get(
-      `/jobs/employers/?employer_id=${employerId}`,
+      `/jobs/employers/?employer_id=${employerId}&page_size=1000`,
     );
     return response as any;
   } catch (error: any) {
@@ -178,7 +178,7 @@ export const fetchJobsByCategory = createAsyncThunk<
   { rejectValue: string }
 >("jobs/fetchJobsByCategory", async (categoryId, { rejectWithValue }) => {
   try {
-    const response = await api.get(`/jobs/category/${categoryId}/filter/`);
+    const response = await api.get(`/jobs/category/${categoryId}/filter/?page_size=1000`);
     return response as any;
   } catch (error: any) {
     return rejectWithValue(

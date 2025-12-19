@@ -92,7 +92,7 @@ const JobPostingModal = ({
     end_date: "",
     estimated_hours: "",
     max_applicants: "50",
-    status: JobStatus.PENDING,
+    status: JobStatus.ACTIVE,
     visibility: JobVisibility.PUBLIC,
   });
 
@@ -201,11 +201,11 @@ const JobPostingModal = ({
         location_text: formData.location_text || "",
         job_type: formData.job_type,
         urgency_level: formData.urgency_level,
-        budget_min: formData.budget_min ? parseFloat(formData.budget_min) : 0,
-        budget_max: formData.budget_max ? parseFloat(formData.budget_max) : 0,
+        budget_min: formData.budget_min ? parseFloat(formData.budget_min) : null,
+        budget_max: formData.budget_max ? parseFloat(formData.budget_max) : null,
         payment_type: formData.payment_type,
-        start_date: formData.start_date || "",
-        end_date: formData.end_date || "",
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
         estimated_hours: formData.estimated_hours
           ? parseInt(formData.estimated_hours)
           : 0,
@@ -223,6 +223,7 @@ const JobPostingModal = ({
         // The success message and modal closing is handled in useEffect
       } else if (createJob.rejected.match(resultAction)) {
         const errorPayload = resultAction.payload;
+        console.error("Job creation failed:", errorPayload);
 
         dispatch(clearState());
 

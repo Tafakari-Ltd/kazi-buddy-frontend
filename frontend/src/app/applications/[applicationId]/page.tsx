@@ -223,7 +223,7 @@ export default function ApplicationDetailsPage() {
                   Proposed Rate
                 </label>
                 <p className="mt-1 text-lg font-semibold text-gray-900">
-                  ${application.proposed_rate}
+                  KES {application.proposed_rate}
                 </p>
               </div>
               <div>
